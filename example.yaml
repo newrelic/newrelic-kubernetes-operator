@@ -1,0 +1,17 @@
+apiVersion: nr-alerts.k8s.newrelic.com/v1beta1
+kind: NrqlAlertCondition
+metadata:
+  name: my-alert
+spec:
+  nrql:
+    query: "SELECT count(*) FROM Transactions"
+    since_value: "10"
+  enabled: true
+  terms:
+    - threshold: "75.0"
+      time_function: "all"
+      duration: "5"
+      priority: "critical"
+      operator: "above"
+  name: "K8s generated alert condition"
+  existing_policy_id: 26458

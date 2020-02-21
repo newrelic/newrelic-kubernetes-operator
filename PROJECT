@@ -1,0 +1,7 @@
+domain: k8s.newrelic.com
+repo: github.com/newrelic/newrelic-kubernetes-operator
+resources:
+- group: nr-alerts
+  kind: NrqlAlertCondition
+  version: v1beta1
+version: "2"

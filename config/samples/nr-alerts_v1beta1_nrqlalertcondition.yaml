@@ -1,0 +1,7 @@
+apiVersion: nr-alerts.k8s.newrelic.com/v1beta1
+kind: NrqlAlertCondition
+metadata:
+  name: nrqlalertcondition-sample
+spec:
+  # Add fields here
+  foo: bar
