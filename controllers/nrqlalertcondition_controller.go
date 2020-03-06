@@ -17,20 +17,21 @@ package controllers
 
 import (
 	"context"
+	"reflect"
 
 	"github.com/go-logr/logr"
-	"github.com/newrelic/newrelic-client-go/pkg/alerts"
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
+	"github.com/newrelic/newrelic-kubernetes-operator/interfaces"
 	nralertsv1beta1 "github.com/newrelic/newrelic-kubernetes-operator/api/v1beta1"
 )
 
 // NrqlAlertConditionReconciler reconciles a NrqlAlertCondition object
 type NrqlAlertConditionReconciler struct {
 	client.Client
-	Alerts alerts.Alerts
+	Alerts interfaces.NewRelicAlertsClient
 	Log    logr.Logger
 	Scheme *runtime.Scheme
 }
@@ -46,10 +47,11 @@ func (r *NrqlAlertConditionReconciler) Reconcile(req ctrl.Request) (ctrl.Result,
 	var condition nralertsv1beta1.NrqlAlertCondition
 	err := r.Client.Get(ctx, req.NamespacedName, &condition)
 	if err != nil {
-		r.Log.Error(err, "tried getting condition", "name", req.NamespacedName)
+		r.Log.Error(err, "tried getting condition", "name", req.NamespacedName.String())
+		return ctrl.Result{}, nil
 	}
 
-	if condition.Status.AppliedSpec == &condition.Spec {
+	if reflect.DeepEqual(&condition.Spec, condition.Status.AppliedSpec) {
 		return ctrl.Result{}, nil
 	}
 
@@ -58,14 +60,15 @@ func (r *NrqlAlertConditionReconciler) Reconcile(req ctrl.Request) (ctrl.Result,
 	APICondition := condition.Spec.APICondition()
 	r.Log.Info("Trying to create or update condition", "API fields", APICondition)
 
-	if condition.Status.AppliedSpec != nil && &condition.Spec != condition.Status.AppliedSpec {
+	if condition.Status.ConditionID != 0 && !reflect.DeepEqual(&condition.Spec, condition.Status.AppliedSpec) {
 		APICondition.ID = condition.Status.ConditionID
-		_, err := r.Alerts.UpdateNrqlCondition(APICondition)
+		updatedCondition, err := r.Alerts.UpdateNrqlCondition(APICondition)
 		if err != nil {
 			r.Log.Error(err, "failed to update condition")
+		} else {
+			condition.Status.AppliedSpec = &condition.Spec
+			condition.Status.ConditionID = updatedCondition.ID
 		}
-
-		condition.Status.AppliedSpec = &condition.Spec
 
 		err = r.Client.Update(ctx, &condition)
 		if err != nil {
@@ -77,9 +80,8 @@ func (r *NrqlAlertConditionReconciler) Reconcile(req ctrl.Request) (ctrl.Result,
 			r.Log.Error(err, "failed to create condition")
 		} else {
 			condition.Status.AppliedSpec = &condition.Spec
+			condition.Status.ConditionID = createdCondition.ID
 		}
-
-		condition.Status.ConditionID = createdCondition.ID
 
 		err = r.Client.Update(ctx, &condition)
 		if err != nil {

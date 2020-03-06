@@ -30,6 +30,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 
 	nralertsv1beta1 "github.com/newrelic/newrelic-kubernetes-operator/api/v1beta1"
+	"github.com/newrelic/newrelic-kubernetes-operator/interfaces/interfacesfakes"
 	// +kubebuilder:scaffold:imports
 )
 
@@ -39,6 +40,7 @@ import (
 var cfg *rest.Config
 var k8sClient client.Client
 var testEnv *envtest.Environment
+var alertsClient *interfacesfakes.FakeNewRelicAlertsClient
 
 func TestAPIs(t *testing.T) {
 	RegisterFailHandler(Fail)
