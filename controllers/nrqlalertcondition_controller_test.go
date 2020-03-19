@@ -11,14 +11,14 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 
+	"github.com/newrelic/newrelic-client-go/pkg/alerts"
 	nralertsv1beta1 "github.com/newrelic/newrelic-kubernetes-operator/api/v1beta1"
 	"github.com/newrelic/newrelic-kubernetes-operator/interfaces/interfacesfakes"
-	"github.com/newrelic/newrelic-client-go/pkg/alerts"
 )
 
 var _ = Describe("NrqlCondition reconciliation", func() {
 	var (
-		ctx            context.Context
+		ctx context.Context
 		//events         chan string
 		r              *NrqlAlertConditionReconciler
 		condition      *nralertsv1beta1.NrqlAlertCondition

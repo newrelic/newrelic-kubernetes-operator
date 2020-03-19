@@ -24,8 +24,8 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	"github.com/newrelic/newrelic-kubernetes-operator/interfaces"
 	nralertsv1beta1 "github.com/newrelic/newrelic-kubernetes-operator/api/v1beta1"
+	"github.com/newrelic/newrelic-kubernetes-operator/interfaces"
 )
 
 // NrqlAlertConditionReconciler reconciles a NrqlAlertCondition object
