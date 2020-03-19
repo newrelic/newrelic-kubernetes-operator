@@ -5,10 +5,10 @@ Operator to manage New Relic resources
 
 To get required tooling:
 
-Install kubebuilder https://go.kubebuilder.io/quick-start.html
+
 
 ```bash
-brew install kubectl kustomize
+brew install kubectl kubebuilder kustomize
 ```
 
 
@@ -73,6 +73,9 @@ $ diff -u resources-installed.txt resources-uninstalled.txt
 
 # Running the tests
 
+Install kubebuilder https://go.kubebuilder.io/quick-start.html to get `etcd` and `kube-apiserver` needed for the tests
+
+To run the tests the first time
 `make test`
 
 First time running you may get security prompts from `etcd` and `kube-apiserver`
