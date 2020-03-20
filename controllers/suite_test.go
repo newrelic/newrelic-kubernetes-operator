@@ -22,15 +22,12 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 
+	nralertsv1beta1 "github.com/newrelic/newrelic-kubernetes-operator/api/v1beta1"
+	"github.com/newrelic/newrelic-kubernetes-operator/interfaces/interfacesfakes"
 	"k8s.io/client-go/kubernetes/scheme"
 	"k8s.io/client-go/rest"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/envtest"
-	logf "sigs.k8s.io/controller-runtime/pkg/log"
-	"sigs.k8s.io/controller-runtime/pkg/log/zap"
-
-	nralertsv1beta1 "github.com/newrelic/newrelic-kubernetes-operator/api/v1beta1"
-	"github.com/newrelic/newrelic-kubernetes-operator/interfaces/interfacesfakes"
 	// +kubebuilder:scaffold:imports
 )
 
@@ -51,8 +48,6 @@ func TestAPIs(t *testing.T) {
 }
 
 var _ = BeforeSuite(func(done Done) {
-	logf.SetLogger(zap.LoggerTo(GinkgoWriter, true))
-
 	By("bootstrapping test environment")
 	testEnv = &envtest.Environment{
 		CRDDirectoryPaths: []string{filepath.Join("..", "config", "crd", "bases")},
