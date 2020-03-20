@@ -75,7 +75,7 @@ func main() {
 
 	if err = (&controllers.NrqlAlertConditionReconciler{
 		Client: mgr.GetClient(),
-		Alerts: alertsClient,
+		Alerts: &alertsClient,
 		Log:    ctrl.Log.WithName("controllers").WithName("NrqlAlertCondition"),
 		Scheme: mgr.GetScheme(),
 	}).SetupWithManager(mgr); err != nil {

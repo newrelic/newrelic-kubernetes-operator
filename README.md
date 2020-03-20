@@ -5,9 +5,12 @@ Operator to manage New Relic resources
 
 To get required tooling:
 
+
+
 ```bash
 brew install kubectl kubebuilder kustomize
 ```
+
 
 You will also want to install Docker for Mac and enable its built-in kubernetes cluster functionality.
 
@@ -66,3 +69,16 @@ $ diff -u resources-installed.txt resources-uninstalled.txt
  podsecuritypolicies               psp          policy                         false        PodSecurityPolicy
  clusterrolebindings                            rbac.authorization.k8s.io      false        ClusterRoleBinding
 ```
+
+
+# Running the tests
+
+Install kubebuilder https://go.kubebuilder.io/quick-start.html to get `etcd` and `kube-apiserver` needed for the tests
+
+To run the tests the first time
+`make test`
+
+First time running you may get security prompts from `etcd` and `kube-apiserver`
+
+Tests can be run with `ginkgo -r` or `make test`
+
