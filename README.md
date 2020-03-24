@@ -44,6 +44,51 @@ $ diff -u resources-before.txt resources-installed.txt
  clusterrolebindings                            rbac.authorization.k8s.io      false        ClusterRoleBinding
 ```
 
+Next, set the env var NEWRELIC_API_KEY with your [New Relic Admin API key](https://docs.newrelic.com/docs/apis/get-started/intro-apis/types-new-relic-api-keys#admin)
+
+`export NEWRELIC_API_KEY=<ADMIN API KEY`
+
+Finally, build the image and push it to the desired docker repo
+
+`make docker-build docker-push IMG=<some-registry>/<project-name>:tag`
+
+`make deploy IMG=<some-registry>/<project-name>:tag`
+
+The newrelic-kubernetes-operator should now be running in your kubernetes cluster.
+
+As an alternative to running the operator in the Kubernetes cluster, you can run the operator locally with `make run`.
+
+#Using the operator
+
+The operator will create and update conditions as needed by applying yaml files with `kubectl apply -f <filename>`
+
+Sample yaml file
+```
+apiVersion: nr-alerts.k8s.newrelic.com/v1beta1
+kind: NrqlAlertCondition
+metadata:
+  name: my-alert
+spec:
+  nrql:
+    query: "SELECT count(*) FROM Transactions"
+    since_value: "10"
+  enabled: true
+  terms:
+    - threshold: "75.0"
+      time_function: "all"
+      duration: "5"
+      priority: "critical"
+      operator: "above"
+  name: "K8s generated alert condition"
+  existing_policy_id: 26458
+```
+
+Please note the `existing_policy_id` field which must be set to a currently existing policy ID in the account configured
+
+`kubectl describe nrqlalertconditions` - describes currently configured alert conditions
+
+
+
 # Uninstall the operator
 
 ``` bash
