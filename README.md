@@ -46,7 +46,7 @@ $ diff -u resources-before.txt resources-installed.txt
 
 Next, set the env var NEWRELIC_API_KEY with your [New Relic Admin API key](https://docs.newrelic.com/docs/apis/get-started/intro-apis/types-new-relic-api-keys#admin)
 
-`export NEWRELIC_API_KEY=<ADMIN API KEY`
+`export NEWRELIC_API_KEY=<ADMIN API KEY>`
 
 Finally, build the image and push it to the desired docker repo
 
@@ -58,7 +58,7 @@ The newrelic-kubernetes-operator should now be running in your kubernetes cluste
 
 As an alternative to running the operator in the Kubernetes cluster, you can run the operator locally with `make run`.
 
-#Using the operator
+# Using the operator
 
 The operator will create and update conditions as needed by applying yaml files with `kubectl apply -f <filename>`
 
