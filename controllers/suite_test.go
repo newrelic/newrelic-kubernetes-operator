@@ -54,6 +54,7 @@ var _ = BeforeSuite(func(done Done) {
 	testEnv = &envtest.Environment{
 		CRDDirectoryPaths: []string{filepath.Join("..", "config", "crd", "bases")},
 	}
+	// Uncomment to get verbose logs in your tests
 	logf.SetLogger(zap.LoggerTo(GinkgoWriter, true))
 
 	var err error

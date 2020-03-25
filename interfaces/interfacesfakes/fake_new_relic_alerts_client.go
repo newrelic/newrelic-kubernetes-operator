@@ -22,17 +22,17 @@ type FakeNewRelicAlertsClient struct {
 		result1 *alerts.NrqlCondition
 		result2 error
 	}
-	ListNrqlConditionsStub        func(int) (*[]alerts.NrqlCondition, error)
+	ListNrqlConditionsStub        func(int) ([]*alerts.NrqlCondition, error)
 	listNrqlConditionsMutex       sync.RWMutex
 	listNrqlConditionsArgsForCall []struct {
 		arg1 int
 	}
 	listNrqlConditionsReturns struct {
-		result1 *[]alerts.NrqlCondition
+		result1 []*alerts.NrqlCondition
 		result2 error
 	}
 	listNrqlConditionsReturnsOnCall map[int]struct {
-		result1 *[]alerts.NrqlCondition
+		result1 []*alerts.NrqlCondition
 		result2 error
 	}
 	UpdateNrqlConditionStub        func(alerts.NrqlCondition) (*alerts.NrqlCondition, error)
@@ -115,7 +115,7 @@ func (fake *FakeNewRelicAlertsClient) CreateNrqlConditionReturnsOnCall(i int, re
 	}{result1, result2}
 }
 
-func (fake *FakeNewRelicAlertsClient) ListNrqlConditions(arg1 int) (*[]alerts.NrqlCondition, error) {
+func (fake *FakeNewRelicAlertsClient) ListNrqlConditions(arg1 int) ([]*alerts.NrqlCondition, error) {
 	fake.listNrqlConditionsMutex.Lock()
 	ret, specificReturn := fake.listNrqlConditionsReturnsOnCall[len(fake.listNrqlConditionsArgsForCall)]
 	fake.listNrqlConditionsArgsForCall = append(fake.listNrqlConditionsArgsForCall, struct {
@@ -139,7 +139,7 @@ func (fake *FakeNewRelicAlertsClient) ListNrqlConditionsCallCount() int {
 	return len(fake.listNrqlConditionsArgsForCall)
 }
 
-func (fake *FakeNewRelicAlertsClient) ListNrqlConditionsCalls(stub func(int) (*[]alerts.NrqlCondition, error)) {
+func (fake *FakeNewRelicAlertsClient) ListNrqlConditionsCalls(stub func(int) ([]*alerts.NrqlCondition, error)) {
 	fake.listNrqlConditionsMutex.Lock()
 	defer fake.listNrqlConditionsMutex.Unlock()
 	fake.ListNrqlConditionsStub = stub
@@ -152,28 +152,28 @@ func (fake *FakeNewRelicAlertsClient) ListNrqlConditionsArgsForCall(i int) int {
 	return argsForCall.arg1
 }
 
-func (fake *FakeNewRelicAlertsClient) ListNrqlConditionsReturns(result1 *[]alerts.NrqlCondition, result2 error) {
+func (fake *FakeNewRelicAlertsClient) ListNrqlConditionsReturns(result1 []*alerts.NrqlCondition, result2 error) {
 	fake.listNrqlConditionsMutex.Lock()
 	defer fake.listNrqlConditionsMutex.Unlock()
 	fake.ListNrqlConditionsStub = nil
 	fake.listNrqlConditionsReturns = struct {
-		result1 *[]alerts.NrqlCondition
+		result1 []*alerts.NrqlCondition
 		result2 error
 	}{result1, result2}
 }
 
-func (fake *FakeNewRelicAlertsClient) ListNrqlConditionsReturnsOnCall(i int, result1 *[]alerts.NrqlCondition, result2 error) {
+func (fake *FakeNewRelicAlertsClient) ListNrqlConditionsReturnsOnCall(i int, result1 []*alerts.NrqlCondition, result2 error) {
 	fake.listNrqlConditionsMutex.Lock()
 	defer fake.listNrqlConditionsMutex.Unlock()
 	fake.ListNrqlConditionsStub = nil
 	if fake.listNrqlConditionsReturnsOnCall == nil {
 		fake.listNrqlConditionsReturnsOnCall = make(map[int]struct {
-			result1 *[]alerts.NrqlCondition
+			result1 []*alerts.NrqlCondition
 			result2 error
 		})
 	}
 	fake.listNrqlConditionsReturnsOnCall[i] = struct {
-		result1 *[]alerts.NrqlCondition
+		result1 []*alerts.NrqlCondition
 		result2 error
 	}{result1, result2}
 }

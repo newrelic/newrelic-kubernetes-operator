@@ -55,28 +55,10 @@ func (r *NrqlAlertConditionReconciler) Reconcile(req ctrl.Request) (ctrl.Result,
 		return ctrl.Result{}, nil
 	}
 
-
 	r.Log.Info("Reconciling", "condition", condition)
 
 	//check if condition has condition id
-	if condition.Status.ConditionID == 0 {
-		r.Log.Info("Checking for existing condition", "conditionName", condition.Name)
-		//if no conditionId, get list of conditions and compare name
-		existingConditions, err := r.Alerts.ListNrqlConditions(condition.Spec.ExistingPolicyId)
-		r.Log.Info("existingConditions", "existingConditions", existingConditions)
-		if err != nil {
-			r.Log.Error(err, "failed to get list of NRQL conditions from New Relic API")
-		} else {
-			for _, existingCondition := range *existingConditions {
-				if existingCondition.Name == condition.Spec.Name {
-					r.Log.Info("Matched on existing condition, updating ConditionId", "conditionId", existingCondition.ID)
-					condition.Status.ConditionID = existingCondition.ID
-				}
-				break
-			}
-		}
-
-	}
+	r.checkForExistingCondition(&condition)
 
 	APICondition := condition.Spec.APICondition()
 	r.Log.Info("Trying to create or update condition", "API fields", APICondition)
@@ -112,6 +94,27 @@ func (r *NrqlAlertConditionReconciler) Reconcile(req ctrl.Request) (ctrl.Result,
 	}
 
 	return ctrl.Result{}, nil
+}
+
+func (r *NrqlAlertConditionReconciler) checkForExistingCondition(condition *nralertsv1beta1.NrqlAlertCondition) {
+	if condition.Status.ConditionID == 0 {
+		r.Log.Info("Checking for existing condition", "conditionName", condition.Name)
+		//if no conditionId, get list of conditions and compare name
+		existingConditions, err := r.Alerts.ListNrqlConditions(condition.Spec.ExistingPolicyId)
+		r.Log.Info("existingConditions", "existingConditions", existingConditions)
+		if err != nil {
+			r.Log.Error(err, "failed to get list of NRQL conditions from New Relic API")
+		} else {
+			for _, existingCondition := range existingConditions {
+				if existingCondition.Name == condition.Spec.Name {
+					r.Log.Info("Matched on existing condition, updating ConditionId", "conditionId", existingCondition.ID)
+					condition.Status.ConditionID = existingCondition.ID
+				}
+				break
+			}
+		}
+
+	}
 }
 
 func (r *NrqlAlertConditionReconciler) SetupWithManager(mgr ctrl.Manager) error {

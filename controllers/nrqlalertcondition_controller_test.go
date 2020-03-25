@@ -122,13 +122,13 @@ var _ = Describe("NrqlCondition reconciliation", func() {
 			a.ID = 112
 			return &a, nil
 		}
-		alertsClient.ListNrqlConditionsStub = func(int) (*[]alerts.NrqlCondition, error) {
-			var a []alerts.NrqlCondition
-			a = append(a, alerts.NrqlCondition{
-				ID: 112,
+		alertsClient.ListNrqlConditionsStub = func(int) ([]*alerts.NrqlCondition, error) {
+			var a []*alerts.NrqlCondition
+			a = append(a, &alerts.NrqlCondition{
+				ID:   112,
 				Name: "NRQL Condition matches",
 			})
-			return &a, nil
+			return a, nil
 		}
 	})
 
