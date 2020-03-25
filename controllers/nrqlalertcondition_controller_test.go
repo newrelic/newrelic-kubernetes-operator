@@ -73,6 +73,41 @@ var _ = Describe("NrqlCondition reconciliation", func() {
 				ConditionID: 0,
 			},
 		}
+		condition = &nralertsv1beta1.NrqlAlertCondition{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      "test-condition",
+				Namespace: "default",
+			},
+			Spec: nralertsv1beta1.NrqlAlertConditionSpec{
+				Terms: []nralertsv1beta1.AlertConditionTerm{
+					nralertsv1beta1.AlertConditionTerm{
+						Duration:     resource.MustParse("30"),
+						Operator:     "Above",
+						Priority:     "Critical",
+						Threshold:    resource.MustParse("5"),
+						TimeFunction: "All",
+					},
+				},
+				Nrql: nralertsv1beta1.NrqlQuery{
+					Query:      "SELECT 1 FROM MyEvents",
+					SinceValue: "5",
+				},
+				Type:                "NRQL",
+				Name:                "NRQL Condition",
+				RunbookURL:          "http://test.com/runbook",
+				ValueFunction:       "Over",
+				ID:                  777,
+				ViolationCloseTimer: 60,
+				ExpectedGroups:      2,
+				IgnoreOverlap:       true,
+				Enabled:             true,
+				ExistingPolicyId:    42,
+			},
+			Status: nralertsv1beta1.NrqlAlertConditionStatus{
+				AppliedSpec: &nralertsv1beta1.NrqlAlertConditionSpec{},
+				ConditionID: 0,
+			},
+		}
 		namespacedName = types.NamespacedName{
 			Namespace: "default",
 			Name:      "test-condition",
@@ -86,6 +121,14 @@ var _ = Describe("NrqlCondition reconciliation", func() {
 		alertsClient.UpdateNrqlConditionStub = func(a alerts.NrqlCondition) (*alerts.NrqlCondition, error) {
 			a.ID = 112
 			return &a, nil
+		}
+		alertsClient.ListNrqlConditionsStub = func(int) ([]*alerts.NrqlCondition, error) {
+			var a []*alerts.NrqlCondition
+			a = append(a, &alerts.NrqlCondition{
+				ID:   112,
+				Name: "NRQL Condition matches",
+			})
+			return a, nil
 		}
 	})
 
@@ -130,6 +173,89 @@ var _ = Describe("NrqlCondition reconciliation", func() {
 				Expect(err).To(BeNil())
 				Expect(endStateCondition.Status.AppliedSpec).To(Equal(&condition.Spec))
 			})
+		})
+	})
+
+	Context("when given a NrqlAlertCondition that exists in New Relic", func() {
+		JustBeforeEach(func() {
+			condition = &nralertsv1beta1.NrqlAlertCondition{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "test-condition",
+					Namespace: "default",
+				},
+				Spec: nralertsv1beta1.NrqlAlertConditionSpec{
+					Terms: []nralertsv1beta1.AlertConditionTerm{
+						nralertsv1beta1.AlertConditionTerm{
+							Duration:     resource.MustParse("30"),
+							Operator:     "Above",
+							Priority:     "Critical",
+							Threshold:    resource.MustParse("5"),
+							TimeFunction: "All",
+						},
+					},
+					Nrql: nralertsv1beta1.NrqlQuery{
+						Query:      "SELECT 1 FROM MyEvents",
+						SinceValue: "5",
+					},
+					Type:                "NRQL",
+					Name:                "NRQL Condition matches",
+					RunbookURL:          "http://test.com/runbook",
+					ValueFunction:       "Over",
+					ID:                  777,
+					ViolationCloseTimer: 60,
+					ExpectedGroups:      2,
+					IgnoreOverlap:       true,
+					Enabled:             true,
+					ExistingPolicyId:    42,
+				},
+				Status: nralertsv1beta1.NrqlAlertConditionStatus{
+					AppliedSpec: &nralertsv1beta1.NrqlAlertConditionSpec{},
+					ConditionID: 0,
+				},
+			}
+		})
+
+		Context("with a valid condition", func() {
+
+			It("does not create a new condition", func() {
+				err := k8sClient.Create(ctx, condition)
+				Expect(err).ToNot(HaveOccurred())
+
+				// call reconcile
+				_, err = r.Reconcile(request)
+				Expect(err).ToNot(HaveOccurred())
+
+				Expect(alertsClient.CreateNrqlConditionCallCount()).To(Equal(0))
+			})
+
+			It("updates the ConditionID on the kubernetes object", func() {
+				err := k8sClient.Create(ctx, condition)
+				Expect(err).ToNot(HaveOccurred())
+
+				// call reconcile
+				_, err = r.Reconcile(request)
+				Expect(err).ToNot(HaveOccurred())
+
+				var endStateCondition nralertsv1beta1.NrqlAlertCondition
+				err = k8sClient.Get(ctx, namespacedName, &endStateCondition)
+				Expect(err).To(BeNil())
+				Expect(endStateCondition.Status.ConditionID).To(Equal(112))
+			})
+
+			It("updates the AppliedSpec on the kubernetes object for later comparison", func() {
+				err := k8sClient.Create(ctx, condition)
+				Expect(err).ToNot(HaveOccurred())
+
+				// call reconcile
+				_, err = r.Reconcile(request)
+				Expect(err).ToNot(HaveOccurred())
+
+				var endStateCondition nralertsv1beta1.NrqlAlertCondition
+				err = k8sClient.Get(ctx, namespacedName, &endStateCondition)
+				Expect(err).To(BeNil())
+				Expect(endStateCondition.Status.AppliedSpec).To(Equal(&condition.Spec))
+			})
+
 		})
 	})
 
