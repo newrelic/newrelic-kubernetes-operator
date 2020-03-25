@@ -17,6 +17,8 @@ package controllers
 
 import (
 	"path/filepath"
+	logf "sigs.k8s.io/controller-runtime/pkg/log"
+	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 	"testing"
 
 	. "github.com/onsi/ginkgo"
@@ -52,6 +54,7 @@ var _ = BeforeSuite(func(done Done) {
 	testEnv = &envtest.Environment{
 		CRDDirectoryPaths: []string{filepath.Join("..", "config", "crd", "bases")},
 	}
+	logf.SetLogger(zap.LoggerTo(GinkgoWriter, true))
 
 	var err error
 	cfg, err = testEnv.Start()

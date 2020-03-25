@@ -87,6 +87,14 @@ var _ = Describe("NrqlCondition reconciliation", func() {
 			a.ID = 112
 			return &a, nil
 		}
+		alertsClient.ListNrqlConditionsStub = func(int) (*[]alerts.NrqlCondition, error) {
+			var a []alerts.NrqlCondition
+			a = append(a, alerts.NrqlCondition{
+				ID: 111,
+				Name: "test-condition",
+			})
+			return &a, nil
+		}
 	})
 
 	Context("when given a new NrqlAlertCondition", func() {
@@ -130,6 +138,51 @@ var _ = Describe("NrqlCondition reconciliation", func() {
 				Expect(err).To(BeNil())
 				Expect(endStateCondition.Status.AppliedSpec).To(Equal(&condition.Spec))
 			})
+		})
+	})
+
+	FContext("when given a NrqlAlertCondition that exists in New Relic", func() {
+		Context("with a valid condition", func() {
+
+			It("does not create a new condition", func() {
+				err := k8sClient.Create(ctx, condition)
+				Expect(err).ToNot(HaveOccurred())
+
+				// call reconcile
+				_, err = r.Reconcile(request)
+				Expect(err).ToNot(HaveOccurred())
+
+				Expect(alertsClient.CreateNrqlConditionCallCount()).To(Equal(0))
+			})
+
+			//It("updates the ConditionID on the kubernetes object", func() {
+			//	err := k8sClient.Create(ctx, condition)
+			//	Expect(err).ToNot(HaveOccurred())
+			//
+			//	// call reconcile
+			//	_, err = r.Reconcile(request)
+			//	Expect(err).ToNot(HaveOccurred())
+			//
+			//	var endStateCondition nralertsv1beta1.NrqlAlertCondition
+			//	err = k8sClient.Get(ctx, namespacedName, &endStateCondition)
+			//	Expect(err).To(BeNil())
+			//	Expect(endStateCondition.Status.ConditionID).To(Equal(111))
+			//})
+			//
+			//It("updates the AppliedSpec on the kubernetes object for later comparison", func() {
+			//	err := k8sClient.Create(ctx, condition)
+			//	Expect(err).ToNot(HaveOccurred())
+			//
+			//	// call reconcile
+			//	_, err = r.Reconcile(request)
+			//	Expect(err).ToNot(HaveOccurred())
+			//
+			//	var endStateCondition nralertsv1beta1.NrqlAlertCondition
+			//	err = k8sClient.Get(ctx, namespacedName, &endStateCondition)
+			//	Expect(err).To(BeNil())
+			//	Expect(endStateCondition.Status.AppliedSpec).To(Equal(&condition.Spec))
+			//})
+
 		})
 	})
 

@@ -6,4 +6,5 @@ import "github.com/newrelic/newrelic-client-go/pkg/alerts"
 type NewRelicAlertsClient interface {
 	CreateNrqlCondition(alerts.NrqlCondition) (*alerts.NrqlCondition, error)
 	UpdateNrqlCondition(alerts.NrqlCondition) (*alerts.NrqlCondition, error)
+	ListNrqlConditions(int) (*[]alerts.NrqlCondition, error)
 }
