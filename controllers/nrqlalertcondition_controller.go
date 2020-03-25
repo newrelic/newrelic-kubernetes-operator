@@ -68,7 +68,7 @@ func (r *NrqlAlertConditionReconciler) Reconcile(req ctrl.Request) (ctrl.Result,
 			r.Log.Error(err, "failed to get list of NRQL conditions from New Relic API")
 		} else {
 			for _, existingCondition := range *existingConditions {
-				if existingCondition.Name == condition.Name {
+				if existingCondition.Name == condition.Spec.Name {
 					r.Log.Info("Matched on existing condition, updating ConditionId", "conditionId", existingCondition.ID)
 					condition.Status.ConditionID = existingCondition.ID
 				}
@@ -82,6 +82,7 @@ func (r *NrqlAlertConditionReconciler) Reconcile(req ctrl.Request) (ctrl.Result,
 	r.Log.Info("Trying to create or update condition", "API fields", APICondition)
 
 	if condition.Status.ConditionID != 0 && !reflect.DeepEqual(&condition.Spec, condition.Status.AppliedSpec) {
+		r.Log.Info("updating condition")
 		APICondition.ID = condition.Status.ConditionID
 		updatedCondition, err := r.Alerts.UpdateNrqlCondition(APICondition)
 		if err != nil {
