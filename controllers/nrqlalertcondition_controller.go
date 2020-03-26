@@ -51,6 +51,37 @@ func (r *NrqlAlertConditionReconciler) Reconcile(req ctrl.Request) (ctrl.Result,
 		return ctrl.Result{}, nil
 	}
 
+	deleteFinalizer := "storage.finalizers.tutorial.kubebuilder.io"
+
+	// examine DeletionTimestamp to determine if object is under deletion
+	if condition.DeletionTimestamp.IsZero() {
+		if !containsString(condition.Finalizers, deleteFinalizer) {
+			condition.Finalizers = append(condition.Finalizers, deleteFinalizer)
+			if err := r.Client.Update(ctx, &condition); err != nil {
+				return ctrl.Result{}, err
+			}
+		}
+	} else {
+		// The object is being deleted
+		if containsString(condition.Finalizers, deleteFinalizer) {
+			// our finalizer is present, so lets handle any external dependency
+			if err := r.deleteNewRelicAlertCondition(condition); err != nil {
+				// if fail to delete the external dependency here, return with error
+				// so that it can be retried
+				return ctrl.Result{}, err
+			}
+
+			// remove our finalizer from the list and update it.
+			condition.Finalizers = removeString(condition.Finalizers, deleteFinalizer)
+			if err := r.Client.Update(ctx, &condition); err != nil {
+				return ctrl.Result{}, err
+			}
+		}
+
+		// Stop reconciliation as the item is being deleted
+		return ctrl.Result{}, nil
+	}
+
 	if reflect.DeepEqual(&condition.Spec, condition.Status.AppliedSpec) {
 		return ctrl.Result{}, nil
 	}
@@ -121,4 +152,28 @@ func (r *NrqlAlertConditionReconciler) SetupWithManager(mgr ctrl.Manager) error 
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&nralertsv1beta1.NrqlAlertCondition{}).
 		Complete(r)
+}
+
+func containsString(slice []string, s string) bool {
+	for _, item := range slice {
+		if item == s {
+			return true
+		}
+	}
+	return false
+}
+
+func (r *NrqlAlertConditionReconciler) deleteNewRelicAlertCondition(condition nralertsv1beta1.NrqlAlertCondition) error{
+	r.Log.Info("Deleting condition", "conditionName", condition.Spec.Name)
+	return nil
+}
+
+func removeString(slice []string, s string) (result []string) {
+	for _, item := range slice {
+		if item == s {
+			continue
+		}
+		result = append(result, item)
+	}
+	return
 }

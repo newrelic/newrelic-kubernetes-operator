@@ -7,4 +7,5 @@ type NewRelicAlertsClient interface {
 	CreateNrqlCondition(alerts.NrqlCondition) (*alerts.NrqlCondition, error)
 	UpdateNrqlCondition(alerts.NrqlCondition) (*alerts.NrqlCondition, error)
 	ListNrqlConditions(int) ([]*alerts.NrqlCondition, error)
+	DeleteNrqlCondition(int) (*alerts.NrqlCondition, error)
 }

@@ -130,6 +130,12 @@ var _ = Describe("NrqlCondition reconciliation", func() {
 			})
 			return a, nil
 		}
+
+		alertsClient.DeleteNrqlConditionStub = func(int) (*alerts.NrqlCondition, error) {
+			return &alerts.NrqlCondition{},nil
+		}
+
+
 	})
 
 	Context("when given a new NrqlAlertCondition", func() {
@@ -335,6 +341,51 @@ var _ = Describe("NrqlCondition reconciliation", func() {
 
 				Expect(alertsClient.CreateNrqlConditionCallCount()).To(Equal(1))
 				Expect(alertsClient.UpdateNrqlConditionCallCount()).To(Equal(0))
+			})
+		})
+	})
+
+	Context("when deleting a NrqlAlertCondition", func() {
+		Context("with a valid condition", func() {
+			It("should delete that condition via the AlertClient", func() {
+				err := k8sClient.Delete(ctx, condition)
+				Expect(err).ToNot(HaveOccurred())
+
+				// call reconcile
+				_, err = r.Reconcile(request)
+				Expect(err).ToNot(HaveOccurred())
+
+				Expect(alertsClient.CreateNrqlConditionCallCount()).To(Equal(0))
+				Expect(alertsClient.UpdateNrqlConditionCallCount()).To(Equal(0))
+				Expect(alertsClient.DeleteNrqlConditionCallCount()).To(Equal(1))
+			})
+
+			PIt("updates the ConditionID on the kubernetes object", func() {
+				err := k8sClient.Create(ctx, condition)
+				Expect(err).ToNot(HaveOccurred())
+
+				// call reconcile
+				_, err = r.Reconcile(request)
+				Expect(err).ToNot(HaveOccurred())
+
+				var endStateCondition nralertsv1beta1.NrqlAlertCondition
+				err = k8sClient.Get(ctx, namespacedName, &endStateCondition)
+				Expect(err).To(BeNil())
+				Expect(endStateCondition.Status.ConditionID).To(Equal(111))
+			})
+
+			PIt("updates the AppliedSpec on the kubernetes object for later comparison", func() {
+				err := k8sClient.Create(ctx, condition)
+				Expect(err).ToNot(HaveOccurred())
+
+				// call reconcile
+				_, err = r.Reconcile(request)
+				Expect(err).ToNot(HaveOccurred())
+
+				var endStateCondition nralertsv1beta1.NrqlAlertCondition
+				err = k8sClient.Get(ctx, namespacedName, &endStateCondition)
+				Expect(err).To(BeNil())
+				Expect(endStateCondition.Status.AppliedSpec).To(Equal(&condition.Spec))
 			})
 		})
 	})
