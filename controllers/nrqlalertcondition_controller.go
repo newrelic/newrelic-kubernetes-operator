@@ -61,26 +61,27 @@ func (r *NrqlAlertConditionReconciler) Reconcile(req ctrl.Request) (ctrl.Result,
 				return ctrl.Result{}, err
 			}
 		}
-	} else {
-		// The object is being deleted
-		if containsString(condition.Finalizers, deleteFinalizer) {
-			// our finalizer is present, so lets handle any external dependency
-			if err := r.deleteNewRelicAlertCondition(condition); err != nil {
-				// if fail to delete the external dependency here, return with error
-				// so that it can be retried
-				return ctrl.Result{}, err
-			}
-
-			// remove our finalizer from the list and update it.
-			condition.Finalizers = removeString(condition.Finalizers, deleteFinalizer)
-			if err := r.Client.Update(ctx, &condition); err != nil {
-				return ctrl.Result{}, err
-			}
-		}
-
-		// Stop reconciliation as the item is being deleted
-		return ctrl.Result{}, nil
 	}
+	//else {
+	//	// The object is being deleted
+	//	if containsString(condition.Finalizers, deleteFinalizer) {
+	//		// our finalizer is present, so lets handle any external dependency
+	//		if err := r.deleteNewRelicAlertCondition(condition); err != nil {
+	//			// if fail to delete the external dependency here, return with error
+	//			// so that it can be retried
+	//			return ctrl.Result{}, err
+	//		}
+	//
+	//		// remove our finalizer from the list and update it.
+	//		condition.Finalizers = removeString(condition.Finalizers, deleteFinalizer)
+	//		if err := r.Client.Update(ctx, &condition); err != nil {
+	//			return ctrl.Result{}, err
+	//		}
+	//	}
+	//
+	//	// Stop reconciliation as the item is being deleted
+	//	return ctrl.Result{}, nil
+	//}
 
 	if reflect.DeepEqual(&condition.Spec, condition.Status.AppliedSpec) {
 		return ctrl.Result{}, nil
@@ -163,8 +164,13 @@ func containsString(slice []string, s string) bool {
 	return false
 }
 
-func (r *NrqlAlertConditionReconciler) deleteNewRelicAlertCondition(condition nralertsv1beta1.NrqlAlertCondition) error{
+func (r *NrqlAlertConditionReconciler) deleteNewRelicAlertCondition(condition nralertsv1beta1.NrqlAlertCondition) error {
 	r.Log.Info("Deleting condition", "conditionName", condition.Spec.Name)
+	returnedCondition, err := r.Alerts.DeleteNrqlCondition(condition.Status.ConditionID)
+	if err != nil {
+		return err
+	}
+	r.Log.Info("returned condition", "returnedCondition", returnedCondition)
 	return nil
 }
 
