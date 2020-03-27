@@ -45,43 +45,57 @@ func (r *NrqlAlertConditionReconciler) Reconcile(req ctrl.Request) (ctrl.Result,
 
 	r.Log.Info("Starting reconcile action")
 	var condition nralertsv1beta1.NrqlAlertCondition
+	r.Log.Info("initial get", "req", req, "condition", &condition)
+
 	err := r.Client.Get(ctx, req.NamespacedName, &condition)
+	r.Log.Info("after GET")
+
 	if err != nil {
+		//TODO: This throws after a successful delete, need to catch that second reconcile somehow
 		r.Log.Error(err, "tried getting condition", "name", req.NamespacedName.String())
 		return ctrl.Result{}, nil
 	}
 
 	deleteFinalizer := "storage.finalizers.tutorial.kubebuilder.io"
 
-	// examine DeletionTimestamp to determine if object is under deletion
+	// proto code to manually delete
+	//condition.Finalizers = removeString(condition.Finalizers, deleteFinalizer)
+
+	//examine DeletionTimestamp to determine if object is under deletion
 	if condition.DeletionTimestamp.IsZero() {
 		if !containsString(condition.Finalizers, deleteFinalizer) {
+
 			condition.Finalizers = append(condition.Finalizers, deleteFinalizer)
+
+			r.Log.Info("Adding deletion finalizer", "condition", condition)
+
+
+		}
+	} else {
+		// The object is being deleted
+		if containsString(condition.Finalizers, deleteFinalizer) {
+			r.Log.Info("Deleting condition", "conditionName", condition.Name)
+
+			// our finalizer is present, so lets handle any external dependency
+			if err := r.deleteNewRelicAlertCondition(condition); err != nil {
+				// if fail to delete the external dependency here, return with error
+				// so that it can be retried
+				return ctrl.Result{}, err
+			}
+
+			// remove our finalizer from the list and update it.
+			r.Log.Info("New Relic Alert condition deleted, Removing finalizer")
+			condition.Finalizers = removeString(condition.Finalizers, deleteFinalizer)
 			if err := r.Client.Update(ctx, &condition); err != nil {
 				return ctrl.Result{}, err
 			}
 		}
+
+		// Stop reconciliation as the item is being deleted
+		r.Log.Info("all done with condition deletion", "conditionName", condition.Name)
+
+		return ctrl.Result{}, nil
 	}
-	//else {
-	//	// The object is being deleted
-	//	if containsString(condition.Finalizers, deleteFinalizer) {
-	//		// our finalizer is present, so lets handle any external dependency
-	//		if err := r.deleteNewRelicAlertCondition(condition); err != nil {
-	//			// if fail to delete the external dependency here, return with error
-	//			// so that it can be retried
-	//			return ctrl.Result{}, err
-	//		}
-	//
-	//		// remove our finalizer from the list and update it.
-	//		condition.Finalizers = removeString(condition.Finalizers, deleteFinalizer)
-	//		if err := r.Client.Update(ctx, &condition); err != nil {
-	//			return ctrl.Result{}, err
-	//		}
-	//	}
-	//
-	//	// Stop reconciliation as the item is being deleted
-	//	return ctrl.Result{}, nil
-	//}
 
 	if reflect.DeepEqual(&condition.Spec, condition.Status.AppliedSpec) {
 		return ctrl.Result{}, nil
@@ -168,6 +182,7 @@ func (r *NrqlAlertConditionReconciler) deleteNewRelicAlertCondition(condition nr
 	r.Log.Info("Deleting condition", "conditionName", condition.Spec.Name)
 	returnedCondition, err := r.Alerts.DeleteNrqlCondition(condition.Status.ConditionID)
 	if err != nil {
+		r.Log.Info("Error thrown", "error", err)
 		return err
 	}
 	r.Log.Info("returned condition", "returnedCondition", returnedCondition)
