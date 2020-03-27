@@ -17,12 +17,12 @@ package controllers
 
 import (
 	"context"
-	"reflect"
-
 	"github.com/go-logr/logr"
 	"k8s.io/apimachinery/pkg/runtime"
+	"reflect"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"strings"
 
 	nralertsv1beta1 "github.com/newrelic/newrelic-kubernetes-operator/api/v1beta1"
 	"github.com/newrelic/newrelic-kubernetes-operator/interfaces"
@@ -47,7 +47,44 @@ func (r *NrqlAlertConditionReconciler) Reconcile(req ctrl.Request) (ctrl.Result,
 	var condition nralertsv1beta1.NrqlAlertCondition
 	err := r.Client.Get(ctx, req.NamespacedName, &condition)
 	if err != nil {
-		r.Log.Error(err, "tried getting condition", "name", req.NamespacedName.String())
+		if strings.Contains(err.Error(), " not found") {
+			r.Log.Info("Expected error 'not found' after condition deleted", "error", err)
+			return ctrl.Result{}, nil
+		}
+		r.Log.Error(err, "Tried getting condition", "name", req.NamespacedName.String())
+		return ctrl.Result{}, nil
+	}
+
+	deleteFinalizer := "storage.finalizers.tutorial.kubebuilder.io"
+
+	// proto code to manually delete
+	//condition.Finalizers = removeString(condition.Finalizers, deleteFinalizer)
+
+	//examine DeletionTimestamp to determine if object is under deletion
+	if condition.DeletionTimestamp.IsZero() {
+		if !containsString(condition.Finalizers, deleteFinalizer) {
+			condition.Finalizers = append(condition.Finalizers, deleteFinalizer)
+		}
+	} else {
+		// The object is being deleted
+		if containsString(condition.Finalizers, deleteFinalizer) {
+			// our finalizer is present, so lets handle any external dependency
+			if err := r.deleteNewRelicAlertCondition(condition); err != nil {
+				// if fail to delete the external dependency here, return with error
+				// so that it can be retried
+				return ctrl.Result{}, err
+			}
+			// remove our finalizer from the list and update it.
+			r.Log.Info("New Relic Alert condition deleted, Removing finalizer")
+			condition.Finalizers = removeString(condition.Finalizers, deleteFinalizer)
+			if err := r.Client.Update(ctx, &condition); err != nil {
+				return ctrl.Result{}, err
+			}
+		}
+
+		// Stop reconciliation as the item is being deleted
+		r.Log.Info("All done with condition deletion", "conditionName", condition.Spec.Name)
+
 		return ctrl.Result{}, nil
 	}
 
@@ -121,4 +158,33 @@ func (r *NrqlAlertConditionReconciler) SetupWithManager(mgr ctrl.Manager) error 
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&nralertsv1beta1.NrqlAlertCondition{}).
 		Complete(r)
+}
+
+func containsString(slice []string, s string) bool {
+	for _, item := range slice {
+		if item == s {
+			return true
+		}
+	}
+	return false
+}
+
+func (r *NrqlAlertConditionReconciler) deleteNewRelicAlertCondition(condition nralertsv1beta1.NrqlAlertCondition) error {
+	r.Log.Info("Deleting condition", "conditionName", condition.Spec.Name)
+	_, err := r.Alerts.DeleteNrqlCondition(condition.Status.ConditionID)
+	if err != nil {
+		r.Log.Info("Error thrown", "error", err)
+		return err
+	}
+	return nil
+}
+
+func removeString(slice []string, s string) (result []string) {
+	for _, item := range slice {
+		if item == s {
+			continue
+		}
+		result = append(result, item)
+	}
+	return
 }
