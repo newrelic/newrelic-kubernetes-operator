@@ -3,7 +3,7 @@
 #
 DOCKER            ?= docker
 DOCKER_FILE       ?= build/package/Dockerfile
-DOCKER_IMAGE      ?= $(PROJECT_NAME)
+DOCKER_IMAGE      ?= newrelic/kubernetes-operator:snapshot
 
 docker-login:
 	@echo "=== $(PROJECT_NAME) === [ docker-login     ]: logging into docker hub"
@@ -24,11 +24,11 @@ docker-login:
 #
 
 # Build the docker image
-docker-build: test
-	docker build -f $(DOCKER_FILE) -t ${DOCKER_IMG}
+docker-build: compile-linux
+	docker build -f $(DOCKER_FILE) -t ${DOCKER_IMAGE} $(BUILD_DIR)/linux/
 
 # Push the docker image
 docker-push: docker-login
-	$(DOCKER) push ${DOCKER_IMG}
+	$(DOCKER) push ${DOCKER_IMAGE}
 
 .PHONY: docker-build docker-push docker-login
