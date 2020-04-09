@@ -45,7 +45,7 @@ var _ = Describe("NrqlCondition reconciliation", func() {
 			},
 			Spec: nralertsv1beta1.NrqlAlertConditionSpec{
 				Terms: []nralertsv1beta1.AlertConditionTerm{
-					nralertsv1beta1.AlertConditionTerm{
+					{
 						Duration:     resource.MustParse("30"),
 						Operator:     "Above",
 						Priority:     "Critical",
@@ -66,7 +66,7 @@ var _ = Describe("NrqlCondition reconciliation", func() {
 				ExpectedGroups:      2,
 				IgnoreOverlap:       true,
 				Enabled:             true,
-				ExistingPolicyId:    42,
+				ExistingPolicyID:    42,
 			},
 			Status: nralertsv1beta1.NrqlAlertConditionStatus{
 				AppliedSpec: &nralertsv1beta1.NrqlAlertConditionSpec{},
@@ -80,7 +80,7 @@ var _ = Describe("NrqlCondition reconciliation", func() {
 			},
 			Spec: nralertsv1beta1.NrqlAlertConditionSpec{
 				Terms: []nralertsv1beta1.AlertConditionTerm{
-					nralertsv1beta1.AlertConditionTerm{
+					{
 						Duration:     resource.MustParse("30"),
 						Operator:     "Above",
 						Priority:     "Critical",
@@ -101,7 +101,7 @@ var _ = Describe("NrqlCondition reconciliation", func() {
 				ExpectedGroups:      2,
 				IgnoreOverlap:       true,
 				Enabled:             true,
-				ExistingPolicyId:    42,
+				ExistingPolicyID:    42,
 			},
 			Status: nralertsv1beta1.NrqlAlertConditionStatus{
 				AppliedSpec: &nralertsv1beta1.NrqlAlertConditionSpec{},
@@ -192,7 +192,7 @@ var _ = Describe("NrqlCondition reconciliation", func() {
 					},
 					Spec: nralertsv1beta1.NrqlAlertConditionSpec{
 						Terms: []nralertsv1beta1.AlertConditionTerm{
-							nralertsv1beta1.AlertConditionTerm{
+							{
 								Duration:     resource.MustParse("30"),
 								Operator:     "Above",
 								Priority:     "Critical",
@@ -213,7 +213,7 @@ var _ = Describe("NrqlCondition reconciliation", func() {
 						ExpectedGroups:      2,
 						IgnoreOverlap:       true,
 						Enabled:             true,
-						ExistingPolicyId:    42,
+						ExistingPolicyID:    42,
 					},
 					Status: nralertsv1beta1.NrqlAlertConditionStatus{
 						AppliedSpec: &nralertsv1beta1.NrqlAlertConditionSpec{},
