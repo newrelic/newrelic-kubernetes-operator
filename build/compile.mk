@@ -21,9 +21,9 @@ compile-clean:
 	@echo "=== $(PROJECT_NAME) === [ compile-clean    ]: removing binaries..."
 	@rm -rfv $(BUILD_DIR)/*
 
-compile: deps compile-only
+compile: compile-only
 
-compile-all: deps-only
+compile-all:
 	@echo "=== $(PROJECT_NAME) === [ compile          ]: building commands:"
 	@mkdir -p $(BUILD_DIR)/$(GOOS)
 	@for b in $(BINS); do \
@@ -34,7 +34,7 @@ compile-all: deps-only
 		done \
 	done
 
-compile-only: deps-only
+compile-only: 
 	@echo "=== $(PROJECT_NAME) === [ compile          ]: building commands:"
 	@mkdir -p $(BUILD_DIR)/$(GOOS)
 	@for b in $(BINS); do \
@@ -45,13 +45,13 @@ compile-only: deps-only
 
 # Override GOOS for these specific targets
 compile-darwin: GOOS=darwin
-compile-darwin: deps-only compile-only
+compile-darwin: compile-only
 
 compile-linux: GOOS=linux
-compile-linux: deps-only compile-only
+compile-linux: compile-only
 
 compile-windows: GOOS=windows
-compile-windows: deps-only compile-only
+compile-windows: compile-only
 
 
 .PHONY: clean-compile compile compile-darwin compile-linux compile-only compile-windows
