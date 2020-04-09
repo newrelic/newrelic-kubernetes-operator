@@ -1,36 +1,3 @@
-
-#all: manager
-
-
-# Build manager binary
-#manager: generate fmt vet
-#	go build -ldflags "-X main.NewRelicAPIKey=${NEWRELIC_API_KEY}" -o bin/manager main.go
-
-
-
-# Produce CRDs that work back to Kubernetes 1.11 (no version conversion)
-#CRD_OPTIONS ?= "crd:trivialVersions=true"
-
-# Install CRDs into a cluster
-#install: manifests
-#	kustomize build config/crd | kubectl apply -f -
-
-# Uninstall CRDs from a cluster
-#uninstall: manifests
-#	kustomize build config/crd | kubectl delete -f -
-
-# Deploy controller in the configured Kubernetes cluster in ~/.kube/config
-#deploy: manifests
-#	cd config/manager && kustomize edit set image controller=${IMG}
-#	kustomize build config/default | kubectl apply -f -
-
-# Generate manifests e.g. CRD, RBAC etc.
-#manifests: controller-gen
-#	$(CONTROLLER_GEN) $(CRD_OPTIONS) rbac:roleName=manager-role webhook paths="./..." output:crd:artifacts:config=config/crd/bases
-
-
-
-
 #############################
 # Global vars
 #############################
