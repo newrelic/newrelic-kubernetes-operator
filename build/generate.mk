@@ -1,27 +1,15 @@
-# Get the currently used golang install path (in GOPATH/bin, unless GOBIN is set)
-ifeq (,$(shell go env GOBIN))
-GOBIN=$(shell go env GOPATH)/bin
-else
-GOBIN=$(shell go env GOBIN)
-endif
+#
+# Makefile Fragment for generating code
+#
+
+CONTROLLER_GEN    ?= controller-gen
+HEADER_FILE       ?= $(SRCDIR)/hack/boilerplate.go.txt
+
+GOTOOLS += sigs.k8s.io/controller-tools/cmd/controller-gen
+
 
 # Generate code
-generate: controller-gen
-	$(CONTROLLER_GEN) object:headerFile=./hack/boilerplate.go.txt paths="./..."
+generate: tools
+	@echo "=== $(PROJECT_NAME) === [ generate         ]: Running $(CONTROLLER_GEN)..."
+	@$(CONTROLLER_GEN) object:headerFile=$(HEADER_FILE) paths="./..."
 
-# find or download controller-gen
-# download controller-gen if necessary
-controller-gen:
-ifeq (, $(shell which controller-gen))
-	@{ \
-	set -e ;\
-	CONTROLLER_GEN_TMP_DIR=$$(mktemp -d) ;\
-	cd $$CONTROLLER_GEN_TMP_DIR ;\
-	go mod init tmp ;\
-	go get sigs.k8s.io/controller-tools/cmd/controller-gen@v0.2.4 ;\
-	rm -rf $$CONTROLLER_GEN_TMP_DIR ;\
-	}
-CONTROLLER_GEN=$(GOBIN)/controller-gen
-else
-CONTROLLER_GEN=$(shell which controller-gen)
-endif
