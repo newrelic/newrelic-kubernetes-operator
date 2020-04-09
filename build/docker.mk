@@ -2,7 +2,7 @@
 # Makefile fragment for Docker actions
 #
 DOCKER            ?= docker
-DOCKER_FILE       ?= build/package/Docker
+DOCKER_FILE       ?= build/package/Dockerfile
 DOCKER_IMAGE      ?= $(PROJECT_NAME)
 
 docker-login:
