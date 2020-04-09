@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"context"
+
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"k8s.io/apimachinery/pkg/api/resource"
@@ -11,6 +12,7 @@ import (
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 
 	"github.com/newrelic/newrelic-client-go/pkg/alerts"
+
 	nralertsv1beta1 "github.com/newrelic/newrelic-kubernetes-operator/api/v1beta1"
 	"github.com/newrelic/newrelic-kubernetes-operator/interfaces/interfacesfakes"
 )
