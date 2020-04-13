@@ -1,10 +1,12 @@
 // +build integration
 
-package v1beta1
+package v1
 
 import (
 	"fmt"
 	"reflect"
+
+	"github.com/newrelic/newrelic-client-go/pkg/alerts"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -19,10 +21,10 @@ var _ = Describe("NrqlAlertConditionSpec", func() {
 			Terms: []AlertConditionTerm{
 				{
 					Duration:     resource.MustParse("30"),
-					Operator:     "Above",
-					Priority:     "Critical",
+					Operator:     "above",
+					Priority:     "critical",
 					Threshold:    resource.MustParse("5"),
-					TimeFunction: "All",
+					TimeFunction: "all",
 				},
 			},
 			Nrql: NrqlQuery{
@@ -32,7 +34,7 @@ var _ = Describe("NrqlAlertConditionSpec", func() {
 			Type:                "NRQL",
 			Name:                "NRQL Condition",
 			RunbookURL:          "http://test.com/runbook",
-			ValueFunction:       "Over",
+			ValueFunction:       "max",
 			ID:                  777,
 			ViolationCloseTimer: 60,
 			ExpectedGroups:      2,
@@ -51,8 +53,8 @@ var _ = Describe("NrqlAlertConditionSpec", func() {
 			Expect(apiCondition.Type).To(Equal("NRQL"))
 			Expect(apiCondition.Name).To(Equal("NRQL Condition"))
 			Expect(apiCondition.RunbookURL).To(Equal("http://test.com/runbook"))
-			Expect(apiCondition.ValueFunction).To(Equal("Over"))
-			Expect(apiCondition.PolicyID).To(Equal(42))
+			Expect(apiCondition.ValueFunction).To(Equal(alerts.ValueFunctionTypes.Max))
+			//Expect(apiCondition.PolicyID).To(Equal(42))
 			Expect(apiCondition.ID).To(Equal(777))
 			Expect(apiCondition.ViolationCloseTimer).To(Equal(60))
 			Expect(apiCondition.ExpectedGroups).To(Equal(2))
@@ -64,10 +66,10 @@ var _ = Describe("NrqlAlertConditionSpec", func() {
 			Expect(fmt.Sprint(reflect.TypeOf(apiTerm))).To(Equal("alerts.ConditionTerm"))
 
 			Expect(apiTerm.Duration).To(Equal(30))
-			Expect(apiTerm.Operator).To(Equal("Above"))
-			Expect(apiTerm.Priority).To(Equal("Critical"))
+			Expect(apiTerm.Operator).To(Equal(alerts.OperatorTypes.Above))
+			Expect(apiTerm.Priority).To(Equal(alerts.PriorityTypes.Critical))
 			Expect(apiTerm.Threshold).To(Equal(float64(5)))
-			Expect(apiTerm.TimeFunction).To(Equal("All"))
+			Expect(apiTerm.TimeFunction).To(Equal(alerts.TimeFunctionTypes.All))
 
 			apiQuery := apiCondition.Nrql
 
