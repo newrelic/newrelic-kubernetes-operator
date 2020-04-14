@@ -54,7 +54,7 @@ $ diff -u resources-before.txt resources-installed.txt
 
 Now install a Certificate manager, we recommend https://cert-manager.io/docs/installation/kubernetes/#installing-with-regular-manifests
 
-Next, set the Dockerfile replacing NEWRELIC_API_KEY with your [New Relic Admin API key](https://docs.newrelic.com/docs/apis/get-started/intro-apis/types-new-relic-api-keys#admin)
+Next, set the Dockerfile replacing NEW_RELIC_API_KEY with your [New Relic Admin API key](https://docs.newrelic.com/docs/apis/get-started/intro-apis/types-new-relic-api-keys#admin)
 
 Finally, build the image and push it to the desired docker repo
 
