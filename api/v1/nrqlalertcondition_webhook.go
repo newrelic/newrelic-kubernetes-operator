@@ -60,7 +60,6 @@ var _ webhook.Defaulter = &NrqlAlertCondition{}
 func (r *NrqlAlertCondition) Default() {
 	log.Info("default", "name", r.Name)
 
-	// TODO(user): fill in your defaulting logic.
 	if r.Status.AppliedSpec == nil {
 		log.Info("Setting null Applied Spec to empty interface")
 		r.Status.AppliedSpec = &NrqlAlertConditionSpec{}

@@ -5,6 +5,6 @@ WORKDIR /
 USER nonroot:nonroot
 
 # Add the binary
-COPY manager /bin/manager
+COPY manager /manager
 
-ENTRYPOINT ["/bin/manager"]
+ENTRYPOINT ["/manager"]
