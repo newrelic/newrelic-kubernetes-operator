@@ -3,7 +3,7 @@
 #
 
 # Image URL to use all building/pushing image targets
-IMG ?= kubernetes-operator:latest
+DOCKER_IMAGE ?= newrelic/kubernetes-operator:snapshot
 # Produce CRDs that work back to Kubernetes 1.11 (no version conversion)
 CRD_OPTIONS ?= "crd:trivialVersions=true"
 
@@ -20,8 +20,8 @@ uninstall: manifests
 
 # Deploy controller in the configured Kubernetes cluster in ~/.kube/config
 deploy: manifests docker-build
-	@echo "=== $(PROJECT_NAME) === [ deploy           ]: Deploying operator as docker image ${IMG}..."
-	@cd config/manager && kustomize edit set image controller=${IMG}
+	@echo "=== $(PROJECT_NAME) === [ deploy           ]: Deploying operator as docker image ${DOCKER_IMAGE}..."
+	@cd config/manager && kustomize edit set image controller=${DOCKER_IMAGE}
 	@kustomize build config/default | kubectl apply -f -
 
 # Generate manifests e.g. CRD, RBAC etc.

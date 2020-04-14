@@ -52,15 +52,26 @@ $ diff -u resources-before.txt resources-installed.txt
  clusterrolebindings                            rbac.authorization.k8s.io      false        ClusterRoleBinding
 ```
 
-Next, set the env var NEWRELIC_API_KEY with your [New Relic Admin API key](https://docs.newrelic.com/docs/apis/get-started/intro-apis/types-new-relic-api-keys#admin)
+Now install a Certificate manager, we recommend https://cert-manager.io/docs/installation/kubernetes/#installing-with-regular-manifests
 
-`export NEWRELIC_API_KEY=<ADMIN API KEY>`
+Next, set the Dockerfile replacing NEW_RELIC_API_KEY with your [New Relic Admin API key](https://docs.newrelic.com/docs/apis/get-started/intro-apis/types-new-relic-api-keys#admin)
 
 Finally, build the image and push it to the desired docker repo
 
-`make docker-build docker-push IMG=<some-registry>/<project-name>:tag`
+`make docker-build docker-push DOCKER_IMAGE=<some-registry>/<project-name>:tag`
 
-`make deploy IMG=<some-registry>/<project-name>:tag`
+`make docker-push DOCKER_IMAGE=<some-registry>/<project-name>:tag`
+This must be a container registry accessible to your k8 cluster
+
+If using kind for local development, you can replace this with 
+`kind load docker-image <some-registry>/<project-name>:tag`
+
+Finally to deploy the image 
+
+`make deploy DOCKER_IMAGE=<some-registry>/<project-name>:tag`
+
+Handy shortcut command to run these steps at once
+`export DOCKER_IMAGE=controller:alpha3 && make docker-build && kind load docker-image $IMG && make deploy`
 
 The newrelic-kubernetes-operator should now be running in your kubernetes cluster.
 
@@ -72,7 +83,7 @@ The operator will create and update conditions as needed by applying yaml files 
 
 Sample yaml file
 ```
-apiVersion: nr-alerts.k8s.newrelic.com/v1beta1
+apiVersion: nr-alerts.k8s.newrelic.com/v1
 kind: NrqlAlertCondition
 metadata:
   name: my-alert

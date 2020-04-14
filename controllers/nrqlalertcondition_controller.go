@@ -20,13 +20,14 @@ import (
 	"reflect"
 	"strings"
 
+	"github.com/newrelic/newrelic-kubernetes-operator/interfaces"
+
 	"github.com/go-logr/logr"
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	nralertsv1beta1 "github.com/newrelic/newrelic-kubernetes-operator/api/v1beta1"
-	"github.com/newrelic/newrelic-kubernetes-operator/interfaces"
+	nralertsv1 "github.com/newrelic/newrelic-kubernetes-operator/api/v1"
 )
 
 // NrqlAlertConditionReconciler reconciles a NrqlAlertCondition object
@@ -45,7 +46,7 @@ func (r *NrqlAlertConditionReconciler) Reconcile(req ctrl.Request) (ctrl.Result,
 	_ = r.Log.WithValues("nrqlalertcondition", req.NamespacedName)
 
 	r.Log.Info("Starting reconcile action")
-	var condition nralertsv1beta1.NrqlAlertCondition
+	var condition nralertsv1.NrqlAlertCondition
 	err := r.Client.Get(ctx, req.NamespacedName, &condition)
 	if err != nil {
 		if strings.Contains(err.Error(), " not found") {
@@ -58,9 +59,6 @@ func (r *NrqlAlertConditionReconciler) Reconcile(req ctrl.Request) (ctrl.Result,
 
 	deleteFinalizer := "storage.finalizers.tutorial.kubebuilder.io"
 
-	// proto code to manually delete
-	//condition.Finalizers = removeString(condition.Finalizers, deleteFinalizer)
-
 	//examine DeletionTimestamp to determine if object is under deletion
 	if condition.DeletionTimestamp.IsZero() {
 		if !containsString(condition.Finalizers, deleteFinalizer) {
@@ -69,17 +67,23 @@ func (r *NrqlAlertConditionReconciler) Reconcile(req ctrl.Request) (ctrl.Result,
 	} else {
 		// The object is being deleted
 		if containsString(condition.Finalizers, deleteFinalizer) {
-			// our finalizer is present, so lets handle any external dependency
-			if err := r.deleteNewRelicAlertCondition(condition); err != nil {
-				// if fail to delete the external dependency here, return with error
-				// so that it can be retried
-				return ctrl.Result{}, err
-			}
-			// remove our finalizer from the list and update it.
-			r.Log.Info("New Relic Alert condition deleted, Removing finalizer")
-			condition.Finalizers = removeString(condition.Finalizers, deleteFinalizer)
-			if err := r.Client.Update(ctx, &condition); err != nil {
-				return ctrl.Result{}, err
+			// catch invalid state
+			if condition.Status.ConditionID == 0 {
+				r.Log.Info("No Condition ID set, just removing finalizer")
+				condition.Finalizers = removeString(condition.Finalizers, deleteFinalizer)
+			} else {
+				// our finalizer is present, so lets handle any external dependency
+				if err := r.deleteNewRelicAlertCondition(condition); err != nil {
+					// if fail to delete the external dependency here, return with error
+					// so that it can be retried
+					return ctrl.Result{}, err
+				}
+				// remove our finalizer from the list and update it.
+				r.Log.Info("New Relic Alert condition deleted, Removing finalizer")
+				condition.Finalizers = removeString(condition.Finalizers, deleteFinalizer)
+				if err := r.Client.Update(ctx, &condition); err != nil {
+					return ctrl.Result{}, err
+				}
 			}
 		}
 
@@ -117,7 +121,7 @@ func (r *NrqlAlertConditionReconciler) Reconcile(req ctrl.Request) (ctrl.Result,
 			r.Log.Error(err, "tried updating condition status", "name", req.NamespacedName)
 		}
 	} else {
-		createdCondition, err := r.Alerts.CreateNrqlCondition(APICondition)
+		createdCondition, err := r.Alerts.CreateNrqlCondition(condition.Spec.ExistingPolicyID, APICondition)
 		if err != nil {
 			r.Log.Error(err, "failed to create condition")
 		} else {
@@ -134,7 +138,7 @@ func (r *NrqlAlertConditionReconciler) Reconcile(req ctrl.Request) (ctrl.Result,
 	return ctrl.Result{}, nil
 }
 
-func (r *NrqlAlertConditionReconciler) checkForExistingCondition(condition *nralertsv1beta1.NrqlAlertCondition) {
+func (r *NrqlAlertConditionReconciler) checkForExistingCondition(condition *nralertsv1.NrqlAlertCondition) {
 	if condition.Status.ConditionID == 0 {
 		r.Log.Info("Checking for existing condition", "conditionName", condition.Name)
 		//if no conditionId, get list of conditions and compare name
@@ -156,7 +160,7 @@ func (r *NrqlAlertConditionReconciler) checkForExistingCondition(condition *nral
 
 func (r *NrqlAlertConditionReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
-		For(&nralertsv1beta1.NrqlAlertCondition{}).
+		For(&nralertsv1.NrqlAlertCondition{}).
 		Complete(r)
 }
 
@@ -169,7 +173,7 @@ func containsString(slice []string, s string) bool {
 	return false
 }
 
-func (r *NrqlAlertConditionReconciler) deleteNewRelicAlertCondition(condition nralertsv1beta1.NrqlAlertCondition) error {
+func (r *NrqlAlertConditionReconciler) deleteNewRelicAlertCondition(condition nralertsv1.NrqlAlertCondition) error {
 	r.Log.Info("Deleting condition", "conditionName", condition.Spec.Name)
 	_, err := r.Alerts.DeleteNrqlCondition(condition.Status.ConditionID)
 	if err != nil {
