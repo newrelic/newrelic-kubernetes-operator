@@ -1,80 +1,41 @@
+#############################
+# Global vars
+#############################
+PROJECT_NAME := $(shell basename $(shell pwd))
+PROJECT_VER  ?= $(shell git describe --tags --always --dirty | sed -e '/^v/s/^v\(.*\)$$/\1/g') # Strip leading 'v' if found
+# Last released version (not dirty)
+PROJECT_VER_TAGGED  ?= $(shell git describe --tags --always --abbrev=0 | sed -e '/^v/s/^v\(.*\)$$/\1/g') # Strip leading 'v' if found
 
-# Image URL to use all building/pushing image targets
-IMG ?= controller:latest
-# Produce CRDs that work back to Kubernetes 1.11 (no version conversion)
-CRD_OPTIONS ?= "crd:trivialVersions=true"
+SRCDIR       ?= .
+GO            = go
 
-# Get the currently used golang install path (in GOPATH/bin, unless GOBIN is set)
-ifeq (,$(shell go env GOBIN))
-GOBIN=$(shell go env GOPATH)/bin
-else
-GOBIN=$(shell go env GOBIN)
-endif
+# The root module (from go.mod)
+PROJECT_MODULE  ?= $(shell $(GO) list -m)
 
-all: manager
+#############################
+# Targets
+#############################
+all: build
 
-# Run tests
-test: generate fmt vet manifests
-	go test ./... -coverprofile cover.out
+# Humans running make:
+build: check-version clean generate lint test cover-report compile
 
-# Build manager binary
-manager: generate fmt vet
-	go build -ldflags "-X main.NewRelicAPIKey=${NEWRELIC_API_KEY}" -o bin/manager main.go
+# Build command for CI tooling
+build-ci: check-version clean lint test compile-only
 
-# Run against the configured Kubernetes cluster in ~/.kube/config
-run: generate fmt vet manifests
-	go run -ldflags "-X main.NewRelicAPIKey=${NEWRELIC_API_KEY}" ./main.go
+# All clean commands
+clean: cover-clean compile-clean release-clean
 
-# Install CRDs into a cluster
-install: manifests
-	kustomize build config/crd | kubectl apply -f -
+# Import fragments
+include build/compile.mk
+include build/docker.mk
+include build/document.mk
+include build/generate.mk
+include build/kube.mk
+include build/lint.mk
+include build/release.mk
+include build/test.mk
+include build/tools.mk
+include build/util.mk
 
-# Uninstall CRDs from a cluster
-uninstall: manifests
-	kustomize build config/crd | kubectl delete -f -
-
-# Deploy controller in the configured Kubernetes cluster in ~/.kube/config
-deploy: manifests
-	cd config/manager && kustomize edit set image controller=${IMG}
-	kustomize build config/default | kubectl apply -f -
-
-# Generate manifests e.g. CRD, RBAC etc.
-manifests: controller-gen
-	$(CONTROLLER_GEN) $(CRD_OPTIONS) rbac:roleName=manager-role webhook paths="./..." output:crd:artifacts:config=config/crd/bases
-
-# Run go fmt against code
-fmt:
-	go fmt ./...
-
-# Run go vet against code
-vet:
-	go vet ./...
-
-# Generate code
-generate: controller-gen
-	$(CONTROLLER_GEN) object:headerFile=./hack/boilerplate.go.txt paths="./..."
-
-# Build the docker image
-docker-build: test
-	docker build . -t ${IMG}
-
-# Push the docker image
-docker-push:
-	docker push ${IMG}
-
-# find or download controller-gen
-# download controller-gen if necessary
-controller-gen:
-ifeq (, $(shell which controller-gen))
-	@{ \
-	set -e ;\
-	CONTROLLER_GEN_TMP_DIR=$$(mktemp -d) ;\
-	cd $$CONTROLLER_GEN_TMP_DIR ;\
-	go mod init tmp ;\
-	go get sigs.k8s.io/controller-tools/cmd/controller-gen@v0.2.4 ;\
-	rm -rf $$CONTROLLER_GEN_TMP_DIR ;\
-	}
-CONTROLLER_GEN=$(GOBIN)/controller-gen
-else
-CONTROLLER_GEN=$(shell which controller-gen)
-endif
+.PHONY: all build build-ci clean

@@ -17,13 +17,11 @@ package v1beta1
 
 import (
 	"encoding/json"
+
 	"github.com/newrelic/newrelic-client-go/pkg/alerts"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
-
-// EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
-// NOTE: json tags are required.  Any new fields you add must have json tags for the fields to be serialized.
 
 // NrqlAlertConditionSpec defines the desired state of NrqlAlertCondition
 type NrqlAlertConditionSpec struct {
@@ -39,7 +37,7 @@ type NrqlAlertConditionSpec struct {
 	ExpectedGroups      int                  `json:"expected_groups,omitempty"`
 	IgnoreOverlap       bool                 `json:"ignore_overlap,omitempty"`
 	Enabled             bool                 `json:"enabled"`
-	ExistingPolicyId    int                  `json:"existing_policy_id"`
+	ExistingPolicyID    int                  `json:"existing_policy_id"`
 }
 
 // NrqlQuery represents a NRQL query to use with a NRQL alert condition
@@ -88,12 +86,12 @@ func init() {
 	SchemeBuilder.Register(&NrqlAlertCondition{}, &NrqlAlertConditionList{})
 }
 
-func (spec NrqlAlertConditionSpec) APICondition() alerts.NrqlCondition {
-	jsonString, _ := json.Marshal(spec)
+func (in NrqlAlertConditionSpec) APICondition() alerts.NrqlCondition {
+	jsonString, _ := json.Marshal(in)
 	var APICondition alerts.NrqlCondition
-	json.Unmarshal([]byte(jsonString), &APICondition)
+	json.Unmarshal(jsonString, &APICondition) //nolint
 
-	APICondition.PolicyID = spec.ExistingPolicyId
+	APICondition.PolicyID = in.ExistingPolicyID
 
 	return APICondition
 }

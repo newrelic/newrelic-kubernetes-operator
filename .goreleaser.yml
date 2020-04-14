@@ -1,0 +1,60 @@
+project_name: newrelic-kubernetes-operator
+
+env:
+  - GO111MODULE=on
+
+before:
+  hooks:
+    - make clean
+    - go mod download
+
+builds:
+  -
+    id: newrelic
+    dir: cmd/newrelic
+    binary: newrelic
+    env:
+      - CGO_ENABLED=0
+    goos:
+      - linux
+    goarch:
+      - amd64
+    ldflags:
+      - -s -w -X main.version={{.Version}} -X main.appName={{.Binary}}
+
+release:
+  # Mark as a pre-release for now
+  prerelease: true
+  name_template: "{{.ProjectName}} v{{.Version}}"
+
+archives:
+  -
+    id: "default"
+    builds:
+      - newrelic
+    replacements:
+      linux: Linux
+      amd64: x86_64
+    files:
+      - CHANGELOG.md
+      - LICENSE
+      - README.md
+
+dockers:
+  -
+    dockerfile: build/package/Dockerfile
+    image_templates:
+      - 'newrelic/kubernetes-operator:{{ .Tag }}'
+      - 'newrelic/kubernetes-operator:v{{ .Major }}.{{ .Minor }}'
+      - 'newrelic/kubernetes-operator:latest'
+    binaries:
+      - newrelic
+    build_flag_templates:
+      - "--pull"
+      - "--label=repository=http://github.com/newrelic/newrelic-kubernetes-operator"
+      - "--label=homepage=https://developer.newrelic.com/"
+      - "--label=maintainer=Developer Toolkit <opensource@newrelic.com>"
+
+# Already using git-chglog
+changelog:
+  skip: true

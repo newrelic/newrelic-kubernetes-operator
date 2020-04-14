@@ -1,7 +1,10 @@
+// +build integration
+
 package controllers
 
 import (
 	"context"
+
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"k8s.io/apimachinery/pkg/api/resource"
@@ -11,6 +14,7 @@ import (
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 
 	"github.com/newrelic/newrelic-client-go/pkg/alerts"
+
 	nralertsv1beta1 "github.com/newrelic/newrelic-kubernetes-operator/api/v1beta1"
 	"github.com/newrelic/newrelic-kubernetes-operator/interfaces/interfacesfakes"
 )
@@ -43,7 +47,7 @@ var _ = Describe("NrqlCondition reconciliation", func() {
 			},
 			Spec: nralertsv1beta1.NrqlAlertConditionSpec{
 				Terms: []nralertsv1beta1.AlertConditionTerm{
-					nralertsv1beta1.AlertConditionTerm{
+					{
 						Duration:     resource.MustParse("30"),
 						Operator:     "Above",
 						Priority:     "Critical",
@@ -64,7 +68,7 @@ var _ = Describe("NrqlCondition reconciliation", func() {
 				ExpectedGroups:      2,
 				IgnoreOverlap:       true,
 				Enabled:             true,
-				ExistingPolicyId:    42,
+				ExistingPolicyID:    42,
 			},
 			Status: nralertsv1beta1.NrqlAlertConditionStatus{
 				AppliedSpec: &nralertsv1beta1.NrqlAlertConditionSpec{},
@@ -78,7 +82,7 @@ var _ = Describe("NrqlCondition reconciliation", func() {
 			},
 			Spec: nralertsv1beta1.NrqlAlertConditionSpec{
 				Terms: []nralertsv1beta1.AlertConditionTerm{
-					nralertsv1beta1.AlertConditionTerm{
+					{
 						Duration:     resource.MustParse("30"),
 						Operator:     "Above",
 						Priority:     "Critical",
@@ -99,7 +103,7 @@ var _ = Describe("NrqlCondition reconciliation", func() {
 				ExpectedGroups:      2,
 				IgnoreOverlap:       true,
 				Enabled:             true,
-				ExistingPolicyId:    42,
+				ExistingPolicyID:    42,
 			},
 			Status: nralertsv1beta1.NrqlAlertConditionStatus{
 				AppliedSpec: &nralertsv1beta1.NrqlAlertConditionSpec{},
@@ -190,7 +194,7 @@ var _ = Describe("NrqlCondition reconciliation", func() {
 					},
 					Spec: nralertsv1beta1.NrqlAlertConditionSpec{
 						Terms: []nralertsv1beta1.AlertConditionTerm{
-							nralertsv1beta1.AlertConditionTerm{
+							{
 								Duration:     resource.MustParse("30"),
 								Operator:     "Above",
 								Priority:     "Critical",
@@ -211,7 +215,7 @@ var _ = Describe("NrqlCondition reconciliation", func() {
 						ExpectedGroups:      2,
 						IgnoreOverlap:       true,
 						Enabled:             true,
-						ExistingPolicyId:    42,
+						ExistingPolicyID:    42,
 					},
 					Status: nralertsv1beta1.NrqlAlertConditionStatus{
 						AppliedSpec: &nralertsv1beta1.NrqlAlertConditionSpec{},

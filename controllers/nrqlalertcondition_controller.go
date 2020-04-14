@@ -17,12 +17,13 @@ package controllers
 
 import (
 	"context"
+	"reflect"
+	"strings"
+
 	"github.com/go-logr/logr"
 	"k8s.io/apimachinery/pkg/runtime"
-	"reflect"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
-	"strings"
 
 	nralertsv1beta1 "github.com/newrelic/newrelic-kubernetes-operator/api/v1beta1"
 	"github.com/newrelic/newrelic-kubernetes-operator/interfaces"
@@ -137,7 +138,7 @@ func (r *NrqlAlertConditionReconciler) checkForExistingCondition(condition *nral
 	if condition.Status.ConditionID == 0 {
 		r.Log.Info("Checking for existing condition", "conditionName", condition.Name)
 		//if no conditionId, get list of conditions and compare name
-		existingConditions, err := r.Alerts.ListNrqlConditions(condition.Spec.ExistingPolicyId)
+		existingConditions, err := r.Alerts.ListNrqlConditions(condition.Spec.ExistingPolicyID)
 		r.Log.Info("existingConditions", "existingConditions", existingConditions)
 		if err != nil {
 			r.Log.Error(err, "failed to get list of NRQL conditions from New Relic API")
@@ -146,11 +147,10 @@ func (r *NrqlAlertConditionReconciler) checkForExistingCondition(condition *nral
 				if existingCondition.Name == condition.Spec.Name {
 					r.Log.Info("Matched on existing condition, updating ConditionId", "conditionId", existingCondition.ID)
 					condition.Status.ConditionID = existingCondition.ID
+					break
 				}
-				break
 			}
 		}
-
 	}
 }
 

@@ -1,3 +1,5 @@
+// +build integration
+
 package v1beta1
 
 import (
@@ -15,7 +17,7 @@ var _ = Describe("NrqlAlertConditionSpec", func() {
 	BeforeEach(func() {
 		condition = NrqlAlertConditionSpec{
 			Terms: []AlertConditionTerm{
-				AlertConditionTerm{
+				{
 					Duration:     resource.MustParse("30"),
 					Operator:     "Above",
 					Priority:     "Critical",
@@ -36,7 +38,7 @@ var _ = Describe("NrqlAlertConditionSpec", func() {
 			ExpectedGroups:      2,
 			IgnoreOverlap:       true,
 			Enabled:             true,
-			ExistingPolicyId:    42,
+			ExistingPolicyID:    42,
 		}
 	})
 
