@@ -16,6 +16,7 @@ import (
 	"github.com/newrelic/newrelic-client-go/pkg/alerts"
 
 	nralertsv1 "github.com/newrelic/newrelic-kubernetes-operator/api/v1"
+	"github.com/newrelic/newrelic-kubernetes-operator/interfaces"
 	"github.com/newrelic/newrelic-kubernetes-operator/interfaces/interfacesfakes"
 )
 
@@ -34,10 +35,35 @@ var _ = Describe("NrqlCondition reconciliation", func() {
 
 		alertsClient = &interfacesfakes.FakeNewRelicAlertsClient{}
 
+		alertsClient.CreateNrqlConditionStub = func(i int, a alerts.NrqlCondition) (*alerts.NrqlCondition, error) {
+			a.ID = 111
+			return &a, nil
+		}
+		alertsClient.UpdateNrqlConditionStub = func(a alerts.NrqlCondition) (*alerts.NrqlCondition, error) {
+			a.ID = 112
+			return &a, nil
+		}
+		alertsClient.ListNrqlConditionsStub = func(int) ([]*alerts.NrqlCondition, error) {
+			var a []*alerts.NrqlCondition
+			a = append(a, &alerts.NrqlCondition{
+				ID:   112,
+				Name: "NRQL Condition matches",
+			})
+			return a, nil
+		}
+
+		alertsClient.DeleteNrqlConditionStub = func(int) (*alerts.NrqlCondition, error) {
+			return &alerts.NrqlCondition{}, nil
+		}
+
+		fakeAlertFunc := func(string, string) (interfaces.NewRelicAlertsClient, error) {
+			return alertsClient, nil
+		}
+
 		r = &NrqlAlertConditionReconciler{
-			Client: k8sClient,
-			Log:    logf.Log,
-			Alerts: alertsClient,
+			Client:          k8sClient,
+			Log:             logf.Log,
+			AlertClientFunc: fakeAlertFunc,
 		}
 
 		condition = &nralertsv1.NrqlAlertCondition{
@@ -117,27 +143,6 @@ var _ = Describe("NrqlCondition reconciliation", func() {
 			Name:      "test-condition",
 		}
 		request = ctrl.Request{NamespacedName: namespacedName}
-
-		alertsClient.CreateNrqlConditionStub = func(i int, a alerts.NrqlCondition) (*alerts.NrqlCondition, error) {
-			a.ID = 111
-			return &a, nil
-		}
-		alertsClient.UpdateNrqlConditionStub = func(a alerts.NrqlCondition) (*alerts.NrqlCondition, error) {
-			a.ID = 112
-			return &a, nil
-		}
-		alertsClient.ListNrqlConditionsStub = func(int) ([]*alerts.NrqlCondition, error) {
-			var a []*alerts.NrqlCondition
-			a = append(a, &alerts.NrqlCondition{
-				ID:   112,
-				Name: "NRQL Condition matches",
-			})
-			return a, nil
-		}
-
-		alertsClient.DeleteNrqlConditionStub = func(int) (*alerts.NrqlCondition, error) {
-			return &alerts.NrqlCondition{}, nil
-		}
 
 	})
 

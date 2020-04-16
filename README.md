@@ -71,7 +71,7 @@ Finally to deploy the image
 `make deploy DOCKER_IMAGE=<some-registry>/<project-name>:tag`
 
 Handy shortcut command to run these steps at once
-`export DOCKER_IMAGE=controller:alpha3 && make docker-build && kind load docker-image $IMG && make deploy`
+`export DOCKER_IMAGE=controller:alpha3 && make docker-build && kind load docker-image DOCKER_IMAGE && make deploy`
 
 The newrelic-kubernetes-operator should now be running in your kubernetes cluster.
 

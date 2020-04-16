@@ -33,9 +33,10 @@ import (
 // NrqlAlertConditionReconciler reconciles a NrqlAlertCondition object
 type NrqlAlertConditionReconciler struct {
 	client.Client
-	Alerts interfaces.NewRelicAlertsClient
-	Log    logr.Logger
-	Scheme *runtime.Scheme
+	Alerts          interfaces.NewRelicAlertsClient
+	Log             logr.Logger
+	Scheme          *runtime.Scheme
+	AlertClientFunc func(string, string) (interfaces.NewRelicAlertsClient, error)
 }
 
 // +kubebuilder:rbac:groups=nr-alerts.k8s.newrelic.com,resources=nrqlalertconditions,verbs=get;list;watch;create;update;patch;delete
@@ -56,6 +57,14 @@ func (r *NrqlAlertConditionReconciler) Reconcile(req ctrl.Request) (ctrl.Result,
 		r.Log.Error(err, "Tried getting condition", "name", req.NamespacedName.String())
 		return ctrl.Result{}, nil
 	}
+
+	//initial alertsClient
+	alertsClient, errAlertsClient := r.AlertClientFunc(condition.Spec.APIKey, condition.Spec.Region)
+	if errAlertsClient != nil {
+		r.Log.Info("Error thrown", "error", errAlertsClient)
+		return ctrl.Result{}, errAlertsClient
+	}
+	r.Alerts = alertsClient
 
 	deleteFinalizer := "storage.finalizers.tutorial.kubebuilder.io"
 
@@ -108,7 +117,7 @@ func (r *NrqlAlertConditionReconciler) Reconcile(req ctrl.Request) (ctrl.Result,
 	if condition.Status.ConditionID != 0 && !reflect.DeepEqual(&condition.Spec, condition.Status.AppliedSpec) {
 		r.Log.Info("updating condition")
 		APICondition.ID = condition.Status.ConditionID
-		updatedCondition, err := r.Alerts.UpdateNrqlCondition(APICondition)
+		updatedCondition, err := alertsClient.UpdateNrqlCondition(APICondition)
 		if err != nil {
 			r.Log.Error(err, "failed to update condition")
 		} else {
@@ -121,7 +130,7 @@ func (r *NrqlAlertConditionReconciler) Reconcile(req ctrl.Request) (ctrl.Result,
 			r.Log.Error(err, "tried updating condition status", "name", req.NamespacedName)
 		}
 	} else {
-		createdCondition, err := r.Alerts.CreateNrqlCondition(condition.Spec.ExistingPolicyID, APICondition)
+		createdCondition, err := alertsClient.CreateNrqlCondition(condition.Spec.ExistingPolicyID, APICondition)
 		if err != nil {
 			r.Log.Error(err, "failed to create condition")
 		} else {
@@ -159,6 +168,7 @@ func (r *NrqlAlertConditionReconciler) checkForExistingCondition(condition *nral
 }
 
 func (r *NrqlAlertConditionReconciler) SetupWithManager(mgr ctrl.Manager) error {
+	r.AlertClientFunc = interfaces.InitializeAlertsClient
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&nralertsv1.NrqlAlertCondition{}).
 		Complete(r)

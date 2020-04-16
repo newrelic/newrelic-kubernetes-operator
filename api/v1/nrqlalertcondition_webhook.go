@@ -16,9 +16,6 @@ limitations under the License.
 package v1
 
 import (
-	"github.com/newrelic/newrelic-client-go/pkg/alerts"
-	"github.com/newrelic/newrelic-client-go/pkg/config"
-	"github.com/newrelic/newrelic-client-go/pkg/region"
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
@@ -29,21 +26,12 @@ import (
 
 // log is for logging in this package.
 var (
-	log = logf.Log.WithName("nrqlalertcondition-resource")
-	//alertsClient interfaces.NewRelicAlertsClient
+	log             = logf.Log.WithName("nrqlalertcondition-resource")
+	alertClientFunc func(string, string) (interfaces.NewRelicAlertsClient, error)
 )
 
-func (r *NrqlAlertCondition) SetupWebhookWithManager(mgr ctrl.Manager, NewRelicAPIKey string) error {
-	//configuration := config.Config{
-	//	AdminAPIKey: NewRelicAPIKey,
-	//}
-	//err := configuration.SetRegion(region.Parse("Staging"))
-	//if err != nil {
-	//	return err
-	//}
-	//
-	//alertsClientthing := alerts.New(configuration)
-	//alertsClient = &alertsClientthing
+func (r *NrqlAlertCondition) SetupWebhookWithManager(mgr ctrl.Manager) error {
+	alertClientFunc = interfaces.InitializeAlertsClient
 
 	return ctrl.NewWebhookManagedBy(mgr).
 		For(r).
@@ -97,24 +85,15 @@ func (r *NrqlAlertCondition) ValidateDelete() error {
 func (r *NrqlAlertCondition) CheckExistingPolicyID() error {
 	log.Info("Checking existing", "policyId", r.Spec.ExistingPolicyID)
 
-	alertsClient, _ := initializeAlertsClient(r.Spec.APIKey, r.Spec.Region)
-	_, err := alertsClient.GetPolicy(r.Spec.ExistingPolicyID)
-	if err != nil {
-		log.Info("failed to get policy", "policyId", r.Spec.ExistingPolicyID, "error", err)
-		return err
+	alertsClient, errAlertClient := alertClientFunc(r.Spec.APIKey, r.Spec.Region)
+	if errAlertClient != nil {
+		log.Info("failed to get policy", "policyId", r.Spec.ExistingPolicyID, "error", errAlertClient)
+		return errAlertClient
+	}
+	_, errAlertPolicy := alertsClient.GetPolicy(r.Spec.ExistingPolicyID)
+	if errAlertPolicy != nil {
+		log.Info("failed to get policy", "policyId", r.Spec.ExistingPolicyID, "error", errAlertPolicy)
+		return errAlertPolicy
 	}
 	return nil
-}
-
-func initializeAlertsClient(apiKey string, regionName string) (interfaces.NewRelicAlertsClient, error) {
-	configuration := config.Config{
-		AdminAPIKey: apiKey,
-	}
-	err := configuration.SetRegion(region.Parse(regionName))
-	if err != nil {
-		return nil, err
-	}
-
-	alertsClientthing := alerts.New(configuration)
-	return &alertsClientthing, nil
 }

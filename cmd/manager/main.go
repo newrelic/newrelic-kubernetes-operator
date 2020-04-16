@@ -19,9 +19,7 @@ import (
 	"flag"
 	"os"
 
-	"github.com/newrelic/newrelic-client-go/pkg/alerts"
-	"github.com/newrelic/newrelic-client-go/pkg/config"
-	"github.com/newrelic/newrelic-client-go/pkg/region"
+	"github.com/newrelic/newrelic-kubernetes-operator/interfaces"
 
 	"k8s.io/apimachinery/pkg/runtime"
 	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
@@ -35,9 +33,8 @@ import (
 )
 
 var (
-	scheme         = runtime.NewScheme()
-	setupLog       = ctrl.Log.WithName("setup")
-	NewRelicAPIKey string
+	scheme   = runtime.NewScheme()
+	setupLog = ctrl.Log.WithName("setup")
 )
 
 func init() {
@@ -50,9 +47,7 @@ func init() {
 func main() {
 	var metricsAddr string
 	var enableLeaderElection bool
-	var NewRelicRegion string
 
-	flag.StringVar(&NewRelicRegion, "region", "us", "The New Relic Region to connect to.")
 	flag.StringVar(&metricsAddr, "metrics-addr", ":8080", "The address the metric endpoint binds to.")
 	flag.BoolVar(&enableLeaderElection, "enable-leader-election", false,
 		"Enable leader election for controller manager. Enabling this will ensure there is only one active controller manager.")
@@ -73,27 +68,16 @@ func main() {
 		os.Exit(1)
 	}
 
-	configuration := config.Config{
-		AdminAPIKey: NewRelicAPIKey,
-	}
-	err = configuration.SetRegion(region.Parse(NewRelicRegion))
-	if err != nil {
-		setupLog.Error(err, "unable to set region: '"+NewRelicRegion+"'")
-		os.Exit(1)
-	}
-
-	alertsClient := alerts.New(configuration)
-
 	if err = (&controllers.NrqlAlertConditionReconciler{
-		Client: mgr.GetClient(),
-		Alerts: &alertsClient,
-		Log:    ctrl.Log.WithName("controllers").WithName("NrqlAlertCondition"),
-		Scheme: mgr.GetScheme(),
+		Client:          mgr.GetClient(),
+		Log:             ctrl.Log.WithName("controllers").WithName("NrqlAlertCondition"),
+		Scheme:          mgr.GetScheme(),
+		AlertClientFunc: interfaces.InitializeAlertsClient,
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "NrqlAlertCondition")
 		os.Exit(1)
 	}
-	if err = (&nralertsv1.NrqlAlertCondition{}).SetupWebhookWithManager(mgr, NewRelicAPIKey); err != nil {
+	if err = (&nralertsv1.NrqlAlertCondition{}).SetupWebhookWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create webhook", "webhook", "NrqlAlertCondition")
 		os.Exit(1)
 	}
