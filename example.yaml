@@ -15,3 +15,5 @@ spec:
       operator: "above"
   name: "K8s generated alert condition"
   existing_policy_id: 26458
+  api_key: "API_KEY"
+  region: "staging"

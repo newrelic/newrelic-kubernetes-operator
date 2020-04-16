@@ -69,6 +69,7 @@ var _ = Describe("NrqlCondition reconciliation", func() {
 				IgnoreOverlap:       true,
 				Enabled:             true,
 				ExistingPolicyID:    42,
+				APIKey:              "nraa-key",
 			},
 			Status: nralertsv1.NrqlAlertConditionStatus{
 				AppliedSpec: &nralertsv1.NrqlAlertConditionSpec{},
@@ -104,6 +105,7 @@ var _ = Describe("NrqlCondition reconciliation", func() {
 				IgnoreOverlap:       true,
 				Enabled:             true,
 				ExistingPolicyID:    42,
+				APIKey:              "nraa-key",
 			},
 			Status: nralertsv1.NrqlAlertConditionStatus{
 				AppliedSpec: &nralertsv1.NrqlAlertConditionSpec{},
@@ -216,6 +218,7 @@ var _ = Describe("NrqlCondition reconciliation", func() {
 						IgnoreOverlap:       true,
 						Enabled:             true,
 						ExistingPolicyID:    42,
+						APIKey:              "nraa-key",
 					},
 					Status: nralertsv1.NrqlAlertConditionStatus{
 						AppliedSpec: &nralertsv1.NrqlAlertConditionSpec{},

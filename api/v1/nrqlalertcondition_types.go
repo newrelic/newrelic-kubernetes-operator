@@ -23,6 +23,8 @@ type NrqlAlertConditionSpec struct {
 	IgnoreOverlap       bool                 `json:"ignore_overlap,omitempty"`
 	Enabled             bool                 `json:"enabled"`
 	ExistingPolicyID    int                  `json:"existing_policy_id"`
+	APIKey              string               `json:"api_key"`
+	Region              string               `json:"region"`
 }
 
 // NrqlQuery represents a NRQL query to use with a NRQL alert condition

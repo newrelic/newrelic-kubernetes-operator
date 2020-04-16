@@ -29,21 +29,21 @@ import (
 
 // log is for logging in this package.
 var (
-	log          = logf.Log.WithName("nrqlalertcondition-resource")
-	alertsClient interfaces.NewRelicAlertsClient
+	log = logf.Log.WithName("nrqlalertcondition-resource")
+	//alertsClient interfaces.NewRelicAlertsClient
 )
 
 func (r *NrqlAlertCondition) SetupWebhookWithManager(mgr ctrl.Manager, NewRelicAPIKey string) error {
-	configuration := config.Config{
-		AdminAPIKey: NewRelicAPIKey,
-	}
-	err := configuration.SetRegion(region.Parse("Staging"))
-	if err != nil {
-		return err
-	}
-
-	alertsClientthing := alerts.New(configuration)
-	alertsClient = &alertsClientthing
+	//configuration := config.Config{
+	//	AdminAPIKey: NewRelicAPIKey,
+	//}
+	//err := configuration.SetRegion(region.Parse("Staging"))
+	//if err != nil {
+	//	return err
+	//}
+	//
+	//alertsClientthing := alerts.New(configuration)
+	//alertsClient = &alertsClientthing
 
 	return ctrl.NewWebhookManagedBy(mgr).
 		For(r).
@@ -96,10 +96,25 @@ func (r *NrqlAlertCondition) ValidateDelete() error {
 
 func (r *NrqlAlertCondition) CheckExistingPolicyID() error {
 	log.Info("Checking existing", "policyId", r.Spec.ExistingPolicyID)
+
+	alertsClient, _ := initializeAlertsClient(r.Spec.APIKey, r.Spec.Region)
 	_, err := alertsClient.GetPolicy(r.Spec.ExistingPolicyID)
 	if err != nil {
 		log.Info("failed to get policy", "policyId", r.Spec.ExistingPolicyID, "error", err)
 		return err
 	}
 	return nil
+}
+
+func initializeAlertsClient(apiKey string, regionName string) (interfaces.NewRelicAlertsClient, error) {
+	configuration := config.Config{
+		AdminAPIKey: apiKey,
+	}
+	err := configuration.SetRegion(region.Parse(regionName))
+	if err != nil {
+		return nil, err
+	}
+
+	alertsClientthing := alerts.New(configuration)
+	return &alertsClientthing, nil
 }
