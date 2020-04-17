@@ -73,7 +73,7 @@ var _ = Describe("NrqlCondition reconciliation", func() {
 			},
 			Spec: nralertsv1.NrqlAlertConditionSpec{
 				Terms: []nralertsv1.AlertConditionTerm{
-					nralertsv1.AlertConditionTerm{
+					{
 						Duration:     resource.MustParse("30"),
 						Operator:     "Above",
 						Priority:     "Critical",
@@ -109,7 +109,7 @@ var _ = Describe("NrqlCondition reconciliation", func() {
 			},
 			Spec: nralertsv1.NrqlAlertConditionSpec{
 				Terms: []nralertsv1.AlertConditionTerm{
-					nralertsv1.AlertConditionTerm{
+					{
 						Duration:     resource.MustParse("30"),
 						Operator:     "Above",
 						Priority:     "Critical",
@@ -201,7 +201,7 @@ var _ = Describe("NrqlCondition reconciliation", func() {
 					},
 					Spec: nralertsv1.NrqlAlertConditionSpec{
 						Terms: []nralertsv1.AlertConditionTerm{
-							nralertsv1.AlertConditionTerm{
+							{
 								Duration:     resource.MustParse("30"),
 								Operator:     "Above",
 								Priority:     "Critical",
