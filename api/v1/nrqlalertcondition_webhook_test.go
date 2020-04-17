@@ -4,19 +4,21 @@ package v1
 
 import (
 	"errors"
+
 	"github.com/newrelic/newrelic-client-go/pkg/alerts"
-	"github.com/newrelic/newrelic-kubernetes-operator/interfaces"
-	"github.com/newrelic/newrelic-kubernetes-operator/interfaces/interfacesfakes"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"k8s.io/apimachinery/pkg/api/resource"
+
+	"github.com/newrelic/newrelic-kubernetes-operator/interfaces"
+	"github.com/newrelic/newrelic-kubernetes-operator/interfaces/interfacesfakes"
 )
 
 var _ = Describe("Default", func() {
 	var (
-		r NrqlAlertCondition
+		r            NrqlAlertCondition
 		alertsClient *interfacesfakes.FakeNewRelicAlertsClient
-		)
+	)
 
 	BeforeEach(func() {
 
@@ -31,7 +33,7 @@ var _ = Describe("Default", func() {
 			alertClientFunc = fakeAlertFunc
 
 			r = NrqlAlertCondition{
-				Spec: 				NrqlAlertConditionSpec{
+				Spec: NrqlAlertConditionSpec{
 					Terms: []AlertConditionTerm{
 						{
 							Duration:     resource.MustParse("30"),
@@ -62,7 +64,7 @@ var _ = Describe("Default", func() {
 			BeforeEach(func() {
 				alertsClient.GetPolicyStub = func(int) (*alerts.Policy, error) {
 					return &alerts.Policy{
-						ID:42,
+						ID: 42,
 					}, nil
 				}
 			})

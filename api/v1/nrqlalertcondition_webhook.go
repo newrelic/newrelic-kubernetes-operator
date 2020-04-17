@@ -17,6 +17,7 @@ package v1
 
 import (
 	"errors"
+
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
@@ -97,7 +98,7 @@ func (r *NrqlAlertCondition) CheckExistingPolicyID() error {
 		return errAlertPolicy
 	}
 	if alertPolicy.ID != r.Spec.ExistingPolicyID {
-		return errors.New("Alert policy returned by API did not match")
+		return errors.New("alert policy returned by API did not match")
 	}
 	return nil
 }
