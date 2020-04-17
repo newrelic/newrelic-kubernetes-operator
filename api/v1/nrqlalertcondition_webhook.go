@@ -16,6 +16,7 @@ limitations under the License.
 package v1
 
 import (
+	"errors"
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
@@ -90,10 +91,13 @@ func (r *NrqlAlertCondition) CheckExistingPolicyID() error {
 		log.Info("failed to get policy", "policyId", r.Spec.ExistingPolicyID, "error", errAlertClient)
 		return errAlertClient
 	}
-	_, errAlertPolicy := alertsClient.GetPolicy(r.Spec.ExistingPolicyID)
+	alertPolicy, errAlertPolicy := alertsClient.GetPolicy(r.Spec.ExistingPolicyID)
 	if errAlertPolicy != nil {
 		log.Info("failed to get policy", "policyId", r.Spec.ExistingPolicyID, "error", errAlertPolicy)
 		return errAlertPolicy
+	}
+	if alertPolicy.ID != r.Spec.ExistingPolicyID {
+		return errors.New("Alert policy returned by API did not match")
 	}
 	return nil
 }
