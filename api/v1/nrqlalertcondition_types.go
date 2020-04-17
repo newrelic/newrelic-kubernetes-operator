@@ -23,7 +23,8 @@ type NrqlAlertConditionSpec struct {
 	IgnoreOverlap       bool                 `json:"ignore_overlap,omitempty"`
 	Enabled             bool                 `json:"enabled"`
 	ExistingPolicyID    int                  `json:"existing_policy_id"`
-	APIKey              string               `json:"api_key"`
+	APIKey              string               `json:"api_key,omitempty"`
+	APIKeySecret        NewRelicAPIKeySecret `json:"api_key_secret,omitempty"`
 	Region              string               `json:"region"`
 }
 
@@ -67,6 +68,12 @@ type NrqlAlertConditionList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`
 	Items           []NrqlAlertCondition `json:"items"`
+}
+
+type NewRelicAPIKeySecret struct {
+	Name      string `json:"name,omitempty"`
+	Namespace string `json:"namespace,omitempty"`
+	KeyName   string `json:"key_name,omitempty"`
 }
 
 func init() {

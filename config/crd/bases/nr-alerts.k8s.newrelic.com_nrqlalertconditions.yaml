@@ -41,6 +41,15 @@ spec:
           properties:
             api_key:
               type: string
+            api_key_secret:
+              properties:
+                key_name:
+                  type: string
+                name:
+                  type: string
+                namespace:
+                  type: string
+              type: object
             enabled:
               type: boolean
             existing_policy_id:
@@ -100,7 +109,6 @@ spec:
             violation_time_limit_seconds:
               type: integer
           required:
-          - api_key
           - enabled
           - existing_policy_id
           - region
@@ -113,6 +121,15 @@ spec:
               properties:
                 api_key:
                   type: string
+                api_key_secret:
+                  properties:
+                    key_name:
+                      type: string
+                    name:
+                      type: string
+                    namespace:
+                      type: string
+                  type: object
                 enabled:
                   type: boolean
                 existing_policy_id:
@@ -172,7 +189,6 @@ spec:
                 violation_time_limit_seconds:
                   type: integer
               required:
-              - api_key
               - enabled
               - existing_policy_id
               - region

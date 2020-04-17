@@ -17,8 +17,12 @@ package controllers
 
 import (
 	"context"
+	"errors"
 	"reflect"
 	"strings"
+
+	v1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/types"
 
 	"github.com/newrelic/newrelic-kubernetes-operator/interfaces"
 
@@ -46,6 +50,13 @@ func (r *NrqlAlertConditionReconciler) Reconcile(req ctrl.Request) (ctrl.Result,
 	ctx := context.Background()
 	_ = r.Log.WithValues("nrqlalertcondition", req.NamespacedName)
 
+	// the testing code
+	//key := types.NamespacedName{Namespace: "default", Name: "newrelic"}
+	//var thing v1.Secret
+	//getErr := r.Client.Get(ctx, key, &thing)
+	//
+	//r.Log.Info("secret", "secret", thing, "error", getErr)
+
 	r.Log.Info("Starting reconcile action")
 	var condition nralertsv1.NrqlAlertCondition
 	err := r.Client.Get(ctx, req.NamespacedName, &condition)
@@ -58,8 +69,13 @@ func (r *NrqlAlertConditionReconciler) Reconcile(req ctrl.Request) (ctrl.Result,
 		return ctrl.Result{}, nil
 	}
 
+	apiKey := r.getAPIKeyOrSecret(condition)
+
+	if apiKey == "" {
+		return ctrl.Result{}, errors.New("api key is blank")
+	}
 	//initial alertsClient
-	alertsClient, errAlertsClient := r.AlertClientFunc(condition.Spec.APIKey, condition.Spec.Region)
+	alertsClient, errAlertsClient := r.AlertClientFunc(apiKey, condition.Spec.Region)
 	if errAlertsClient != nil {
 		r.Log.Info("Error thrown", "error", errAlertsClient)
 		return ctrl.Result{}, errAlertsClient
@@ -201,4 +217,20 @@ func removeString(slice []string, s string) (result []string) {
 		result = append(result, item)
 	}
 	return
+}
+
+func (r *NrqlAlertConditionReconciler) getAPIKeyOrSecret(condition nralertsv1.NrqlAlertCondition) string {
+
+	if condition.Spec.APIKey != "" {
+		return condition.Spec.APIKey
+	}
+	if condition.Spec.APIKeySecret != (nralertsv1.NewRelicAPIKeySecret{}) {
+		key := types.NamespacedName{Namespace: condition.Spec.APIKeySecret.Namespace, Name: condition.Spec.APIKeySecret.Name}
+		var apiKeySecret v1.Secret
+		getErr := r.Client.Get(context.Background(), key, &apiKeySecret)
+
+		r.Log.Info("secret", "secret", apiKeySecret, "error", getErr)
+		return string(apiKeySecret.Data[condition.Spec.APIKeySecret.KeyName])
+	}
+	return ""
 }

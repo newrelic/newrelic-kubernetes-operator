@@ -7,6 +7,7 @@ import (
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
@@ -29,6 +30,8 @@ var _ = Describe("NrqlCondition reconciliation", func() {
 		request        ctrl.Request
 		namespacedName types.NamespacedName
 		//expectedEvents []string
+		secret        *v1.Secret
+		fakeAlertFunc func(string, string) (interfaces.NewRelicAlertsClient, error)
 	)
 	BeforeEach(func() {
 		ctx = context.Background()
@@ -56,7 +59,7 @@ var _ = Describe("NrqlCondition reconciliation", func() {
 			return &alerts.NrqlCondition{}, nil
 		}
 
-		fakeAlertFunc := func(string, string) (interfaces.NewRelicAlertsClient, error) {
+		fakeAlertFunc = func(string, string) (interfaces.NewRelicAlertsClient, error) {
 			return alertsClient, nil
 		}
 
@@ -160,6 +163,74 @@ var _ = Describe("NrqlCondition reconciliation", func() {
 
 					Expect(alertsClient.CreateNrqlConditionCallCount()).To(Equal(1))
 					Expect(alertsClient.UpdateNrqlConditionCallCount()).To(Equal(0))
+				})
+
+				It("updates the ConditionID on the kubernetes object", func() {
+					err := k8sClient.Create(ctx, condition)
+					Expect(err).ToNot(HaveOccurred())
+
+					// call reconcile
+					_, err = r.Reconcile(request)
+					Expect(err).ToNot(HaveOccurred())
+
+					var endStateCondition nralertsv1.NrqlAlertCondition
+					err = k8sClient.Get(ctx, namespacedName, &endStateCondition)
+					Expect(err).To(BeNil())
+					Expect(endStateCondition.Status.ConditionID).To(Equal(111))
+				})
+
+				It("updates the AppliedSpec on the kubernetes object for later comparison", func() {
+					err := k8sClient.Create(ctx, condition)
+					Expect(err).ToNot(HaveOccurred())
+
+					// call reconcile
+					_, err = r.Reconcile(request)
+					Expect(err).ToNot(HaveOccurred())
+
+					var endStateCondition nralertsv1.NrqlAlertCondition
+					err = k8sClient.Get(ctx, namespacedName, &endStateCondition)
+					Expect(err).To(BeNil())
+					Expect(endStateCondition.Status.AppliedSpec).To(Equal(&condition.Spec))
+				})
+			})
+		})
+
+		Context("and given a new NrqlAlertCondition", func() {
+			Context("with a valid condition and a kubernetes secret", func() {
+				BeforeEach(func() {
+					condition.Spec.APIKey = ""
+					condition.Spec.APIKeySecret = nralertsv1.NewRelicAPIKeySecret{
+						Name:      "my-api-key-secret",
+						Namespace: "my-namespace",
+						KeyName:   "my-api-key",
+					}
+
+					secret = &v1.Secret{
+						ObjectMeta: metav1.ObjectMeta{
+							Name:      "my-api-key-secret",
+							Namespace: "my-namespace",
+						},
+						Data: map[string][]byte{
+							"my-api-key": []byte("data_here"),
+						},
+					}
+					k8sClient.Create(ctx, secret)
+				})
+				It("should create that condition via the AlertClient", func() {
+
+					err := k8sClient.Create(ctx, condition)
+					Expect(err).ToNot(HaveOccurred())
+
+					// call reconcile
+					_, err = r.Reconcile(request)
+					Expect(err).ToNot(HaveOccurred())
+
+					Expect(alertsClient.CreateNrqlConditionCallCount()).To(Equal(1))
+					Expect(alertsClient.UpdateNrqlConditionCallCount()).To(Equal(0))
+				})
+				AfterEach(func() {
+					//k8sClient.Delete(ctx, secret)
+
 				})
 
 				It("updates the ConditionID on the kubernetes object", func() {
@@ -413,5 +484,28 @@ var _ = Describe("NrqlCondition reconciliation", func() {
 			})
 		})
 	})
+
+	//Context("When reading the API key from a secret", func() {
+	//	It("should read the secret", func() {
+	//		secret := &v1.Secret{
+	//			ObjectMeta: metav1.ObjectMeta{
+	//				Name:      "newrelic",
+	//				Namespace: "default",
+	//			},
+	//			Data: map[string][]byte{
+	//				"api_key": []byte("api-key"),
+	//			},
+	//		}
+	//		err := k8sClient.Create(ctx, secret)
+	//
+	//		Expect(err).ToNot(HaveOccurred())
+	//		_, err = r.Reconcile(request)
+	//
+	//
+	//		Expect("this").To(Equal("that"))
+	//
+	//
+	//	})
+	//})
 
 })
