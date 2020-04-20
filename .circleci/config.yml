@@ -90,16 +90,16 @@ jobs:
           name: Integration Tests
           command: make test-integration
 
-  security-scan:
-    docker:
-      - image: circleci/golang:1.14
-    steps:
-      - restore_cache:
-          key: repo-{{ .Environment.CIRCLE_BRANCH }}-{{ .Environment.CIRCLE_SHA1 }}
-      - snyk/scan:
-          severity-threshold: high
-          fail-on-issues: false
-          monitor-on-build: true
+#  security-scan:
+#    docker:
+#      - image: circleci/golang:1.14
+#    steps:
+#      - restore_cache:
+#          key: repo-{{ .Environment.CIRCLE_BRANCH }}-{{ .Environment.CIRCLE_SHA1 }}
+#      - snyk/scan:
+#          severity-threshold: high
+#          fail-on-issues: false
+#          monitor-on-build: true
 
   compile:
     docker:
