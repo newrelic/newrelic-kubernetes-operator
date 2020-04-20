@@ -14,14 +14,14 @@ workflows:
           requires:
             - checkout_code
       # Snyk fails, out of memory. Disabled for now
-      - security-scan:
-          requires:
-            - checkout_code
+      # - security-scan:
+      #     requires:
+      #       - checkout_code
       - compile:
           requires:
             - lint
             - test
-            - security-scan
+            # - security-scan
       - hold-for-release:
           type: approval
           filters:
@@ -57,7 +57,7 @@ jobs:
             tar -zxvf kubebuilder_${version}_linux_${arch}.tar.gz
             mv kubebuilder_${version}_linux_${arch} ~/kubebuilder
       - save_cache:
-          key: repo-{{ .Environment.CIRCLE_BRANCH }}-{{ .Environment.CIRCLE_SHA1 }}
+          key: repo-{{ .Environment.CIRCLE_BRANCH }}-{{ .Environment.CIRCLE_SHA1 }}-test
           paths:
             - ~/project
             - ~/kubebuilder
@@ -67,7 +67,7 @@ jobs:
       - image: circleci/golang:1.14
     steps:
       - restore_cache:
-          key: repo-{{ .Environment.CIRCLE_BRANCH }}-{{ .Environment.CIRCLE_SHA1 }}
+          key: repo-{{ .Environment.CIRCLE_BRANCH }}-{{ .Environment.CIRCLE_SHA1 }}-test
       - run:
           name: Lint
           command: make lint
@@ -77,7 +77,7 @@ jobs:
       - image: circleci/golang:1.14
     steps:
       - restore_cache:
-          key: repo-{{ .Environment.CIRCLE_BRANCH }}-{{ .Environment.CIRCLE_SHA1 }}
+          key: repo-{{ .Environment.CIRCLE_BRANCH }}-{{ .Environment.CIRCLE_SHA1 }}-test
       - run:
           name: Restore kubebuilder
           command: |
@@ -90,23 +90,23 @@ jobs:
           name: Integration Tests
           command: make test-integration
 
-  security-scan:
-    docker:
-      - image: circleci/golang:1.14
-    steps:
-      - restore_cache:
-          key: repo-{{ .Environment.CIRCLE_BRANCH }}-{{ .Environment.CIRCLE_SHA1 }}
-      - snyk/scan:
-          severity-threshold: high
-          fail-on-issues: false
-          monitor-on-build: true
+  # security-scan:
+  #   docker:
+  #     - image: circleci/golang:1.14
+  #   steps:
+  #     - restore_cache:
+  #         key: repo-{{ .Environment.CIRCLE_BRANCH }}-{{ .Environment.CIRCLE_SHA1 }}-test
+  #     - snyk/scan:
+  #         severity-threshold: high
+  #         fail-on-issues: false
+  #         monitor-on-build: true
 
   compile:
     docker:
       - image: circleci/golang:1.14
     steps:
       - restore_cache:
-          key: repo-{{ .Environment.CIRCLE_BRANCH }}-{{ .Environment.CIRCLE_SHA1 }}
+          key: repo-{{ .Environment.CIRCLE_BRANCH }}-{{ .Environment.CIRCLE_SHA1 }}-test
       - run: make compile-only
 #  release:
 #    docker:
