@@ -16,9 +16,13 @@ limitations under the License.
 package v1
 
 import (
-	"github.com/newrelic/newrelic-client-go/pkg/alerts"
-	"github.com/newrelic/newrelic-client-go/pkg/config"
-	"github.com/newrelic/newrelic-client-go/pkg/region"
+	"context"
+	"errors"
+
+	v1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/types"
+	"sigs.k8s.io/controller-runtime/pkg/client"
+
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
@@ -29,22 +33,16 @@ import (
 
 // log is for logging in this package.
 var (
-	log          = logf.Log.WithName("nrqlalertcondition-resource")
-	alertsClient interfaces.NewRelicAlertsClient
+	log             = logf.Log.WithName("nrqlalertcondition-resource")
+	alertClientFunc func(string, string) (interfaces.NewRelicAlertsClient, error)
+	k8Client        client.Client
+	ctx             context.Context
 )
 
-func (r *NrqlAlertCondition) SetupWebhookWithManager(mgr ctrl.Manager, NewRelicAPIKey string) error {
-	configuration := config.Config{
-		AdminAPIKey: NewRelicAPIKey,
-	}
-	err := configuration.SetRegion(region.Parse("Staging"))
-	if err != nil {
-		return err
-	}
-
-	alertsClientthing := alerts.New(configuration)
-	alertsClient = &alertsClientthing
-
+func (r *NrqlAlertCondition) SetupWebhookWithManager(mgr ctrl.Manager) error {
+	alertClientFunc = interfaces.InitializeAlertsClient
+	k8Client = mgr.GetClient()
+	ctx = context.Background()
 	return ctrl.NewWebhookManagedBy(mgr).
 		For(r).
 		Complete()
@@ -75,6 +73,11 @@ var _ webhook.Validator = &NrqlAlertCondition{}
 // ValidateCreate implements webhook.Validator so a webhook will be registered for the type
 func (r *NrqlAlertCondition) ValidateCreate() error {
 	log.Info("validate create", "name", r.Name)
+	//TODO this should write this value TO a new secret so code path always reads from a secret
+	err := r.CheckForAPIKeyOrSecret()
+	if err != nil {
+		return err
+	}
 	return r.CheckExistingPolicyID()
 }
 
@@ -96,10 +99,45 @@ func (r *NrqlAlertCondition) ValidateDelete() error {
 
 func (r *NrqlAlertCondition) CheckExistingPolicyID() error {
 	log.Info("Checking existing", "policyId", r.Spec.ExistingPolicyID)
-	_, err := alertsClient.GetPolicy(r.Spec.ExistingPolicyID)
-	if err != nil {
-		log.Info("failed to get policy", "policyId", r.Spec.ExistingPolicyID, "error", err)
-		return err
+	var apiKey string
+	if r.Spec.APIKey == "" {
+		key := types.NamespacedName{Namespace: r.Spec.APIKeySecret.Namespace, Name: r.Spec.APIKeySecret.Name}
+		var apiKeySecret v1.Secret
+		getErr := k8Client.Get(ctx, key, &apiKeySecret)
+		if getErr != nil {
+			log.Error(getErr, "Error getting secret")
+			return getErr
+		}
+		apiKey = string(apiKeySecret.Data[r.Spec.APIKeySecret.KeyName])
+
+	} else {
+		apiKey = r.Spec.APIKey
+	}
+
+	alertsClient, errAlertClient := alertClientFunc(apiKey, r.Spec.Region)
+	if errAlertClient != nil {
+		log.Info("failed to get policy", "policyId", r.Spec.ExistingPolicyID, "error", errAlertClient)
+		return errAlertClient
+	}
+	alertPolicy, errAlertPolicy := alertsClient.GetPolicy(r.Spec.ExistingPolicyID)
+	if errAlertPolicy != nil {
+		log.Info("failed to get policy", "policyId", r.Spec.ExistingPolicyID, "error", errAlertPolicy)
+		return errAlertPolicy
+	}
+	if alertPolicy.ID != r.Spec.ExistingPolicyID {
+		return errors.New("alert policy returned by API did not match")
 	}
 	return nil
+}
+
+func (r *NrqlAlertCondition) CheckForAPIKeyOrSecret() error {
+	if r.Spec.APIKey != "" {
+		return nil
+	}
+	if r.Spec.APIKeySecret != (NewRelicAPIKeySecret{}) {
+		if r.Spec.APIKeySecret.Name != "" && r.Spec.APIKeySecret.Namespace != "" && r.Spec.APIKeySecret.KeyName != "" {
+			return nil
+		}
+	}
+	return errors.New("either api_key or api_key_secret must be set")
 }

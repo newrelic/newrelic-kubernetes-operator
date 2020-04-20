@@ -1,7 +1,7 @@
 apiVersion: nr-alerts.k8s.newrelic.com/v1
 kind: NrqlAlertCondition
 metadata:
-  name: my-alert
+  name: alert-1029266
 spec:
   nrql:
     query: "SELECT count(*) FROM Transactions"
@@ -15,3 +15,8 @@ spec:
       operator: "above"
   name: "K8s generated alert condition"
   existing_policy_id: 26458
+  region: "us"
+  api_key_secret:
+    name: nr-api-key
+    namespace: default
+    key_name: api-key

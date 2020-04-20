@@ -17,8 +17,12 @@ package controllers
 
 import (
 	"context"
+	"errors"
 	"reflect"
 	"strings"
+
+	v1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/types"
 
 	"github.com/newrelic/newrelic-kubernetes-operator/interfaces"
 
@@ -33,9 +37,10 @@ import (
 // NrqlAlertConditionReconciler reconciles a NrqlAlertCondition object
 type NrqlAlertConditionReconciler struct {
 	client.Client
-	Alerts interfaces.NewRelicAlertsClient
-	Log    logr.Logger
-	Scheme *runtime.Scheme
+	Alerts          interfaces.NewRelicAlertsClient
+	Log             logr.Logger
+	Scheme          *runtime.Scheme
+	AlertClientFunc func(string, string) (interfaces.NewRelicAlertsClient, error)
 }
 
 // +kubebuilder:rbac:groups=nr-alerts.k8s.newrelic.com,resources=nrqlalertconditions,verbs=get;list;watch;create;update;patch;delete
@@ -44,6 +49,13 @@ type NrqlAlertConditionReconciler struct {
 func (r *NrqlAlertConditionReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 	ctx := context.Background()
 	_ = r.Log.WithValues("nrqlalertcondition", req.NamespacedName)
+
+	// the testing code
+	//key := types.NamespacedName{Namespace: "default", Name: "newrelic"}
+	//var thing v1.Secret
+	//getErr := r.Client.Get(ctx, key, &thing)
+	//
+	//r.Log.Info("secret", "secret", thing, "error", getErr)
 
 	r.Log.Info("Starting reconcile action")
 	var condition nralertsv1.NrqlAlertCondition
@@ -56,6 +68,19 @@ func (r *NrqlAlertConditionReconciler) Reconcile(req ctrl.Request) (ctrl.Result,
 		r.Log.Error(err, "Tried getting condition", "name", req.NamespacedName.String())
 		return ctrl.Result{}, nil
 	}
+
+	apiKey := r.getAPIKeyOrSecret(condition)
+
+	if apiKey == "" {
+		return ctrl.Result{}, errors.New("api key is blank")
+	}
+	//initial alertsClient
+	alertsClient, errAlertsClient := r.AlertClientFunc(apiKey, condition.Spec.Region)
+	if errAlertsClient != nil {
+		r.Log.Info("Error thrown", "error", errAlertsClient)
+		return ctrl.Result{}, errAlertsClient
+	}
+	r.Alerts = alertsClient
 
 	deleteFinalizer := "storage.finalizers.tutorial.kubebuilder.io"
 
@@ -108,7 +133,7 @@ func (r *NrqlAlertConditionReconciler) Reconcile(req ctrl.Request) (ctrl.Result,
 	if condition.Status.ConditionID != 0 && !reflect.DeepEqual(&condition.Spec, condition.Status.AppliedSpec) {
 		r.Log.Info("updating condition")
 		APICondition.ID = condition.Status.ConditionID
-		updatedCondition, err := r.Alerts.UpdateNrqlCondition(APICondition)
+		updatedCondition, err := alertsClient.UpdateNrqlCondition(APICondition)
 		if err != nil {
 			r.Log.Error(err, "failed to update condition")
 		} else {
@@ -121,7 +146,7 @@ func (r *NrqlAlertConditionReconciler) Reconcile(req ctrl.Request) (ctrl.Result,
 			r.Log.Error(err, "tried updating condition status", "name", req.NamespacedName)
 		}
 	} else {
-		createdCondition, err := r.Alerts.CreateNrqlCondition(condition.Spec.ExistingPolicyID, APICondition)
+		createdCondition, err := alertsClient.CreateNrqlCondition(condition.Spec.ExistingPolicyID, APICondition)
 		if err != nil {
 			r.Log.Error(err, "failed to create condition")
 		} else {
@@ -159,6 +184,7 @@ func (r *NrqlAlertConditionReconciler) checkForExistingCondition(condition *nral
 }
 
 func (r *NrqlAlertConditionReconciler) SetupWithManager(mgr ctrl.Manager) error {
+	r.AlertClientFunc = interfaces.InitializeAlertsClient
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&nralertsv1.NrqlAlertCondition{}).
 		Complete(r)
@@ -191,4 +217,20 @@ func removeString(slice []string, s string) (result []string) {
 		result = append(result, item)
 	}
 	return
+}
+
+func (r *NrqlAlertConditionReconciler) getAPIKeyOrSecret(condition nralertsv1.NrqlAlertCondition) string {
+
+	if condition.Spec.APIKey != "" {
+		return condition.Spec.APIKey
+	}
+	if condition.Spec.APIKeySecret != (nralertsv1.NewRelicAPIKeySecret{}) {
+		key := types.NamespacedName{Namespace: condition.Spec.APIKeySecret.Namespace, Name: condition.Spec.APIKeySecret.Name}
+		var apiKeySecret v1.Secret
+		getErr := r.Client.Get(context.Background(), key, &apiKeySecret)
+
+		r.Log.Info("secret", "secret", apiKeySecret, "error", getErr)
+		return string(apiKeySecret.Data[condition.Spec.APIKeySecret.KeyName])
+	}
+	return ""
 }
