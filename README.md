@@ -100,8 +100,11 @@ spec:
       operator: "above"
   name: "K8s generated alert condition"
   existing_policy_id: 26458
-  api_key: "API_KEY"
-  region: "staging"
+  api_key_secret:
+    name: nr-api-key
+    namespace: default
+    key_name: api-key
+  region: "us"
 ```
 
 Please note the `existing_policy_id` field which must be set to a currently existing policy ID in the account configured
