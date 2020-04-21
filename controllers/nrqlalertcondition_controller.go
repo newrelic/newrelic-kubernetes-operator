@@ -41,6 +41,7 @@ type NrqlAlertConditionReconciler struct {
 	Log             logr.Logger
 	Scheme          *runtime.Scheme
 	AlertClientFunc func(string, string) (interfaces.NewRelicAlertsClient, error)
+	apiKey          string
 }
 
 // +kubebuilder:rbac:groups=nr-alerts.k8s.newrelic.com,resources=nrqlalertconditions,verbs=get;list;watch;create;update;patch;delete
@@ -69,15 +70,15 @@ func (r *NrqlAlertConditionReconciler) Reconcile(req ctrl.Request) (ctrl.Result,
 		return ctrl.Result{}, nil
 	}
 
-	apiKey := r.getAPIKeyOrSecret(condition)
+	r.apiKey = r.getAPIKeyOrSecret(condition)
 
-	if apiKey == "" {
+	if r.apiKey == "" {
 		return ctrl.Result{}, errors.New("api key is blank")
 	}
 	//initial alertsClient
-	alertsClient, errAlertsClient := r.AlertClientFunc(apiKey, condition.Spec.Region)
+	alertsClient, errAlertsClient := r.AlertClientFunc(r.apiKey, condition.Spec.Region)
 	if errAlertsClient != nil {
-		r.Log.Info("Error thrown", "error", errAlertsClient)
+		r.Log.Error(errAlertsClient, "Error thrown")
 		return ctrl.Result{}, errAlertsClient
 	}
 	r.Alerts = alertsClient
@@ -101,12 +102,18 @@ func (r *NrqlAlertConditionReconciler) Reconcile(req ctrl.Request) (ctrl.Result,
 				if err := r.deleteNewRelicAlertCondition(condition); err != nil {
 					// if fail to delete the external dependency here, return with error
 					// so that it can be retried
+					r.Log.Error(err, "Failed to delete API Condition",
+						"conditionId", condition.Status.ConditionID,
+						"region", condition.Spec.Region,
+						"Api Key", interfaces.PartialAPIKey(r.apiKey),
+					)
 					return ctrl.Result{}, err
 				}
 				// remove our finalizer from the list and update it.
 				r.Log.Info("New Relic Alert condition deleted, Removing finalizer")
 				condition.Finalizers = removeString(condition.Finalizers, deleteFinalizer)
 				if err := r.Client.Update(ctx, &condition); err != nil {
+					r.Log.Error(err, "Failed to update condition after deleting New Relic Alert condition")
 					return ctrl.Result{}, err
 				}
 			}
@@ -122,16 +129,15 @@ func (r *NrqlAlertConditionReconciler) Reconcile(req ctrl.Request) (ctrl.Result,
 		return ctrl.Result{}, nil
 	}
 
-	r.Log.Info("Reconciling", "condition", condition)
+	r.Log.Info("Reconciling", "condition", condition.Name)
 
 	//check if condition has condition id
 	r.checkForExistingCondition(&condition)
 
 	APICondition := condition.Spec.APICondition()
-	r.Log.Info("Trying to create or update condition", "API fields", APICondition)
 
 	if condition.Status.ConditionID != 0 && !reflect.DeepEqual(&condition.Spec, condition.Status.AppliedSpec) {
-		r.Log.Info("updating condition")
+		r.Log.Info("updating condition", "ConditionName", condition.Name, "API fields", APICondition)
 		APICondition.ID = condition.Status.ConditionID
 		updatedCondition, err := alertsClient.UpdateNrqlCondition(APICondition)
 		if err != nil {
@@ -146,9 +152,14 @@ func (r *NrqlAlertConditionReconciler) Reconcile(req ctrl.Request) (ctrl.Result,
 			r.Log.Error(err, "tried updating condition status", "name", req.NamespacedName)
 		}
 	} else {
+		r.Log.Info("Creating condition", "ConditionName", condition.Name, "API fields", APICondition)
 		createdCondition, err := alertsClient.CreateNrqlCondition(condition.Spec.ExistingPolicyID, APICondition)
 		if err != nil {
-			r.Log.Error(err, "failed to create condition")
+			r.Log.Error(err, "failed to create condition",
+				"conditionId", condition.Status.ConditionID,
+				"region", condition.Spec.Region,
+				"Api Key", interfaces.PartialAPIKey(r.apiKey),
+			)
 		} else {
 			condition.Status.AppliedSpec = &condition.Spec
 			condition.Status.ConditionID = createdCondition.ID
@@ -168,9 +179,12 @@ func (r *NrqlAlertConditionReconciler) checkForExistingCondition(condition *nral
 		r.Log.Info("Checking for existing condition", "conditionName", condition.Name)
 		//if no conditionId, get list of conditions and compare name
 		existingConditions, err := r.Alerts.ListNrqlConditions(condition.Spec.ExistingPolicyID)
-		r.Log.Info("existingConditions", "existingConditions", existingConditions)
 		if err != nil {
-			r.Log.Error(err, "failed to get list of NRQL conditions from New Relic API")
+			r.Log.Error(err, "failed to get list of NRQL conditions from New Relic API",
+				"conditionId", condition.Status.ConditionID,
+				"region", condition.Spec.Region,
+				"Api Key", interfaces.PartialAPIKey(r.apiKey),
+			)
 		} else {
 			for _, existingCondition := range existingConditions {
 				if existingCondition.Name == condition.Spec.Name {
@@ -203,7 +217,11 @@ func (r *NrqlAlertConditionReconciler) deleteNewRelicAlertCondition(condition nr
 	r.Log.Info("Deleting condition", "conditionName", condition.Spec.Name)
 	_, err := r.Alerts.DeleteNrqlCondition(condition.Status.ConditionID)
 	if err != nil {
-		r.Log.Info("Error thrown", "error", err)
+		r.Log.Error(err, "Error deleting condition",
+			"conditionId", condition.Status.ConditionID,
+			"region", condition.Spec.Region,
+			"Api Key", interfaces.PartialAPIKey(r.apiKey),
+		)
 		return err
 	}
 	return nil
@@ -229,7 +247,7 @@ func (r *NrqlAlertConditionReconciler) getAPIKeyOrSecret(condition nralertsv1.Nr
 		var apiKeySecret v1.Secret
 		getErr := r.Client.Get(context.Background(), key, &apiKeySecret)
 
-		r.Log.Info("secret", "secret", apiKeySecret, "error", getErr)
+		r.Log.Error(getErr, "Error retrieving secret", "secret", apiKeySecret)
 		return string(apiKeySecret.Data[condition.Spec.APIKeySecret.KeyName])
 	}
 	return ""

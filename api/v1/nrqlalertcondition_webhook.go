@@ -116,15 +116,24 @@ func (r *NrqlAlertCondition) CheckExistingPolicyID() error {
 
 	alertsClient, errAlertClient := alertClientFunc(apiKey, r.Spec.Region)
 	if errAlertClient != nil {
-		log.Info("failed to get policy", "policyId", r.Spec.ExistingPolicyID, "error", errAlertClient)
+		log.Error(errAlertClient, "failed to get policy",
+			"policyId", r.Spec.ExistingPolicyID,
+			"API Key", interfaces.PartialAPIKey(apiKey),
+			"region", r.Spec.Region,
+		)
 		return errAlertClient
 	}
 	alertPolicy, errAlertPolicy := alertsClient.GetPolicy(r.Spec.ExistingPolicyID)
 	if errAlertPolicy != nil {
-		log.Info("failed to get policy", "policyId", r.Spec.ExistingPolicyID, "error", errAlertPolicy)
+		log.Error(errAlertPolicy, "failed to get policy",
+			"policyId", r.Spec.ExistingPolicyID,
+			"API Key", interfaces.PartialAPIKey(apiKey),
+			"region", r.Spec.Region,
+		)
 		return errAlertPolicy
 	}
 	if alertPolicy.ID != r.Spec.ExistingPolicyID {
+		log.Info("Alert policy returned by the API failed to match provided policy ID")
 		return errors.New("alert policy returned by API did not match")
 	}
 	return nil

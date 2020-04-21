@@ -27,3 +27,16 @@ func InitializeAlertsClient(apiKey string, regionName string) (NewRelicAlertsCli
 	alertsClientthing := alerts.New(configuration)
 	return &alertsClientthing, nil
 }
+
+//PartialAPIKey - Returns a partial API key to ensure we don't log the full API Key
+func PartialAPIKey(apiKey string) string {
+	partialKeyLength := min(10, len(apiKey))
+	return apiKey[0:partialKeyLength] + "..."
+}
+
+func min(x, y int) int {
+	if x > y {
+		return y
+	}
+	return x
+}
