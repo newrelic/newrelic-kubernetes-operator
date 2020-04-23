@@ -5,6 +5,6 @@ resources:
   kind: NrqlAlertCondition
   version: v1beta1
 - group: nr
-  kind: NewRelicPolicy
+  kind: Policy
   version: v1
 version: "2"

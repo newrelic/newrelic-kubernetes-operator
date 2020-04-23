@@ -18,14 +18,14 @@ package v1
 import (
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
-	logf "sigs.k8s.io/controller-runtime/pkg/runtime/log"
+	logf "sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/webhook"
 )
 
 // log is for logging in this package.
-var newrelicpolicylog = logf.Log.WithName("newrelicpolicy-resource")
+var policylog = logf.Log.WithName("policy-resource")
 
-func (r *NewRelicPolicy) SetupWebhookWithManager(mgr ctrl.Manager) error {
+func (r *Policy) SetupWebhookWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewWebhookManagedBy(mgr).
 		For(r).
 		Complete()
@@ -33,41 +33,41 @@ func (r *NewRelicPolicy) SetupWebhookWithManager(mgr ctrl.Manager) error {
 
 // EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
 
-// +kubebuilder:webhook:path=/mutate-nr-k8s-newrelic-com-v1-newrelicpolicy,mutating=true,failurePolicy=fail,groups=nr.k8s.newrelic.com,resources=newrelicpolicies,verbs=create;update,versions=v1,name=mnewrelicpolicy.kb.io
+// +kubebuilder:webhook:path=/mutate-nr-k8s-newrelic-com-v1-policy,mutating=true,failurePolicy=fail,groups=nr.k8s.newrelic.com,resources=policies,verbs=create;update,versions=v1,name=mpolicy.kb.io
 
-var _ webhook.Defaulter = &NewRelicPolicy{}
+var _ webhook.Defaulter = &Policy{}
 
 // Default implements webhook.Defaulter so a webhook will be registered for the type
-func (r *NewRelicPolicy) Default() {
-	newrelicpolicylog.Info("default", "name", r.Name)
+func (r *Policy) Default() {
+	policylog.Info("default", "name", r.Name)
 
 	// TODO(user): fill in your defaulting logic.
 }
 
 // TODO(user): change verbs to "verbs=create;update;delete" if you want to enable deletion validation.
-// +kubebuilder:webhook:verbs=create;update,path=/validate-nr-k8s-newrelic-com-v1-newrelicpolicy,mutating=false,failurePolicy=fail,groups=nr.k8s.newrelic.com,resources=newrelicpolicies,versions=v1,name=vnewrelicpolicy.kb.io
+// +kubebuilder:webhook:verbs=create;update,path=/validate-nr-k8s-newrelic-com-v1-policy,mutating=false,failurePolicy=fail,groups=nr.k8s.newrelic.com,resources=policies,versions=v1,name=vpolicy.kb.io
 
-var _ webhook.Validator = &NewRelicPolicy{}
+var _ webhook.Validator = &Policy{}
 
 // ValidateCreate implements webhook.Validator so a webhook will be registered for the type
-func (r *NewRelicPolicy) ValidateCreate() error {
-	newrelicpolicylog.Info("validate create", "name", r.Name)
+func (r *Policy) ValidateCreate() error {
+	policylog.Info("validate create", "name", r.Name)
 
 	// TODO(user): fill in your validation logic upon object creation.
 	return nil
 }
 
 // ValidateUpdate implements webhook.Validator so a webhook will be registered for the type
-func (r *NewRelicPolicy) ValidateUpdate(old runtime.Object) error {
-	newrelicpolicylog.Info("validate update", "name", r.Name)
+func (r *Policy) ValidateUpdate(old runtime.Object) error {
+	policylog.Info("validate update", "name", r.Name)
 
 	// TODO(user): fill in your validation logic upon object update.
 	return nil
 }
 
 // ValidateDelete implements webhook.Validator so a webhook will be registered for the type
-func (r *NewRelicPolicy) ValidateDelete() error {
-	newrelicpolicylog.Info("validate delete", "name", r.Name)
+func (r *Policy) ValidateDelete() error {
+	policylog.Info("validate delete", "name", r.Name)
 
 	// TODO(user): fill in your validation logic upon object deletion.
 	return nil

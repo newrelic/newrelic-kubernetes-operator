@@ -17,6 +17,7 @@ package controllers
 
 import (
 	"context"
+
 	"github.com/newrelic/newrelic-kubernetes-operator/interfaces"
 
 	"github.com/go-logr/logr"
@@ -27,28 +28,30 @@ import (
 	nrv1 "github.com/newrelic/newrelic-kubernetes-operator/api/v1"
 )
 
-// NewRelicPolicyReconciler reconciles a NewRelicPolicy object
-type NewRelicPolicyReconciler struct {
+// PolicyReconciler reconciles a Policy object
+type PolicyReconciler struct {
 	client.Client
-	Log    logr.Logger
-	Scheme *runtime.Scheme
+	Log             logr.Logger
+	Scheme          *runtime.Scheme
 	AlertClientFunc func(string, string) (interfaces.NewRelicAlertsClient, error)
-	apiKey          string}
+	apiKey          string
+}
 
-// +kubebuilder:rbac:groups=nr.k8s.newrelic.com,resources=newrelicpolicies,verbs=get;list;watch;create;update;patch;delete
-// +kubebuilder:rbac:groups=nr.k8s.newrelic.com,resources=newrelicpolicies/status,verbs=get;update;patch
+// +kubebuilder:rbac:groups=nr.k8s.newrelic.com,resources=policies,verbs=get;list;watch;create;update;patch;delete
+// +kubebuilder:rbac:groups=nr.k8s.newrelic.com,resources=policies/status,verbs=get;update;patch
 
-func (r *NewRelicPolicyReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
+func (r *PolicyReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 	_ = context.Background()
-	_ = r.Log.WithValues("newrelicpolicy", req.NamespacedName)
+	_ = r.Log.WithValues("policy", req.NamespacedName)
 
 	// your logic here
+	r.Log.Info("api" + r.apiKey)
 
 	return ctrl.Result{}, nil
 }
 
-func (r *NewRelicPolicyReconciler) SetupWithManager(mgr ctrl.Manager) error {
+func (r *PolicyReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
-		For(&nrv1.NewRelicPolicy{}).
+		For(&nrv1.Policy{}).
 		Complete(r)
 }

@@ -1,13 +1,13 @@
-# permissions to do edit newrelicpolicies.
+# permissions to do edit policies.
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
-  name: newrelicpolicy-editor-role
+  name: policy-editor-role
 rules:
 - apiGroups:
   - nr.k8s.newrelic.com
   resources:
-  - newrelicpolicies
+  - policies
   verbs:
   - create
   - delete
@@ -19,7 +19,7 @@ rules:
 - apiGroups:
   - nr.k8s.newrelic.com
   resources:
-  - newrelicpolicies/status
+  - policies/status
   verbs:
   - get
   - patch

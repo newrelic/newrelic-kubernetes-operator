@@ -22,39 +22,39 @@ import (
 // EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
 // NOTE: json tags are required.  Any new fields you add must have json tags for the fields to be serialized.
 
-// NewRelicPolicySpec defines the desired state of NewRelicPolicy
-type NewRelicPolicySpec struct {
+// PolicySpec defines the desired state of Policy
+type PolicySpec struct {
 	IncidentPreference string `json:"incident_preference,omitempty"`
 	Name               string `json:"name"`
 	ID                 int    `json:"id"`
 }
 
-// NewRelicPolicyStatus defines the observed state of NewRelicPolicy
-type NewRelicPolicyStatus struct {
-	AppliedSpec *NewRelicPolicySpec `json:"applied_spec"`
-	PolicyID    int                 `json:"policy_id"`
+// PolicyStatus defines the observed state of Policy
+type PolicyStatus struct {
+	AppliedSpec *PolicySpec `json:"applied_spec"`
+	PolicyID    int         `json:"policy_id"`
 }
 
 // +kubebuilder:object:root=true
 
-// NewRelicPolicy is the Schema for the newrelicpolicies API
-type NewRelicPolicy struct {
+// Policy is the Schema for the policies API
+type Policy struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 
-	Spec   NewRelicPolicySpec   `json:"spec,omitempty"`
-	Status NewRelicPolicyStatus `json:"status,omitempty"`
+	Spec   PolicySpec   `json:"spec,omitempty"`
+	Status PolicyStatus `json:"status,omitempty"`
 }
 
 // +kubebuilder:object:root=true
 
-// NewRelicPolicyList contains a list of NewRelicPolicy
-type NewRelicPolicyList struct {
+// PolicyList contains a list of Policy
+type PolicyList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`
-	Items           []NewRelicPolicy `json:"items"`
+	Items           []Policy `json:"items"`
 }
 
 func init() {
-	SchemeBuilder.Register(&NewRelicPolicy{}, &NewRelicPolicyList{})
+	SchemeBuilder.Register(&Policy{}, &PolicyList{})
 }

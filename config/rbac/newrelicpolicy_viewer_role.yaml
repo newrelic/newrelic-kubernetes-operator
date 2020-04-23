@@ -1,13 +1,13 @@
-# permissions to do viewer newrelicpolicies.
+# permissions to do viewer policies.
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
-  name: newrelicpolicy-viewer-role
+  name: policy-viewer-role
 rules:
 - apiGroups:
   - nr.k8s.newrelic.com
   resources:
-  - newrelicpolicies
+  - policies
   verbs:
   - get
   - list
@@ -15,6 +15,6 @@ rules:
 - apiGroups:
   - nr.k8s.newrelic.com
   resources:
-  - newrelicpolicies/status
+  - policies/status
   verbs:
   - get

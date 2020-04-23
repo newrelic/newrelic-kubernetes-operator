@@ -83,16 +83,17 @@ func main() {
 		setupLog.Error(err, "unable to create webhook", "webhook", "NrqlAlertCondition")
 		os.Exit(1)
 	}
-	if err = (&controllers.NewRelicPolicyReconciler{
-		Client: mgr.GetClient(),
-		Log:    ctrl.Log.WithName("controllers").WithName("NewRelicPolicy"),
-		Scheme: mgr.GetScheme(),
+	if err = (&controllers.PolicyReconciler{
+		Client:          mgr.GetClient(),
+		Log:             ctrl.Log.WithName("controllers").WithName("Policy"),
+		Scheme:          mgr.GetScheme(),
+		AlertClientFunc: interfaces.InitializeAlertsClient,
 	}).SetupWithManager(mgr); err != nil {
-		setupLog.Error(err, "unable to create controller", "controller", "NewRelicPolicy")
+		setupLog.Error(err, "unable to create controller", "controller", "Policy")
 		os.Exit(1)
 	}
-	if err = (&nrv1.NewRelicPolicy{}).SetupWebhookWithManager(mgr); err != nil {
-		setupLog.Error(err, "unable to create webhook", "webhook", "NewRelicPolicy")
+	if err = (&nrv1.Policy{}).SetupWebhookWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create webhook", "webhook", "Policy")
 		os.Exit(1)
 	}
 	// +kubebuilder:scaffold:builder

@@ -3,20 +3,20 @@
 # It should be run by config/default
 resources:
 - bases/nr.k8s.newrelic.com_nrqlalertconditions.yaml
-- bases/nr.k8s.newrelic.com_newrelicpolicies.yaml
+- bases/nr.k8s.newrelic.com_policies.yaml
 # +kubebuilder:scaffold:crdkustomizeresource
 
 patchesStrategicMerge:
 # [WEBHOOK] To enable webhook, uncomment all the sections with [WEBHOOK] prefix.
 # patches here are for enabling the conversion webhook for each CRD
 #- patches/webhook_in_nrqlalertconditions.yaml
-#- patches/webhook_in_newrelicpolicies.yaml
+#- patches/webhook_in_policies.yaml
 # +kubebuilder:scaffold:crdkustomizewebhookpatch
 
 # [CERTMANAGER] To enable webhook, uncomment all the sections with [CERTMANAGER] prefix.
 # patches here are for enabling the CA injection for each CRD
 #- patches/cainjection_in_nrqlalertconditions.yaml
-#- patches/cainjection_in_newrelicpolicies.yaml
+#- patches/cainjection_in_policies.yaml
 # +kubebuilder:scaffold:crdkustomizecainjectionpatch
 
 # the following config is for teaching kustomize how to do kustomization for CRDs.
