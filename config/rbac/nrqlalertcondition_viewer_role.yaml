@@ -5,7 +5,7 @@ metadata:
   name: nrqlalertcondition-viewer-role
 rules:
 - apiGroups:
-  - nr-alerts.k8s.newrelic.com
+  - nr.k8s.newrelic.com
   resources:
   - nrqlalertconditions
   verbs:
@@ -13,7 +13,7 @@ rules:
   - list
   - watch
 - apiGroups:
-  - nr-alerts.k8s.newrelic.com
+  - nr.k8s.newrelic.com
   resources:
   - nrqlalertconditions/status
   verbs:

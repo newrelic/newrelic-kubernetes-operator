@@ -1,4 +1,4 @@
-apiVersion: nr-alerts.k8s.newrelic.com/v1beta1
+apiVersion: nr.k8s.newrelic.com/v1beta1
 kind: NrqlAlertCondition
 metadata:
   name: nrqlalertcondition-sample

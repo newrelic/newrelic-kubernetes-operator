@@ -46,7 +46,7 @@ $ diff -u resources-before.txt resources-installed.txt
  ingresses                         ing          networking.k8s.io              true         Ingress
  networkpolicies                   netpol       networking.k8s.io              true         NetworkPolicy
  runtimeclasses                                 node.k8s.io                    false        RuntimeClass
-+nrqlalertconditions                            nr-alerts.k8s.newrelic.com     true         NrqlAlertCondition
++nrqlalertconditions                            nr.k8s.newrelic.com     true         NrqlAlertCondition
  poddisruptionbudgets              pdb          policy                         true         PodDisruptionBudget
  podsecuritypolicies               psp          policy                         false        PodSecurityPolicy
  clusterrolebindings                            rbac.authorization.k8s.io      false        ClusterRoleBinding
@@ -83,7 +83,7 @@ The operator will create and update conditions as needed by applying yaml files 
 
 Sample yaml file
 ```
-apiVersion: nr-alerts.k8s.newrelic.com/v1
+apiVersion: nr.k8s.newrelic.com/v1
 kind: NrqlAlertCondition
 metadata:
   name: my-alert
@@ -133,7 +133,7 @@ $ diff -u resources-installed.txt resources-uninstalled.txt
  ingresses                         ing          networking.k8s.io              true         Ingress
  networkpolicies                   netpol       networking.k8s.io              true         NetworkPolicy
  runtimeclasses                                 node.k8s.io                    false        RuntimeClass
--nrqlalertconditions                            nr-alerts.k8s.newrelic.com     true         NrqlAlertCondition
+-nrqlalertconditions                            nr.k8s.newrelic.com     true         NrqlAlertCondition
  poddisruptionbudgets              pdb          policy                         true         PodDisruptionBudget
  podsecuritypolicies               psp          policy                         false        PodSecurityPolicy
  clusterrolebindings                            rbac.authorization.k8s.io      false        ClusterRoleBinding
