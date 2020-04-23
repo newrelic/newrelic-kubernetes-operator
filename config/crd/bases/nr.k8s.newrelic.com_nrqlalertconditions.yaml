@@ -6,13 +6,13 @@ metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.2.8
   creationTimestamp: null
-  name: nrqlalertconditions.nr-alerts.k8s.newrelic.com
+  name: nrqlalertconditions.nr.k8s.newrelic.com
 spec:
   additionalPrinterColumns:
   - JSONPath: .status.created
     name: Created
     type: boolean
-  group: nr-alerts.k8s.newrelic.com
+  group: nr.k8s.newrelic.com
   names:
     kind: NrqlAlertCondition
     listKind: NrqlAlertConditionList

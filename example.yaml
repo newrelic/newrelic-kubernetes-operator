@@ -1,4 +1,4 @@
-apiVersion: nr-alerts.k8s.newrelic.com/v1
+apiVersion: nr.k8s.newrelic.com/v1
 kind: NrqlAlertCondition
 metadata:
   name: alert-1029266
