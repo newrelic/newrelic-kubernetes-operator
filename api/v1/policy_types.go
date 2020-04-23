@@ -16,6 +16,8 @@ limitations under the License.
 package v1
 
 import (
+	"encoding/json"
+	"github.com/newrelic/newrelic-client-go/pkg/alerts"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -27,6 +29,9 @@ type PolicySpec struct {
 	IncidentPreference string `json:"incident_preference,omitempty"`
 	Name               string `json:"name"`
 	ID                 int    `json:"id"`
+	APIKey              string               `json:"api_key,omitempty"`
+	APIKeySecret        NewRelicAPIKeySecret `json:"api_key_secret,omitempty"`
+	Region              string               `json:"region"`
 }
 
 // PolicyStatus defines the observed state of Policy
@@ -57,4 +62,15 @@ type PolicyList struct {
 
 func init() {
 	SchemeBuilder.Register(&Policy{}, &PolicyList{})
+}
+
+
+func (in PolicySpec) APIPolicy() alerts.Policy {
+	jsonString, _ := json.Marshal(in)
+	var APIPolicy alerts.Policy
+	json.Unmarshal(jsonString, &APIPolicy) //nolint
+
+	//APICondition.PolicyID = spec.ExistingPolicyId
+
+	return APIPolicy
 }

@@ -13,6 +13,10 @@ type NewRelicAlertsClient interface {
 	ListNrqlConditions(int) ([]*alerts.NrqlCondition, error)
 	DeleteNrqlCondition(int) (*alerts.NrqlCondition, error)
 	GetPolicy(id int) (*alerts.Policy, error)
+	CreatePolicy(alerts.Policy) (*alerts.Policy, error)
+	UpdatePolicy(alerts.Policy) (*alerts.Policy, error)
+	DeletePolicy(int) (*alerts.Policy, error)
+	ListPolicies(*alerts.ListPoliciesParams) ([]alerts.Policy, error)
 }
 
 func InitializeAlertsClient(apiKey string, regionName string) (NewRelicAlertsClient, error) {
