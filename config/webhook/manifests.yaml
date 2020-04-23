@@ -11,12 +11,12 @@ webhooks:
     service:
       name: webhook-service
       namespace: system
-      path: /mutate-nr-alerts-k8s-newrelic-com-v1-nrqlalertcondition
+      path: /mutate-nr-k8s-newrelic-com-v1-nrqlalertcondition
   failurePolicy: Fail
   name: mnrqlalertcondition.kb.io
   rules:
   - apiGroups:
-    - nr-alerts.k8s.newrelic.com
+    - nr.k8s.newrelic.com
     apiVersions:
     - v1
     operations:
@@ -37,12 +37,12 @@ webhooks:
     service:
       name: webhook-service
       namespace: system
-      path: /validate-nr-alerts-k8s-newrelic-com-v1-nrqlalertcondition
+      path: /validate-nr-k8s-newrelic-com-v1-nrqlalertcondition
   failurePolicy: Fail
   name: vnrqlalertcondition.kb.io
   rules:
   - apiGroups:
-    - nr-alerts.k8s.newrelic.com
+    - nr.k8s.newrelic.com
     apiVersions:
     - v1
     operations:

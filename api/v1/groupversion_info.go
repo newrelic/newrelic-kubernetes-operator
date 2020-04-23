@@ -15,7 +15,7 @@ limitations under the License.
 
 // Package v1 contains API Schema definitions for the nralerts v1 API group
 // +kubebuilder:object:generate=true
-// +groupName=nr-alerts.k8s.newrelic.com
+// +groupName=nr.k8s.newrelic.com
 package v1
 
 import (
@@ -25,7 +25,7 @@ import (
 
 var (
 	// GroupVersion is group version used to register these objects
-	GroupVersion = schema.GroupVersion{Group: "nr-alerts.k8s.newrelic.com", Version: "v1"}
+	GroupVersion = schema.GroupVersion{Group: "nr.k8s.newrelic.com", Version: "v1"}
 
 	// SchemeBuilder is used to add go types to the GroupVersionKind scheme
 	SchemeBuilder = &scheme.Builder{GroupVersion: GroupVersion}
