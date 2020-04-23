@@ -54,9 +54,7 @@ $ diff -u resources-before.txt resources-installed.txt
 
 Now install a Certificate manager, we recommend https://cert-manager.io/docs/installation/kubernetes/#installing-with-regular-manifests
 
-Next, set the Dockerfile replacing NEW_RELIC_API_KEY with your [New Relic Admin API key](https://docs.newrelic.com/docs/apis/get-started/intro-apis/types-new-relic-api-keys#admin)
-
-Finally, build the image and push it to the desired docker repo
+Next, build the image and push it to the desired docker repo
 
 `make docker-build docker-push DOCKER_IMAGE=<some-registry>/<project-name>:tag`
 
@@ -71,7 +69,7 @@ Finally to deploy the image
 `make deploy DOCKER_IMAGE=<some-registry>/<project-name>:tag`
 
 Handy shortcut command to run these steps at once
-`export DOCKER_IMAGE=controller:alpha3 && make docker-build && kind load docker-image $DOCKER_IMAGE && make deploy`
+`export DOCKER_IMAGE=newrelic/kubernetes-operator:snapshot && make docker-build && kind load docker-image $DOCKER_IMAGE && make deploy`
 
 The newrelic-kubernetes-operator should now be running in your kubernetes cluster.
 
