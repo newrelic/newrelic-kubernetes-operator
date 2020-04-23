@@ -1,0 +1,7 @@
+apiVersion: nr.k8s.newrelic.com/v1
+kind: NewRelicPolicy
+metadata:
+  name: newrelicpolicy-sample
+spec:
+  # Add fields here
+  foo: bar
