@@ -3,7 +3,7 @@ repo: github.com/newrelic/newrelic-kubernetes-operator
 resources:
 - group: nr
   kind: NrqlAlertCondition
-  version: v1beta1
+  version: v1
 - group: nr
   kind: Policy
   version: v1
