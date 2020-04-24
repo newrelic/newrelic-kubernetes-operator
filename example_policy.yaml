@@ -7,7 +7,7 @@ spec:
   name: k8 created policy is awesome
   incident_preference: "PER_POLICY"
   region: "staging"
-# API_KEY can be specificed directly in the yaml file or via a k8 secret
+# API_KEY can be specified directly in the yaml file or via a k8 secret
 #  api_key: API_KEY
   api_key_secret:
     name: nr-api-key

@@ -16,14 +16,18 @@ limitations under the License.
 package v1
 
 import (
+	"errors"
+	"strings"
+
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/webhook"
 )
 
-// log is for logging in this package.
-var policylog = logf.Log.WithName("policy-resource")
+// Log is for logging in this package.
+var Log = logf.Log.WithName("policy-resource")
+var defaultPolicyIncidentPreference = "PER_POLICY"
 
 func (r *Policy) SetupWebhookWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewWebhookManagedBy(mgr).
@@ -39,13 +43,14 @@ var _ webhook.Defaulter = &Policy{}
 
 // Default implements webhook.Defaulter so a webhook will be registered for the type
 func (r *Policy) Default() {
-	policylog.Info("default", "name", r.Name)
+	Log.Info("default", "name", r.Name)
 
 	// TODO(user): add in the defaulting logic for incident_preference
 	if r.Status.AppliedSpec == nil {
 		log.Info("Setting null Applied Spec to empty interface")
 		r.Status.AppliedSpec = &PolicySpec{}
 	}
+	r.DefaultIncidentPreference()
 }
 
 // TODO(user): change verbs to "verbs=create;update;delete" if you want to enable deletion validation.
@@ -55,24 +60,56 @@ var _ webhook.Validator = &Policy{}
 
 // ValidateCreate implements webhook.Validator so a webhook will be registered for the type
 func (r *Policy) ValidateCreate() error {
-	policylog.Info("validate create", "name", r.Name)
+	Log.Info("validate create", "name", r.Name)
 
-	// TODO(user): fill in incident_preference validation here
-	return nil
+	err := r.CheckForAPIKeyOrSecret()
+	if err != nil {
+		return err
+	}
+
+	return r.ValidateIncidentPreference()
 }
 
 // ValidateUpdate implements webhook.Validator so a webhook will be registered for the type
 func (r *Policy) ValidateUpdate(old runtime.Object) error {
-	policylog.Info("validate update", "name", r.Name)
+	Log.Info("validate update", "name", r.Name)
 
-	// TODO(user): fill in your validation logic upon object update.
-	return nil
+	return r.ValidateIncidentPreference()
 }
 
 // ValidateDelete implements webhook.Validator so a webhook will be registered for the type
 func (r *Policy) ValidateDelete() error {
-	policylog.Info("validate delete", "name", r.Name)
+	Log.Info("validate delete", "name", r.Name)
 
 	// TODO(user): fill in your validation logic upon object deletion.
 	return nil
+}
+
+func (r *Policy) DefaultIncidentPreference() {
+	if r.Spec.IncidentPreference == "" {
+		r.Spec.IncidentPreference = defaultPolicyIncidentPreference
+	}
+	r.Spec.IncidentPreference = strings.ToUpper(r.Spec.IncidentPreference)
+
+}
+
+func (r *Policy) ValidateIncidentPreference() error {
+	switch r.Spec.IncidentPreference {
+	case "PER_POLICY", "PER_CONDITION", "PER_CONDITION_AND_TARGET":
+		return nil
+	}
+
+	return errors.New("incident preference must be PER_POLICY, PER_CONDITION, or PER_CONDITION_AND_TARGET")
+}
+
+func (r *Policy) CheckForAPIKeyOrSecret() error {
+	if r.Spec.APIKey != "" {
+		return nil
+	}
+	if r.Spec.APIKeySecret != (NewRelicAPIKeySecret{}) {
+		if r.Spec.APIKeySecret.Name != "" && r.Spec.APIKeySecret.Namespace != "" && r.Spec.APIKeySecret.KeyName != "" {
+			return nil
+		}
+	}
+	return errors.New("either api_key or api_key_secret must be set")
 }

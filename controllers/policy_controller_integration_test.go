@@ -4,6 +4,7 @@ package controllers
 
 import (
 	"context"
+
 	"github.com/newrelic/newrelic-client-go/pkg/alerts"
 
 	//"k8s.io/apimachinery/pkg/types"
@@ -19,16 +20,17 @@ import (
 	//v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
+
 	//ctrl "sigs.k8s.io/controller-runtime"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 )
 
 var _ = Describe("policy reconciliation", func() {
 	var (
-		ctx     context.Context
-		r       *PolicyReconciler
-		policy  *nralertsv1.Policy
-		request ctrl.Request
+		ctx            context.Context
+		r              *PolicyReconciler
+		policy         *nralertsv1.Policy
+		request        ctrl.Request
 		namespacedName types.NamespacedName
 		//expectedEvents []string
 		//secret        *v1.Secret
@@ -61,12 +63,12 @@ var _ = Describe("policy reconciliation", func() {
 				Namespace: "default",
 			},
 			Spec: nralertsv1.PolicySpec{
-				Name: "test policy",
+				Name:   "test policy",
 				APIKey: "112233",
 			},
 			Status: nralertsv1.PolicyStatus{
 				AppliedSpec: &nralertsv1.PolicySpec{},
-				PolicyID: 0,
+				PolicyID:    0,
 			},
 		}
 
@@ -75,7 +77,6 @@ var _ = Describe("policy reconciliation", func() {
 			Name:      "test-policy",
 		}
 		request = ctrl.Request{NamespacedName: namespacedName}
-
 
 	})
 
@@ -144,7 +145,5 @@ var _ = Describe("policy reconciliation", func() {
 		})
 
 	})
-
-
 
 })

@@ -18,11 +18,12 @@ package controllers
 import (
 	"context"
 	"errors"
+	"reflect"
+	"strings"
+
 	"github.com/newrelic/newrelic-client-go/pkg/alerts"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/types"
-	"reflect"
-	"strings"
 
 	"github.com/newrelic/newrelic-kubernetes-operator/interfaces"
 
@@ -42,7 +43,6 @@ type PolicyReconciler struct {
 	AlertClientFunc func(string, string) (interfaces.NewRelicAlertsClient, error)
 	apiKey          string
 	Alerts          interfaces.NewRelicAlertsClient
-
 }
 
 // +kubebuilder:rbac:groups=nr.k8s.newrelic.com,resources=policies,verbs=get;list;watch;create;update;patch;delete
@@ -176,8 +176,6 @@ func (r *PolicyReconciler) SetupWithManager(mgr ctrl.Manager) error {
 		Complete(r)
 }
 
-
-
 func (r *PolicyReconciler) checkForExistingPolicy(policy *nrv1.Policy) {
 	if policy.Status.PolicyID == 0 {
 		r.Log.Info("Checking for existing policy", "policyName", policy.Name)
@@ -204,7 +202,6 @@ func (r *PolicyReconciler) checkForExistingPolicy(policy *nrv1.Policy) {
 	}
 }
 
-
 func (r *PolicyReconciler) deleteNewRelicAlertPolicy(policy nrv1.Policy) error {
 	r.Log.Info("Deleting policy", "policyName", policy.Spec.Name)
 	_, err := r.Alerts.DeletePolicy(policy.Status.PolicyID)
@@ -218,8 +215,6 @@ func (r *PolicyReconciler) deleteNewRelicAlertPolicy(policy nrv1.Policy) error {
 	}
 	return nil
 }
-
-
 
 func (r *PolicyReconciler) getAPIKeyOrSecret(policy nrv1.Policy) string {
 
