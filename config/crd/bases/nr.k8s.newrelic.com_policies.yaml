@@ -34,15 +34,29 @@ spec:
         spec:
           description: PolicySpec defines the desired state of Policy
           properties:
+            api_key:
+              type: string
+            api_key_secret:
+              properties:
+                key_name:
+                  type: string
+                name:
+                  type: string
+                namespace:
+                  type: string
+              type: object
             id:
               type: integer
             incident_preference:
               type: string
             name:
               type: string
+            region:
+              type: string
           required:
           - id
           - name
+          - region
           type: object
         status:
           description: PolicyStatus defines the observed state of Policy
@@ -50,15 +64,29 @@ spec:
             applied_spec:
               description: PolicySpec defines the desired state of Policy
               properties:
+                api_key:
+                  type: string
+                api_key_secret:
+                  properties:
+                    key_name:
+                      type: string
+                    name:
+                      type: string
+                    namespace:
+                      type: string
+                  type: object
                 id:
                   type: integer
                 incident_preference:
                   type: string
                 name:
                   type: string
+                region:
+                  type: string
               required:
               - id
               - name
+              - region
               type: object
             policy_id:
               type: integer

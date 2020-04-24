@@ -41,7 +41,11 @@ var _ webhook.Defaulter = &Policy{}
 func (r *Policy) Default() {
 	policylog.Info("default", "name", r.Name)
 
-	// TODO(user): fill in your defaulting logic.
+	// TODO(user): add in the defaulting logic for incident_preference
+	if r.Status.AppliedSpec == nil {
+		log.Info("Setting null Applied Spec to empty interface")
+		r.Status.AppliedSpec = &PolicySpec{}
+	}
 }
 
 // TODO(user): change verbs to "verbs=create;update;delete" if you want to enable deletion validation.
@@ -53,7 +57,7 @@ var _ webhook.Validator = &Policy{}
 func (r *Policy) ValidateCreate() error {
 	policylog.Info("validate create", "name", r.Name)
 
-	// TODO(user): fill in your validation logic upon object creation.
+	// TODO(user): fill in incident_preference validation here
 	return nil
 }
 

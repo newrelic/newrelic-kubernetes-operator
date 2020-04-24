@@ -80,7 +80,7 @@ var _ = Describe("policy reconciliation", func() {
 	})
 
 	Context("When starting with no policies", func() {
-		Context("with a valid policy", func() {
+		Context("when creating a valid policy", func() {
 			It("should create that policy", func() {
 
 				err := k8sClient.Create(ctx, policy)
@@ -109,16 +109,42 @@ var _ = Describe("policy reconciliation", func() {
 			})
 		})
 
+		AfterEach(func() {
+			// Delete the policy
+			err := k8sClient.Delete(ctx, policy)
+			Expect(err).ToNot(HaveOccurred())
+
+			// Need to call reconcile to delete finalizer
+			_, err = r.Reconcile(request)
+			Expect(err).ToNot(HaveOccurred())
+		})
+
 	})
 
-	AfterEach(func() {
-		// Delete the policy
-		err := k8sClient.Delete(ctx, policy)
-		Expect(err).ToNot(HaveOccurred())
+	Context("When starting with an existing policy", func() {
+		BeforeEach(func() {
 
-		// Need to call reconcile to delete finalizer
-		_, err = r.Reconcile(request)
-		Expect(err).ToNot(HaveOccurred())
+			err := k8sClient.Create(ctx, policy)
+			Expect(err).ToNot(HaveOccurred())
+		})
+		Context("and  deleting that policy", func() {
+			It("should successfully delete", func() {
+				err := k8sClient.Delete(ctx, policy)
+				Expect(err).ToNot(HaveOccurred())
+
+				// Need to call reconcile to delete finalizer
+				_, err = r.Reconcile(request)
+				Expect(err).ToNot(HaveOccurred())
+
+				var endStatePolicy nralertsv1.Policy
+				err = k8sClient.Get(ctx, namespacedName, &endStatePolicy)
+				Expect(err).NotTo(BeNil())
+
+			})
+		})
+
 	})
+
+
 
 })

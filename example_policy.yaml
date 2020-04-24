@@ -1,0 +1,15 @@
+apiVersion: nr.k8s.newrelic.com/v1
+kind: Policy
+metadata:
+  name: my-policy
+spec:
+  # Add fields here
+  name: k8 created policy is awesome
+  incident_preference: "PER_POLICY"
+  region: "staging"
+# API_KEY can be specificed directly in the yaml file or via a k8 secret
+#  api_key: API_KEY
+  api_key_secret:
+    name: nr-api-key
+    namespace: default
+    key_name: api-key
