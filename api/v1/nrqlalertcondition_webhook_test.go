@@ -149,4 +149,16 @@ var _ = Describe("ValidateCreate", func() {
 		})
 
 	})
+
+	Describe("InvalidPolicyID", func() {
+		Context("With a Policy ID that does not exist", func() {
+			BeforeEach(func() {
+				r.Spec.ExistingPolicyID = 0
+			})
+			It("returns an error", func() {
+				err := r.ValidateCreate()
+				Expect(err).To(HaveOccurred())
+			})
+		})
+	})
 })
