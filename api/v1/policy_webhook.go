@@ -45,7 +45,6 @@ var _ webhook.Defaulter = &Policy{}
 func (r *Policy) Default() {
 	Log.Info("default", "name", r.Name)
 
-	// TODO(user): add in the defaulting logic for incident_preference
 	if r.Status.AppliedSpec == nil {
 		log.Info("Setting null Applied Spec to empty interface")
 		r.Status.AppliedSpec = &PolicySpec{}

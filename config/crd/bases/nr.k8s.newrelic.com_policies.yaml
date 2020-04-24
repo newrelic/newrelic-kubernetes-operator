@@ -45,8 +45,6 @@ spec:
                 namespace:
                   type: string
               type: object
-            id:
-              type: integer
             incident_preference:
               type: string
             name:
@@ -54,7 +52,6 @@ spec:
             region:
               type: string
           required:
-          - id
           - name
           - region
           type: object
@@ -75,8 +72,6 @@ spec:
                     namespace:
                       type: string
                   type: object
-                id:
-                  type: integer
                 incident_preference:
                   type: string
                 name:
@@ -84,7 +79,6 @@ spec:
                 region:
                   type: string
               required:
-              - id
               - name
               - region
               type: object

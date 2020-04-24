@@ -29,7 +29,6 @@ import (
 type PolicySpec struct {
 	IncidentPreference string               `json:"incident_preference,omitempty"`
 	Name               string               `json:"name"`
-	ID                 int                  `json:"id"`
 	APIKey             string               `json:"api_key,omitempty"`
 	APIKeySecret       NewRelicAPIKeySecret `json:"api_key_secret,omitempty"`
 	Region             string               `json:"region"`

@@ -36,7 +36,6 @@ var _ = Describe("Policy_webhooks", func() {
 			r = Policy{
 				Spec: PolicySpec{
 					Name:               "Test Policy",
-					ID:                 777,
 					IncidentPreference: "PER_POLICY",
 					APIKey:             "api-key",
 				},
@@ -107,7 +106,6 @@ var _ = Describe("Policy_webhooks", func() {
 		r = Policy{
 			Spec: PolicySpec{
 				Name:               "Test Policy",
-				ID:                 777,
 				IncidentPreference: "PER_POLICY",
 				APIKey:             "api-key",
 			},

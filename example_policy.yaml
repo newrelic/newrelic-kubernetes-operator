@@ -3,7 +3,6 @@ kind: Policy
 metadata:
   name: my-policy
 spec:
-  # Add fields here
   name: k8 created policy is awesome
   incident_preference: "PER_POLICY"
   region: "staging"
