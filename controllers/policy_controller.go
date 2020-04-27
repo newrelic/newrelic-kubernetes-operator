@@ -43,25 +43,26 @@ type PolicyReconciler struct {
 	AlertClientFunc func(string, string) (interfaces.NewRelicAlertsClient, error)
 	apiKey          string
 	Alerts          interfaces.NewRelicAlertsClient
+	ctx				context.Context
 }
 
 // +kubebuilder:rbac:groups=nr.k8s.newrelic.com,resources=policies,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=nr.k8s.newrelic.com,resources=policies/status,verbs=get;update;patch
 
 func (r *PolicyReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
-	ctx := context.Background()
+	r.ctx = context.Background()
 	_ = r.Log.WithValues("policy", req.NamespacedName)
 
 	// your logic here
 
 	var policy nrv1.Policy
-	err := r.Client.Get(ctx, req.NamespacedName, &policy)
+	err := r.Client.Get(r.ctx, req.NamespacedName, &policy)
 	if err != nil {
 		if strings.Contains(err.Error(), " not found") {
-			r.Log.Info("Expected error 'not found' after policy deleted", "error", err)
+			r.Log.Info("Policy 'not found' after being deleted. This is expected and no cause for alarm", "error", err)
 			return ctrl.Result{}, nil
 		}
-		r.Log.Error(err, "Tried getting policy", "name", req.NamespacedName.String())
+		r.Log.Error(err, "Failed to GET policy", "name", req.NamespacedName.String())
 		return ctrl.Result{}, nil
 	}
 	r.Log.Info("Starting reconcile action")
@@ -74,7 +75,7 @@ func (r *PolicyReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 	//initial alertsClient
 	alertsClient, errAlertsClient := r.AlertClientFunc(r.apiKey, policy.Spec.Region)
 	if errAlertsClient != nil {
-		r.Log.Error(errAlertsClient, "Error thrown")
+		r.Log.Error(errAlertsClient, "Failed to create AlertsClient")
 		return ctrl.Result{}, errAlertsClient
 	}
 	r.Alerts = alertsClient
@@ -87,38 +88,7 @@ func (r *PolicyReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 			policy.Finalizers = append(policy.Finalizers, deleteFinalizer)
 		}
 	} else {
-		// The object is being deleted
-		if containsString(policy.Finalizers, deleteFinalizer) {
-			// catch invalid state
-			if policy.Status.PolicyID == 0 {
-				r.Log.Info("No Condition ID set, just removing finalizer")
-				policy.Finalizers = removeString(policy.Finalizers, deleteFinalizer)
-			} else {
-				// our finalizer is present, so lets handle any external dependency
-				if err := r.deleteNewRelicAlertPolicy(policy); err != nil {
-					// if fail to delete the external dependency here, return with error
-					// so that it can be retried
-					r.Log.Error(err, "Failed to delete API Condition",
-						"policyId", policy.Status.PolicyID,
-						"region", policy.Spec.Region,
-						"Api Key", interfaces.PartialAPIKey(r.apiKey),
-					)
-					return ctrl.Result{}, err
-				}
-				// remove our finalizer from the list and update it.
-				r.Log.Info("New Relic Alert policy deleted, Removing finalizer")
-				policy.Finalizers = removeString(policy.Finalizers, deleteFinalizer)
-				if err := r.Client.Update(ctx, &policy); err != nil {
-					r.Log.Error(err, "Failed to update policy after deleting New Relic Alert policy")
-					return ctrl.Result{}, err
-				}
-			}
-		}
-
-		// Stop reconciliation as the item is being deleted
-		r.Log.Info("All done with policy deletion", "policyName", policy.Spec.Name)
-
-		return ctrl.Result{}, nil
+		return r.deletePolicy (policy, deleteFinalizer, r.ctx)
 	}
 
 	if reflect.DeepEqual(&policy.Spec, policy.Status.AppliedSpec) {
@@ -130,42 +100,103 @@ func (r *PolicyReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 	//check if policy has policy id
 	r.checkForExistingPolicy(&policy)
 
-	APIPolicy := policy.Spec.APIPolicy()
 
-	if policy.Status.PolicyID != 0 && !reflect.DeepEqual(&policy.Spec, policy.Status.AppliedSpec) {
-		r.Log.Info("updating policy", "PolicyName", policy.Name, "API fields", APIPolicy)
-		APIPolicy.ID = policy.Status.PolicyID
-		updatedCondition, err := alertsClient.UpdatePolicy(APIPolicy)
-		if err != nil {
-			r.Log.Error(err, "failed to update policy")
-		} else {
-			policy.Status.AppliedSpec = &policy.Spec
-			policy.Status.PolicyID = updatedCondition.ID
-		}
 
-		err = r.Client.Update(ctx, &policy)
+	if policy.Status.PolicyID != 0 {
+		err := r.updatePolicy(policy)
 		if err != nil {
-			r.Log.Error(err, "tried updating policy status", "name", req.NamespacedName)
+			return ctrl.Result{}, err
 		}
 	} else {
-		r.Log.Info("Creating policy", "ConditionName", policy.Name, "API fields", APIPolicy)
-		createdPolicy, err := alertsClient.CreatePolicy(APIPolicy)
+		err := r.createPolicy(policy)
 		if err != nil {
-			r.Log.Error(err, "failed to create policy",
-				"policyId", policy.Status.PolicyID,
-				"region", policy.Spec.Region,
-				"Api Key", interfaces.PartialAPIKey(r.apiKey),
-			)
-		} else {
-			policy.Status.AppliedSpec = &policy.Spec
-			policy.Status.PolicyID = createdPolicy.ID
-		}
-
-		err = r.Client.Update(ctx, &policy)
-		if err != nil {
-			r.Log.Error(err, "tried updating policy status", "name", req.NamespacedName)
+			return ctrl.Result{}, err
 		}
 	}
+
+	return ctrl.Result{}, nil
+}
+
+func (r *PolicyReconciler) createPolicy(policy nrv1.Policy) error {
+	r.Log.Info("Creating policy", "ConditionName", policy.Name, "API fields", policy)
+	APIPolicy := policy.Spec.APIPolicy()
+	createdPolicy, err := r.Alerts.CreatePolicy(APIPolicy)
+	if err != nil {
+		r.Log.Error(err, "failed to create policy via New Relic API",
+			"policyId", policy.Status.PolicyID,
+			"region", policy.Spec.Region,
+			"Api Key", interfaces.PartialAPIKey(r.apiKey),
+		)
+		return err
+	} else {
+		policy.Status.AppliedSpec = &policy.Spec
+		policy.Status.PolicyID = createdPolicy.ID
+	}
+
+	err = r.Client.Update(r.ctx, &policy)
+	if err != nil {
+		r.Log.Error(err, "tried updating policy status", "name", policy.Name)
+		return err
+	}
+	return nil
+}
+
+func (r *PolicyReconciler) updatePolicy(policy nrv1.Policy) error {
+	r.Log.Info("updating policy", "PolicyName", policy.Name, "API fields", policy)
+	APIPolicy := policy.Spec.APIPolicy()
+	APIPolicy.ID = policy.Status.PolicyID
+	updatedCondition, err := r.Alerts.UpdatePolicy(APIPolicy)
+	if err != nil {
+		r.Log.Error(err, "failed to update policy via New Relic API",
+			"policyId", policy.Status.PolicyID,
+			"region", policy.Spec.Region,
+			"Api Key", interfaces.PartialAPIKey(r.apiKey),
+			)
+		return err
+	} else {
+		policy.Status.AppliedSpec = &policy.Spec
+		policy.Status.PolicyID = updatedCondition.ID
+	}
+
+	err = r.Client.Update(r.ctx, &policy)
+	if err != nil {
+		r.Log.Error(err, "failed to update policy status", "name", policy.Name)
+		return err
+	}
+	return nil
+}
+
+func (r *PolicyReconciler) deletePolicy (policy nrv1.Policy, deleteFinalizer string, ctx context.Context) (ctrl.Result, error) {
+	// The object is being deleted
+	if containsString(policy.Finalizers, deleteFinalizer) {
+		// catch invalid state
+		if policy.Status.PolicyID == 0 {
+			r.Log.Info("No Condition ID set, just removing finalizer")
+			policy.Finalizers = removeString(policy.Finalizers, deleteFinalizer)
+		} else {
+			// our finalizer is present, so lets handle any external dependency
+			if err := r.deleteNewRelicAlertPolicy(policy); err != nil {
+				// if fail to delete the external dependency here, return with error
+				// so that it can be retried
+				r.Log.Error(err, "Failed to delete Alert Policy via New Relic API",
+					"policyId", policy.Status.PolicyID,
+					"region", policy.Spec.Region,
+					"Api Key", interfaces.PartialAPIKey(r.apiKey),
+				)
+				return ctrl.Result{}, err
+			}
+			// remove our finalizer from the list and update it.
+			r.Log.Info("New Relic Alert policy deleted, Removing finalizer")
+			policy.Finalizers = removeString(policy.Finalizers, deleteFinalizer)
+			if err := r.Client.Update(ctx, &policy); err != nil {
+				r.Log.Error(err, "Failed to update k8s records for this policy after successfully deleting the policy via New Relic Alert API")
+				return ctrl.Result{}, err
+			}
+		}
+	}
+
+	// Stop reconciliation as the item is being deleted
+	r.Log.Info("All done with policy deletion", "policyName", policy.Spec.Name)
 
 	return ctrl.Result{}, nil
 }
@@ -179,11 +210,11 @@ func (r *PolicyReconciler) SetupWithManager(mgr ctrl.Manager) error {
 func (r *PolicyReconciler) checkForExistingPolicy(policy *nrv1.Policy) {
 	if policy.Status.PolicyID == 0 {
 		r.Log.Info("Checking for existing policy", "policyName", policy.Name)
-		//if no policyId, get list of policys and compare name
+		//if no policyId, get list of policies and compare name
 		alertParams := &alerts.ListPoliciesParams{
-			Name: "STUB=name", //TODO figure out what this should look like
+			Name: policy.Spec.Name,
 		}
-		existingPolicyies, err := r.Alerts.ListPolicies(alertParams)
+		existingPolicies, err := r.Alerts.ListPolicies(alertParams)
 		if err != nil {
 			r.Log.Error(err, "failed to get list of NRQL policys from New Relic API",
 				"policyId", policy.Status.PolicyID,
@@ -191,7 +222,7 @@ func (r *PolicyReconciler) checkForExistingPolicy(policy *nrv1.Policy) {
 				"Api Key", interfaces.PartialAPIKey(r.apiKey),
 			)
 		} else {
-			for _, existingPolicy := range existingPolicyies {
+			for _, existingPolicy := range existingPolicies {
 				if existingPolicy.Name == policy.Spec.Name {
 					r.Log.Info("Matched on existing policy, updating PolicyId", "policyId", existingPolicy.ID)
 					policy.Status.PolicyID = existingPolicy.ID
@@ -226,7 +257,7 @@ func (r *PolicyReconciler) getAPIKeyOrSecret(policy nrv1.Policy) string {
 		var apiKeySecret v1.Secret
 		getErr := r.Client.Get(context.Background(), key, &apiKeySecret)
 
-		r.Log.Error(getErr, "Error retrieving secret", "secret", apiKeySecret)
+		r.Log.Error(getErr, "Failed to retrieve secret", "secret", apiKeySecret)
 		return string(apiKeySecret.Data[policy.Spec.APIKeySecret.KeyName])
 	}
 	return ""

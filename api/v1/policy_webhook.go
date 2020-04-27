@@ -25,7 +25,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/webhook"
 )
 
-// Log is for logging in this package.
+// Log is for emitting logs in this package.
 var Log = logf.Log.WithName("policy-resource")
 var defaultPolicyIncidentPreference = "PER_POLICY"
 
