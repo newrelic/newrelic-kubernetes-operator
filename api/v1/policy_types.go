@@ -32,6 +32,7 @@ type PolicySpec struct {
 	APIKey             string               `json:"api_key,omitempty"`
 	APIKeySecret       NewRelicAPIKeySecret `json:"api_key_secret,omitempty"`
 	Region             string               `json:"region"`
+	Conditions         []NrqlAlertCondition `json:"conditions,omitempty"`
 }
 
 // PolicyStatus defines the observed state of Policy

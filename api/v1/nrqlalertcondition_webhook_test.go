@@ -59,6 +59,7 @@ var _ = Describe("ValidateCreate", func() {
 				Enabled:             true,
 				ExistingPolicyID:    42,
 				APIKey:              "api-key",
+				Region:              "us",
 			},
 		}
 		alertsClient.GetPolicyStub = func(int) (*alerts.Policy, error) {
@@ -120,6 +121,23 @@ var _ = Describe("ValidateCreate", func() {
 			Expect(err).To(HaveOccurred())
 
 		})
+	})
+	Context("when given a NRQL condition without required field region", func() {
+		It("should reject resource creation", func() {
+			r.Spec.Region = ""
+			err := r.ValidateCreate()
+			Expect(err).To(HaveOccurred())
+		})
+	})
+
+	Context("when given a NRQL condition without required field ExistingPolicyId", func() {
+		It("should reject resource creation", func() {
+			r.Spec.ExistingPolicyID = 0
+			err := r.ValidateCreate()
+			Expect(err).To(HaveOccurred())
+
+		})
+
 	})
 
 	Describe("CheckExistingPolicyID", func() {

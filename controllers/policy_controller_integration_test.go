@@ -5,9 +5,9 @@ package controllers
 import (
 	"context"
 	"errors"
+	"k8s.io/apimachinery/pkg/api/resource"
 
 	"github.com/newrelic/newrelic-client-go/pkg/alerts"
-
 	ctrl "sigs.k8s.io/controller-runtime"
 
 	. "github.com/onsi/ginkgo"
@@ -30,6 +30,7 @@ var _ = Describe("policy reconciliation", func() {
 		policy         *nrv1.Policy
 		request        ctrl.Request
 		namespacedName types.NamespacedName
+		conditionName types.NamespacedName
 		//expectedEvents []string
 		//secret        *v1.Secret
 		fakeAlertFunc func(string, string) (interfaces.NewRelicAlertsClient, error)
@@ -64,6 +65,40 @@ var _ = Describe("policy reconciliation", func() {
 				Name:               "test policy",
 				APIKey:             "112233",
 				IncidentPreference: "PER_POLICY",
+				Conditions: []nrv1.NrqlAlertCondition{
+					{
+						Spec: nrv1.NrqlAlertConditionSpec{
+							Terms: []nrv1.AlertConditionTerm{
+								{
+									Duration:     resource.MustParse("30"),
+									Operator:     "above",
+									Priority:     "critical",
+									Threshold:    resource.MustParse("5"),
+									TimeFunction: "all",
+								},
+							},
+							Nrql: nrv1.NrqlQuery{
+								Query:      "SELECT 1 FROM MyEvents",
+								SinceValue: "5",
+							},
+							Type:                "NRQL",
+							Name:                "NRQL Condition",
+							RunbookURL:          "http://test.com/runbook",
+							ValueFunction:       "max",
+							ID:                  777,
+							ViolationCloseTimer: 60,
+							ExpectedGroups:      2,
+							IgnoreOverlap:       true,
+							Enabled:             true,
+							ExistingPolicyID:    42,
+							APIKey:              "api-key",
+							Region:              "us",
+						},
+						Status: nrv1.NrqlAlertConditionStatus{
+							AppliedSpec: &nrv1.NrqlAlertConditionSpec{},
+						},
+					},
+				},
 			},
 			Status: nrv1.PolicyStatus{
 				AppliedSpec: &nrv1.PolicySpec{},
@@ -74,6 +109,10 @@ var _ = Describe("policy reconciliation", func() {
 		namespacedName = types.NamespacedName{
 			Namespace: "default",
 			Name:      "test-policy",
+		}
+		conditionName = types.NamespacedName{
+			Namespace: "default",
+			Name:      "test-policy1942898816", //TODO: swap with calling hash function
 		}
 		request = ctrl.Request{NamespacedName: namespacedName}
 
@@ -132,6 +171,44 @@ var _ = Describe("policy reconciliation", func() {
 			})
 		})
 
+		Context("when creating a valid policy with conditions", func() {
+			It("should create the conditions", func() {
+
+				err := k8sClient.Create(ctx, policy)
+				Expect(err).ToNot(HaveOccurred())
+
+				// call reconcile
+				_, err = r.Reconcile(request)
+				Expect(err).ToNot(HaveOccurred())
+
+				//call reconcile a second time to create conditions
+				//_, err = r.Reconcile(request)
+				//Expect(err).ToNot(HaveOccurred())
+
+				var endStateNrqlCondition nrv1.NrqlAlertCondition
+				err = k8sClient.Get(ctx, conditionName, &endStateNrqlCondition)
+				Expect(err).ToNot(HaveOccurred())
+				Expect(endStateNrqlCondition.Spec.Name).To(Equal("NRQL Condition"))
+
+			})
+
+			//It("updates the policyId on the Policy resource", func() {
+			//
+			//	err := k8sClient.Create(ctx, policy)
+			//	Expect(err).ToNot(HaveOccurred())
+			//
+			//	// call reconcile
+			//	_, err = r.Reconcile(request)
+			//	Expect(err).ToNot(HaveOccurred())
+			//
+			//	var endStatePolicy nrv1.Policy
+			//	err = k8sClient.Get(ctx, namespacedName, &endStatePolicy)
+			//	Expect(err).To(BeNil())
+			//	Expect(endStatePolicy.Status.PolicyID).To(Equal(333))
+			//
+			//})
+		})
+
 		AfterEach(func() {
 			// Delete the policy
 			err := k8sClient.Delete(ctx, policy)
@@ -172,6 +249,22 @@ var _ = Describe("policy reconciliation", func() {
 				var endStatePolicy nrv1.Policy
 				err = k8sClient.Get(ctx, namespacedName, &endStatePolicy)
 				Expect(err).NotTo(BeNil())
+
+
+			})
+			It("should delete the condition", func() {
+				err := k8sClient.Delete(ctx, policy)
+				Expect(err).ToNot(HaveOccurred())
+
+				// Need to call reconcile to delete finalizer
+				_, err = r.Reconcile(request)
+				Expect(err).ToNot(HaveOccurred())
+
+				var endStateCondition nrv1.NrqlAlertCondition
+				err = k8sClient.Get(ctx, conditionName, &endStateCondition)
+
+				Expect(err).To(HaveOccurred())
+				Expect(endStateCondition.Spec.Name).ToNot(Equal(policy.Spec.Conditions[0].Spec.Name))
 
 			})
 		})

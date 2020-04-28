@@ -78,6 +78,11 @@ func (r *NrqlAlertCondition) ValidateCreate() error {
 	if err != nil {
 		return err
 	}
+
+	err = r.CheckRequiredFields()
+	if err != nil {
+		return err
+	}
 	return r.CheckExistingPolicyID()
 }
 
@@ -149,4 +154,15 @@ func (r *NrqlAlertCondition) CheckForAPIKeyOrSecret() error {
 		}
 	}
 	return errors.New("either api_key or api_key_secret must be set")
+}
+
+func (r *NrqlAlertCondition) CheckRequiredFields() error {
+	if r.Spec.Region == "" {
+		return errors.New("region must be set")
+	}
+	if r.Spec.ExistingPolicyID == 0 {
+		return errors.New("existing_policy_id must be set")
+	}
+
+	return nil
 }

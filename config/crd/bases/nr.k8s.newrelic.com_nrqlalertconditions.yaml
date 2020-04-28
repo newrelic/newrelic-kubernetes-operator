@@ -110,8 +110,6 @@ spec:
               type: integer
           required:
           - enabled
-          - existing_policy_id
-          - region
           type: object
         status:
           description: NrqlAlertConditionStatus defines the observed state of NrqlAlertCondition
@@ -190,8 +188,6 @@ spec:
                   type: integer
               required:
               - enabled
-              - existing_policy_id
-              - region
               type: object
             condition_id:
               type: integer
