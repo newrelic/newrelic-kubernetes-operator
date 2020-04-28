@@ -233,7 +233,7 @@ func (r *PolicyReconciler) deleteNewRelicAlertPolicy(policy nrv1.Policy) error {
 	r.Log.Info("Deleting policy", "policyName", policy.Spec.Name)
 	_, err := r.Alerts.DeletePolicy(policy.Status.PolicyID)
 	if err != nil {
-		r.Log.Error(err, "Error deleting policy",
+		r.Log.Error(err, "Error deleting policy via New Relic API",
 			"policyId", policy.Status.PolicyID,
 			"region", policy.Spec.Region,
 			"Api Key", interfaces.PartialAPIKey(r.apiKey),
