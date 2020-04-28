@@ -3,7 +3,7 @@
 #
 DOCKER            ?= docker
 DOCKER_FILE       ?= build/package/Dockerfile
-DOCKER_IMAGE      ?= newrelic/kubernetes-operator:snapshot
+DOCKER_IMAGE      ?= newrelic/k8s-operator:snapshot
 
 docker-login:
 	@echo "=== $(PROJECT_NAME) === [ docker-login     ]: logging into docker hub"

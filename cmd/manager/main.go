@@ -28,6 +28,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 
 	nralertsv1 "github.com/newrelic/newrelic-kubernetes-operator/api/v1"
+	nrv1 "github.com/newrelic/newrelic-kubernetes-operator/api/v1"
 	"github.com/newrelic/newrelic-kubernetes-operator/controllers"
 	// +kubebuilder:scaffold:imports
 )
@@ -41,6 +42,7 @@ func init() {
 	_ = clientgoscheme.AddToScheme(scheme)
 
 	_ = nralertsv1.AddToScheme(scheme)
+	_ = nrv1.AddToScheme(scheme)
 	// +kubebuilder:scaffold:scheme
 }
 
@@ -79,6 +81,19 @@ func main() {
 	}
 	if err = (&nralertsv1.NrqlAlertCondition{}).SetupWebhookWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create webhook", "webhook", "NrqlAlertCondition")
+		os.Exit(1)
+	}
+	if err = (&controllers.PolicyReconciler{
+		Client:          mgr.GetClient(),
+		Log:             ctrl.Log.WithName("controllers").WithName("Policy"),
+		Scheme:          mgr.GetScheme(),
+		AlertClientFunc: interfaces.InitializeAlertsClient,
+	}).SetupWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "Policy")
+		os.Exit(1)
+	}
+	if err = (&nrv1.Policy{}).SetupWebhookWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create webhook", "webhook", "Policy")
 		os.Exit(1)
 	}
 	// +kubebuilder:scaffold:builder
