@@ -245,9 +245,10 @@ func (r *NrqlAlertConditionReconciler) getAPIKeyOrSecret(condition nralertsv1.Nr
 	if condition.Spec.APIKeySecret != (nralertsv1.NewRelicAPIKeySecret{}) {
 		key := types.NamespacedName{Namespace: condition.Spec.APIKeySecret.Namespace, Name: condition.Spec.APIKeySecret.Name}
 		var apiKeySecret v1.Secret
-		getErr := r.Client.Get(context.Background(), key, &apiKeySecret)
-
-		r.Log.Error(getErr, "Error retrieving secret", "secret", apiKeySecret)
+		if getErr := r.Client.Get(context.Background(), key, &apiKeySecret); getErr != nil {
+			r.Log.Error(getErr, "Error retrieving secret", "secret", apiKeySecret)
+			return ""
+		}
 		return string(apiKeySecret.Data[condition.Spec.APIKeySecret.KeyName])
 	}
 	return ""
