@@ -20,10 +20,18 @@ type NewRelicAlertsClient interface {
 }
 
 func InitializeAlertsClient(apiKey string, regionName string) (NewRelicAlertsClient, error) {
-	configuration := config.Config{
-		AdminAPIKey: apiKey,
+	configuration := config.New()
+	configuration.AdminAPIKey = apiKey
+
+	regName, err := region.Parse(regionName)
+	if err != nil {
+		return nil, err
 	}
-	err := configuration.SetRegion(region.Parse(regionName))
+	reg, err := region.Get(regName)
+	if err != nil {
+		return nil, err
+	}
+	err = configuration.SetRegion(reg)
 	if err != nil {
 		return nil, err
 	}
