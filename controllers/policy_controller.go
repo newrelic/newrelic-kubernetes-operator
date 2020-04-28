@@ -43,7 +43,7 @@ type PolicyReconciler struct {
 	AlertClientFunc func(string, string) (interfaces.NewRelicAlertsClient, error)
 	apiKey          string
 	Alerts          interfaces.NewRelicAlertsClient
-	ctx				context.Context
+	ctx             context.Context
 }
 
 // +kubebuilder:rbac:groups=nr.k8s.newrelic.com,resources=policies,verbs=get;list;watch;create;update;patch;delete
@@ -88,7 +88,7 @@ func (r *PolicyReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 			policy.Finalizers = append(policy.Finalizers, deleteFinalizer)
 		}
 	} else {
-		return r.deletePolicy (policy, deleteFinalizer, r.ctx)
+		return r.deletePolicy(r.ctx, policy, deleteFinalizer)
 	}
 
 	if reflect.DeepEqual(&policy.Spec, policy.Status.AppliedSpec) {
@@ -99,8 +99,6 @@ func (r *PolicyReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 
 	//check if policy has policy id
 	r.checkForExistingPolicy(&policy)
-
-
 
 	if policy.Status.PolicyID != 0 {
 		err := r.updatePolicy(policy)
@@ -128,10 +126,9 @@ func (r *PolicyReconciler) createPolicy(policy nrv1.Policy) error {
 			"Api Key", interfaces.PartialAPIKey(r.apiKey),
 		)
 		return err
-	} else {
-		policy.Status.AppliedSpec = &policy.Spec
-		policy.Status.PolicyID = createdPolicy.ID
 	}
+	policy.Status.AppliedSpec = &policy.Spec
+	policy.Status.PolicyID = createdPolicy.ID
 
 	err = r.Client.Update(r.ctx, &policy)
 	if err != nil {
@@ -151,12 +148,11 @@ func (r *PolicyReconciler) updatePolicy(policy nrv1.Policy) error {
 			"policyId", policy.Status.PolicyID,
 			"region", policy.Spec.Region,
 			"Api Key", interfaces.PartialAPIKey(r.apiKey),
-			)
+		)
 		return err
-	} else {
-		policy.Status.AppliedSpec = &policy.Spec
-		policy.Status.PolicyID = updatedCondition.ID
 	}
+	policy.Status.AppliedSpec = &policy.Spec
+	policy.Status.PolicyID = updatedCondition.ID
 
 	err = r.Client.Update(r.ctx, &policy)
 	if err != nil {
@@ -166,7 +162,7 @@ func (r *PolicyReconciler) updatePolicy(policy nrv1.Policy) error {
 	return nil
 }
 
-func (r *PolicyReconciler) deletePolicy (policy nrv1.Policy, deleteFinalizer string, ctx context.Context) (ctrl.Result, error) {
+func (r *PolicyReconciler) deletePolicy(ctx context.Context, policy nrv1.Policy, deleteFinalizer string) (ctrl.Result, error) {
 	// The object is being deleted
 	if containsString(policy.Finalizers, deleteFinalizer) {
 		// catch invalid state
