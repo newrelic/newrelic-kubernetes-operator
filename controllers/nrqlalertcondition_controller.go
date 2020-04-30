@@ -83,7 +83,7 @@ func (r *NrqlAlertConditionReconciler) Reconcile(req ctrl.Request) (ctrl.Result,
 	}
 	r.Alerts = alertsClient
 
-	deleteFinalizer := "storage.finalizers.tutorial.kubebuilder.io"
+	deleteFinalizer := "nrqlalertconditions.finalizers.nr.k8s.newrelic.com"
 
 	//examine DeletionTimestamp to determine if object is under deletion
 	if condition.DeletionTimestamp.IsZero() {
@@ -97,6 +97,10 @@ func (r *NrqlAlertConditionReconciler) Reconcile(req ctrl.Request) (ctrl.Result,
 			if condition.Status.ConditionID == 0 {
 				r.Log.Info("No Condition ID set, just removing finalizer")
 				condition.Finalizers = removeString(condition.Finalizers, deleteFinalizer)
+				if err := r.Client.Update(ctx, &condition); err != nil {
+					r.Log.Error(err, "Failed to update condition after deleting New Relic Alert condition")
+					return ctrl.Result{}, err
+				}
 			} else {
 				// our finalizer is present, so lets handle any external dependency
 				if err := r.deleteNewRelicAlertCondition(condition); err != nil {
@@ -107,7 +111,16 @@ func (r *NrqlAlertConditionReconciler) Reconcile(req ctrl.Request) (ctrl.Result,
 						"region", condition.Spec.Region,
 						"Api Key", interfaces.PartialAPIKey(r.apiKey),
 					)
-					return ctrl.Result{}, err
+					if err.Error() == "resource not found" {
+						r.Log.Info("New Relic API returned resource not found, deleting condition resource")
+					} else {
+						r.Log.Error(err, "Failed to delete API Condition",
+							"conditionId", condition.Status.ConditionID,
+							"region", condition.Spec.Region,
+							"Api Key", interfaces.PartialAPIKey(r.apiKey),
+						)
+						return ctrl.Result{}, err
+					}
 				}
 				// remove our finalizer from the list and update it.
 				r.Log.Info("New Relic Alert condition deleted, Removing finalizer")

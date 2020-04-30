@@ -4,6 +4,7 @@ package v1
 
 import (
 	v1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/newrelic/newrelic-kubernetes-operator/interfaces"
@@ -95,6 +96,66 @@ var _ = Describe("Policy_webhooks", func() {
 				Expect(err).To(HaveOccurred())
 			})
 		})
+		Context("when given a policy with duplicate conditions", func() {
+			It("should reject the policy", func() {
+
+				r.Spec.Conditions = []NrqlAlertCondition{
+					{
+						Spec: NrqlAlertConditionSpec{
+							Terms: []AlertConditionTerm{
+								{
+									Duration:     resource.MustParse("30"),
+									Operator:     "above",
+									Priority:     "critical",
+									Threshold:    resource.MustParse("5"),
+									TimeFunction: "all",
+								},
+							},
+							Nrql: NrqlQuery{
+								Query:      "SELECT 1 FROM MyEvents",
+								SinceValue: "5",
+							},
+							Type:                "NRQL",
+							Name:                "NRQL Condition",
+							RunbookURL:          "http://test.com/runbook",
+							ValueFunction:       "max",
+							ViolationCloseTimer: 60,
+							ExpectedGroups:      2,
+							IgnoreOverlap:       true,
+							Enabled:             true,
+						},
+					},
+					{
+						Spec: NrqlAlertConditionSpec{
+							Terms: []AlertConditionTerm{
+								{
+									Duration:     resource.MustParse("30"),
+									Operator:     "above",
+									Priority:     "critical",
+									Threshold:    resource.MustParse("5"),
+									TimeFunction: "all",
+								},
+							},
+							Nrql: NrqlQuery{
+								Query:      "SELECT 1 FROM MyEvents",
+								SinceValue: "5",
+							},
+							Type:                "NRQL",
+							Name:                "NRQL Condition",
+							RunbookURL:          "http://test.com/runbook",
+							ValueFunction:       "max",
+							ViolationCloseTimer: 60,
+							ExpectedGroups:      2,
+							IgnoreOverlap:       true,
+							Enabled:             true,
+						},
+					},
+					}
+
+				err := r.ValidateCreate()
+				Expect(err).To(HaveOccurred())
+			})
+		})
 
 	})
 
@@ -108,6 +169,32 @@ var _ = Describe("Policy_webhooks", func() {
 				Name:               "Test Policy",
 				IncidentPreference: "PER_POLICY",
 				APIKey:             "api-key",
+				Conditions: []NrqlAlertCondition{
+					{Spec: NrqlAlertConditionSpec{
+						Terms: []AlertConditionTerm{
+							{
+								Duration:     resource.MustParse("30"),
+								Operator:     "above",
+								Priority:     "critical",
+								Threshold:    resource.MustParse("5"),
+								TimeFunction: "all",
+							},
+						},
+						Nrql: NrqlQuery{
+							Query:      "SELECT 1 FROM MyEvents",
+							SinceValue: "5",
+						},
+						Type:                "NRQL",
+						Name:                "NRQL Condition",
+						RunbookURL:          "http://test.com/runbook",
+						ValueFunction:       "max",
+						ViolationCloseTimer: 60,
+						ExpectedGroups:      2,
+						IgnoreOverlap:       true,
+						Enabled:             true,
+					},
+					},
+				},
 			},
 		}
 		Context("when given a policy with no incident_preference set", func() {
@@ -128,6 +215,16 @@ var _ = Describe("Policy_webhooks", func() {
 
 			})
 		})
+
+		Context("when given a policy with conditions", func() {
+			It("should set empty condition appliedSpec", func() {
+
+				r.Default()
+
+				Expect(r.Spec.Conditions[0].Status.AppliedSpec).ToNot(BeNil())
+			})
+		})
+
 
 	})
 

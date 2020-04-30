@@ -35,6 +35,8 @@ type PolicySpec struct {
 	Conditions         []NrqlAlertCondition `json:"conditions,omitempty"`
 }
 
+//PolicyCondition defined the types of conditions contained within a 
+
 // PolicyStatus defines the observed state of Policy
 type PolicyStatus struct {
 	AppliedSpec *PolicySpec `json:"applied_spec"`

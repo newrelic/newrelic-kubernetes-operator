@@ -17,6 +17,10 @@ package v1
 
 import (
 	"errors"
+	"github.com/davecgh/go-spew/spew"
+	"fmt"
+	"hash"
+	"hash/fnv"
 	"strings"
 
 	"k8s.io/apimachinery/pkg/runtime"
@@ -49,6 +53,13 @@ func (r *Policy) Default() {
 		log.Info("Setting null Applied Spec to empty interface")
 		r.Status.AppliedSpec = &PolicySpec{}
 	}
+	for i, condition := range r.Spec.Conditions {
+		if condition.Status.AppliedSpec == nil {
+			log.Info("Setting null Applied Spec to empty interface condition")
+			r.Spec.Conditions[i].Status.AppliedSpec = &NrqlAlertConditionSpec{}
+		}
+	}
+
 	r.DefaultIncidentPreference()
 }
 
@@ -66,6 +77,10 @@ func (r *Policy) ValidateCreate() error {
 		return err
 	}
 
+	err = r.CheckForDuplicateConditions()
+	if err != nil {
+		return err
+	}
 	return r.ValidateIncidentPreference()
 }
 
@@ -73,6 +88,15 @@ func (r *Policy) ValidateCreate() error {
 func (r *Policy) ValidateUpdate(old runtime.Object) error {
 	Log.Info("validate update", "name", r.Name)
 
+	err := r.CheckForAPIKeyOrSecret()
+	if err != nil {
+		return err
+	}
+
+	err = r.CheckForDuplicateConditions()
+	if err != nil {
+		return err
+	}
 	return r.ValidateIncidentPreference()
 }
 
@@ -80,7 +104,10 @@ func (r *Policy) ValidateUpdate(old runtime.Object) error {
 func (r *Policy) ValidateDelete() error {
 	Log.Info("validate delete", "name", r.Name)
 
-	// TODO(user): fill in your validation logic upon object deletion.
+	err := r.CheckForAPIKeyOrSecret()
+	if err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -92,12 +119,27 @@ func (r *Policy) DefaultIncidentPreference() {
 
 }
 
+func (r *Policy) CheckForDuplicateConditions() error {
+
+	var conditionHashMap = make(map[string]interface{})
+	for _, condition := range r.Spec.Conditions {
+		conditionSpecHash := fmt.Sprintf("%d", ComputeHash(&condition.Spec))
+		conditionHashMap[r.Name + string(conditionSpecHash)] = nil
+	}
+	if len(conditionHashMap) != len(r.Spec.Conditions) {
+		log.Info("duplicate conditions detected or hash collision", "conditionHash", conditionHashMap)
+		return errors.New("duplicate conditions detected or hash collision")
+	}
+
+	return nil
+}
+
 func (r *Policy) ValidateIncidentPreference() error {
 	switch r.Spec.IncidentPreference {
 	case "PER_POLICY", "PER_CONDITION", "PER_CONDITION_AND_TARGET":
 		return nil
 	}
-
+	log.Info("Incident preference must be PER_POLICY, PER_CONDITION, or PER_CONDITION_AND_TARGET", "IncidentPreference value", r.Spec.IncidentPreference)
 	return errors.New("incident preference must be PER_POLICY, PER_CONDITION, or PER_CONDITION_AND_TARGET")
 }
 
@@ -111,4 +153,25 @@ func (r *Policy) CheckForAPIKeyOrSecret() error {
 		}
 	}
 	return errors.New("either api_key or api_key_secret must be set")
+}
+
+
+// DeepHashObject writes specified object to hash using the spew library
+// which follows pointers and prints actual values of the nested objects
+// ensuring the hash does not change when a pointer changes.
+func DeepHashObject(hasher hash.Hash, objectToWrite interface{}) {
+	hasher.Reset()
+	printer := spew.ConfigState{
+		Indent:         " ",
+		SortKeys:       true,
+		DisableMethods: true,
+		SpewKeys:       true,
+	}
+	printer.Fprintf(hasher, "%#v", objectToWrite)
+}
+
+func ComputeHash(template *NrqlAlertConditionSpec) uint32 {
+	conditionTemplateSpecHasher := fnv.New32a()
+	DeepHashObject(conditionTemplateSpecHasher, *template)
+	return conditionTemplateSpecHasher.Sum32()
 }

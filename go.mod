@@ -17,6 +17,7 @@ require (
 	github.com/onsi/ginkgo v1.12.0
 	github.com/onsi/gomega v1.9.0
 	github.com/psampaz/go-mod-outdated v0.6.0 // indirect
+	golang.org/x/tools v0.0.0-20200423201157-2723c5de0d66
 	k8s.io/api v0.17.0
 	k8s.io/apimachinery v0.17.0
 	k8s.io/client-go v0.17.0

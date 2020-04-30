@@ -19,12 +19,9 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"hash"
-	"hash/fnv"
 	"reflect"
 	"strings"
 
-	"github.com/davecgh/go-spew/spew"
 	"github.com/newrelic/newrelic-client-go/pkg/alerts"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/types"
@@ -82,7 +79,7 @@ func (r *PolicyReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 	}
 	r.Alerts = alertsClient
 
-	deleteFinalizer := "storage.finalizers.tutorial.kubebuilder.io"
+	deleteFinalizer := "policies.finalizers.nr.k8s.newrelic.com"
 
 	//examine DeletionTimestamp to determine if object is under deletion
 	if policy.DeletionTimestamp.IsZero() {
@@ -171,6 +168,7 @@ func (r *PolicyReconciler) createOrUpdateConditions(policy *nrv1.Policy) error {
 	var processedConditions = make(map[string]interface{})
 
 	for i, condition := range policy.Spec.Conditions {
+		r.Log.Info("Checking on condition", "resourceName", condition.Name, "conditionName", condition.Spec.Name, "condition.ResourceVersion", condition.ResourceVersion)
 		//Check to see if condition has already been created
 		if condition.ResourceVersion != "" {
 			index, err := getConditionIndexByUUID(condition.GetUID(), policy.Status.AppliedSpec.Conditions)
@@ -203,7 +201,6 @@ func (r *PolicyReconciler) createOrUpdateConditions(policy *nrv1.Policy) error {
 	}
 	numberConditionsToDelete := len(policy.Status.AppliedSpec.Conditions) - len(processedConditions)
 
-
 	if numberConditionsToDelete > 0 {
 		//loop through AppliedSpec matching ones already processed
 		for _, conditionToDelete := range policy.Status.AppliedSpec.Conditions {
@@ -231,12 +228,12 @@ func getConditionIndexByUUID(uuid types.UID, conditions []nrv1.NrqlAlertConditio
 }
 
 func (r *PolicyReconciler) createCondition(policy *nrv1.Policy, condition *nrv1.NrqlAlertCondition) error {
-	conditionSpecHash := fmt.Sprintf("%d", ComputeHash(&condition.Spec))
+	conditionSpecHash := fmt.Sprintf("%d", nrv1.ComputeHash(&condition.Spec))
 	condition.Name = policy.Name + conditionSpecHash
 	condition.Namespace = policy.Namespace
 	condition.Labels = policy.Labels
 	//TODO: no clue if this is needed, I'm guessing no
-	//condition.OwnerReferences: []metav1.OwnerReference{*metav1.NewControllerRef(policy, machineDeploymentKind)},
+	//condition.OwnerReferences: []metav1.OwnerReference{*metav1.NewControllerRef(policy, conditionKind)},
 
 	condition.Status = nrv1.NrqlAlertConditionStatus{
 		AppliedSpec: &nrv1.NrqlAlertConditionSpec{},
@@ -247,7 +244,7 @@ func (r *PolicyReconciler) createCondition(policy *nrv1.Policy, condition *nrv1.
 	condition.Spec.APIKey = policy.Spec.APIKey
 	condition.Spec.APIKeySecret = policy.Spec.APIKeySecret
 
-	r.Log.Info("creating condition", "condition", condition.Name)
+	r.Log.Info("creating condition", "condition", condition.Name, "conditionName", condition.Spec.Name)
 	errCondition := r.Create(r.ctx, condition)
 	if errCondition != nil {
 		r.Log.Error(errCondition, "error creating condition")
@@ -267,7 +264,7 @@ func (r *PolicyReconciler) deleteCondition(condition *nrv1.NrqlAlertCondition) e
 }
 
 func (r *PolicyReconciler) updatePolicy(policy *nrv1.Policy) error {
-	r.Log.Info("updating policy", "PolicyName", policy.Name, "API fields", policy)
+	r.Log.Info("updating policy", "PolicyName", policy.Name)
 
 	//only update policy if policy fields have changed
 	APIPolicy := policy.Spec.APIPolicy()
@@ -279,7 +276,7 @@ func (r *PolicyReconciler) updatePolicy(policy *nrv1.Policy) error {
 		r.Log.Info("need to update alert policy via New Relic API",
 			"Alert Policy Name", APIPolicy.Name,
 			"incident preference ", policy.Status.AppliedSpec.IncidentPreference,
-			)
+		)
 		updatedPolicy, err = r.Alerts.UpdatePolicy(APIPolicy)
 		if err != nil {
 			r.Log.Error(err, "failed to update policy via New Relic API",
@@ -359,14 +356,14 @@ func (r *PolicyReconciler) SetupWithManager(mgr ctrl.Manager) error {
 
 func (r *PolicyReconciler) checkForExistingPolicy(policy *nrv1.Policy) {
 	if policy.Status.PolicyID == 0 {
-		r.Log.Info("Checking for existing policy", "policyName", policy.Name)
+		r.Log.Info("Checking for existing policy", "policy", policy.Name, "policyName", policy.Spec.Name)
 		//if no policyId, get list of policies and compare name
 		alertParams := &alerts.ListPoliciesParams{
 			Name: policy.Spec.Name,
 		}
 		existingPolicies, err := r.Alerts.ListPolicies(alertParams)
 		if err != nil {
-			r.Log.Error(err, "failed to get list of NRQL policys from New Relic API",
+			r.Log.Error(err, "failed to get list of policies from New Relic API",
 				"policyId", policy.Status.PolicyID,
 				"region", policy.Spec.Region,
 				"Api Key", interfaces.PartialAPIKey(r.apiKey),
@@ -406,29 +403,12 @@ func (r *PolicyReconciler) getAPIKeyOrSecret(policy nrv1.Policy) string {
 		key := types.NamespacedName{Namespace: policy.Spec.APIKeySecret.Namespace, Name: policy.Spec.APIKeySecret.Name}
 		var apiKeySecret v1.Secret
 		getErr := r.Client.Get(context.Background(), key, &apiKeySecret)
-
-		r.Log.Error(getErr, "Failed to retrieve secret", "secret", apiKeySecret)
+		if getErr != nil {
+			r.Log.Error(getErr, "Failed to retrieve secret", "secret", apiKeySecret)
+			return ""
+		}
 		return string(apiKeySecret.Data[policy.Spec.APIKeySecret.KeyName])
 	}
 	return ""
 }
 
-// DeepHashObject writes specified object to hash using the spew library
-// which follows pointers and prints actual values of the nested objects
-// ensuring the hash does not change when a pointer changes.
-func DeepHashObject(hasher hash.Hash, objectToWrite interface{}) {
-	hasher.Reset()
-	printer := spew.ConfigState{
-		Indent:         " ",
-		SortKeys:       true,
-		DisableMethods: true,
-		SpewKeys:       true,
-	}
-	printer.Fprintf(hasher, "%#v", objectToWrite)
-}
-
-func ComputeHash(template *nrv1.NrqlAlertConditionSpec) uint32 {
-	conditionTemplateSpecHasher := fnv.New32a()
-	DeepHashObject(conditionTemplateSpecHasher, *template)
-	return conditionTemplateSpecHasher.Sum32()
-}
