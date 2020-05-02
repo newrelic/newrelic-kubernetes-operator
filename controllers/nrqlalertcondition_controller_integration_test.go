@@ -539,7 +539,6 @@ var _ = Describe("NrqlCondition reconciliation", func() {
 
 			})
 
-
 		})
 	})
 

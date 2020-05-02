@@ -17,10 +17,6 @@ package v1
 
 import (
 	"errors"
-	"github.com/davecgh/go-spew/spew"
-	"fmt"
-	"hash"
-	"hash/fnv"
 	"strings"
 
 	"k8s.io/apimachinery/pkg/runtime"
@@ -53,12 +49,12 @@ func (r *Policy) Default() {
 		log.Info("Setting null Applied Spec to empty interface")
 		r.Status.AppliedSpec = &PolicySpec{}
 	}
-	for i, condition := range r.Spec.Conditions {
-		if condition.Status.AppliedSpec == nil {
-			log.Info("Setting null Applied Spec to empty interface condition")
-			r.Spec.Conditions[i].Status.AppliedSpec = &NrqlAlertConditionSpec{}
-		}
-	}
+	//for i, condition := range r.Spec.Conditions {
+	//	if condition.Status.AppliedSpec == nil {
+	//		log.Info("Setting null Applied Spec to empty interface condition")
+	//		r.Spec.Conditions[i].Status.AppliedSpec = &NrqlAlertConditionSpec{}
+	//	}
+	//}
 
 	r.DefaultIncidentPreference()
 }
@@ -121,10 +117,9 @@ func (r *Policy) DefaultIncidentPreference() {
 
 func (r *Policy) CheckForDuplicateConditions() error {
 
-	var conditionHashMap = make(map[string]interface{})
+	var conditionHashMap = make(map[uint32]bool)
 	for _, condition := range r.Spec.Conditions {
-		conditionSpecHash := fmt.Sprintf("%d", ComputeHash(&condition.Spec))
-		conditionHashMap[r.Name + string(conditionSpecHash)] = nil
+		conditionHashMap[condition.SpecHash()] = true
 	}
 	if len(conditionHashMap) != len(r.Spec.Conditions) {
 		log.Info("duplicate conditions detected or hash collision", "conditionHash", conditionHashMap)
@@ -156,22 +151,3 @@ func (r *Policy) CheckForAPIKeyOrSecret() error {
 }
 
 
-// DeepHashObject writes specified object to hash using the spew library
-// which follows pointers and prints actual values of the nested objects
-// ensuring the hash does not change when a pointer changes.
-func DeepHashObject(hasher hash.Hash, objectToWrite interface{}) {
-	hasher.Reset()
-	printer := spew.ConfigState{
-		Indent:         " ",
-		SortKeys:       true,
-		DisableMethods: true,
-		SpewKeys:       true,
-	}
-	printer.Fprintf(hasher, "%#v", objectToWrite)
-}
-
-func ComputeHash(template *NrqlAlertConditionSpec) uint32 {
-	conditionTemplateSpecHasher := fnv.New32a()
-	DeepHashObject(conditionTemplateSpecHasher, *template)
-	return conditionTemplateSpecHasher.Sum32()
-}
