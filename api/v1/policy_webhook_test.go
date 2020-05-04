@@ -216,15 +216,6 @@ var _ = Describe("Policy_webhooks", func() {
 			})
 		})
 
-		PContext("when given a policy with conditions", func() {
-			It("should set empty condition appliedSpec", func() {
-
-				r.Default()
-
-				//Expect(r.Spec.Conditions[0].Status.AppliedSpec).ToNot(BeNil())
-			})
-		})
-
 	})
 
 })
