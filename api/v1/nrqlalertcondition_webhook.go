@@ -157,12 +157,20 @@ func (r *NrqlAlertCondition) CheckForAPIKeyOrSecret() error {
 }
 
 func (r *NrqlAlertCondition) CheckRequiredFields() error {
+// will need this in imports at top of file
+// import (
+//    "strings"
+//)
+
+	missing_fields := []string{}
 	if r.Spec.Region == "" {
-		return errors.New("region must be set")
+		append(missing_fields, "region")
 	}
 	if r.Spec.ExistingPolicyID == 0 {
-		return errors.New("existing_policy_id must be set")
+		append(missing_fields, "existing_policy_id")
 	}
-
+	if len(messages) > 0 {
+		return errors.New(strings.Join(missing_fields, " and ") + " must be set")
+	}
 	return nil
 }
