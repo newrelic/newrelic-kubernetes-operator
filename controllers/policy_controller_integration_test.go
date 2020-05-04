@@ -5,6 +5,7 @@ package controllers
 import (
 	"context"
 	"errors"
+
 	"k8s.io/apimachinery/pkg/api/resource"
 
 	"github.com/newrelic/newrelic-client-go/pkg/alerts"
@@ -34,7 +35,7 @@ var _ = Describe("policy reconciliation", func() {
 		conditionName  types.NamespacedName
 		//expectedEvents []string
 		//secret        *v1.Secret
-		fakeAlertFunc func(string, string) (interfaces.NewRelicAlertsClient, error)
+		fakeAlertFunc             func(string, string) (interfaces.NewRelicAlertsClient, error)
 		deletedConditionNamespace types.NamespacedName
 	)
 
@@ -155,14 +156,13 @@ var _ = Describe("policy reconciliation", func() {
 				_, err = r.Reconcile(request)
 				Expect(err).ToNot(HaveOccurred())
 
-
-				var endStatePolicy nrv1.Policy               //test-policy1942898816
+				var endStatePolicy nrv1.Policy //test-policy1942898816
 				var endStateCondition nrv1.NrqlAlertCondition
 				err = k8sClient.Get(ctx, namespacedName, &endStatePolicy) //1942898816
 				Expect(err).To(BeNil())
 				conditionNameType := types.NamespacedName{
-					Name: endStatePolicy.Spec.Conditions[0].Name,
-					Namespace:endStatePolicy.Spec.Conditions[0].Namespace,
+					Name:      endStatePolicy.Spec.Conditions[0].Name,
+					Namespace: endStatePolicy.Spec.Conditions[0].Namespace,
 				}
 				err = k8sClient.Get(ctx, conditionNameType, &endStateCondition)
 				Expect(err).To(BeNil())
@@ -186,8 +186,8 @@ var _ = Describe("policy reconciliation", func() {
 				err = k8sClient.Get(ctx, namespacedName, &endStatePolicy)
 				Expect(err).To(BeNil())
 				conditionNameType := types.NamespacedName{
-					Name: endStatePolicy.Spec.Conditions[0].Name,
-					Namespace:endStatePolicy.Spec.Conditions[0].Namespace,
+					Name:      endStatePolicy.Spec.Conditions[0].Name,
+					Namespace: endStatePolicy.Spec.Conditions[0].Namespace,
 				}
 				err = k8sClient.Get(ctx, conditionNameType, &endStateCondition)
 				Expect(err).To(BeNil())
@@ -239,8 +239,8 @@ var _ = Describe("policy reconciliation", func() {
 				err = k8sClient.Get(ctx, namespacedName, &endStatePolicy)
 				Expect(err).To(BeNil())
 				conditionNameType := types.NamespacedName{
-					Name: endStatePolicy.Spec.Conditions[0].Name,
-					Namespace:endStatePolicy.Spec.Conditions[0].Namespace,
+					Name:      endStatePolicy.Spec.Conditions[0].Name,
+					Namespace: endStatePolicy.Spec.Conditions[0].Namespace,
 				}
 				err = k8sClient.Get(ctx, conditionNameType, &endStateCondition)
 				Expect(err).To(BeNil())
@@ -369,8 +369,8 @@ var _ = Describe("policy reconciliation", func() {
 				Expect(alertsClient.UpdatePolicyCallCount()).To(Equal(0))
 				Expect(endStatePolicy.Status.AppliedSpec.Conditions[0].Name).To(Equal(initialConditionName))
 				conditionNameType := types.NamespacedName{
-					Name: endStatePolicy.Status.AppliedSpec.Conditions[0].Name,
-					Namespace:endStatePolicy.Status.AppliedSpec.Conditions[0].Namespace,
+					Name:      endStatePolicy.Status.AppliedSpec.Conditions[0].Name,
+					Namespace: endStatePolicy.Status.AppliedSpec.Conditions[0].Namespace,
 				}
 				err = k8sClient.Get(ctx, conditionNameType, &endStateCondition)
 				Expect(err).To(BeNil())
@@ -424,15 +424,14 @@ var _ = Describe("policy reconciliation", func() {
 				err = k8sClient.Get(ctx, namespacedName, &endStatePolicy)
 				Expect(err).To(BeNil())
 				conditionNameType := types.NamespacedName{
-					Name: endStatePolicy.Spec.Conditions[0].Name,
-					Namespace:endStatePolicy.Spec.Conditions[0].Namespace,
-						}
+					Name:      endStatePolicy.Spec.Conditions[0].Name,
+					Namespace: endStatePolicy.Spec.Conditions[0].Namespace,
+				}
 				err = k8sClient.Get(ctx, conditionNameType, &endStateCondition)
 				Expect(err).To(BeNil())
 				Expect(endStateCondition.Spec.Name).To(Equal("New conditionName"))
 				Expect(endStateCondition.Name).ToNot(Equal(originalConditionName))
 			})
-
 
 			It("should delete the old condition ", func() {
 				originalConditionName := policy.Status.AppliedSpec.Conditions[0].Name
@@ -450,7 +449,7 @@ var _ = Describe("policy reconciliation", func() {
 
 				var originalCondition nrv1.NrqlAlertCondition
 				originalConditionNamespaceType := types.NamespacedName{
-					Name:originalConditionName,
+					Name:      originalConditionName,
 					Namespace: endStatePolicy.Spec.Conditions[0].Namespace,
 				}
 				err = k8sClient.Get(ctx, originalConditionNamespaceType, &originalCondition)
@@ -483,8 +482,8 @@ var _ = Describe("policy reconciliation", func() {
 				err = k8sClient.Get(ctx, namespacedName, &endStatePolicy)
 				Expect(err).To(BeNil())
 				conditionNameType := types.NamespacedName{
-					Name: endStatePolicy.Spec.Conditions[0].Name,
-					Namespace:endStatePolicy.Spec.Conditions[0].Namespace,
+					Name:      endStatePolicy.Spec.Conditions[0].Name,
+					Namespace: endStatePolicy.Spec.Conditions[0].Namespace,
 				}
 				err = k8sClient.Get(ctx, conditionNameType, &endStateCondition)
 				Expect(err).To(BeNil())
@@ -508,8 +507,8 @@ var _ = Describe("policy reconciliation", func() {
 				err = k8sClient.Get(ctx, namespacedName, &endStatePolicy)
 				Expect(err).To(BeNil())
 				conditionNameType := types.NamespacedName{
-					Name: endStatePolicy.Spec.Conditions[0].Name,
-					Namespace:endStatePolicy.Spec.Conditions[0].Namespace,
+					Name:      endStatePolicy.Spec.Conditions[0].Name,
+					Namespace: endStatePolicy.Spec.Conditions[0].Namespace,
 				}
 				err = k8sClient.Get(ctx, conditionNameType, &endStateCondition)
 				Expect(err).To(BeNil())
@@ -554,13 +553,13 @@ var _ = Describe("policy reconciliation", func() {
 				_, err = r.Reconcile(request)
 				Expect(err).ToNot(HaveOccurred())
 
-				var endStatePolicy nrv1.Policy               //test-policy1942898816
+				var endStatePolicy nrv1.Policy //test-policy1942898816
 				var endStateCondition nrv1.NrqlAlertCondition
 				err = k8sClient.Get(ctx, namespacedName, &endStatePolicy) //1942898816
 				Expect(err).To(BeNil())
 				conditionNameType := types.NamespacedName{
-					Name: endStatePolicy.Spec.Conditions[1].Name,
-					Namespace:endStatePolicy.Spec.Conditions[1].Namespace,
+					Name:      endStatePolicy.Spec.Conditions[1].Name,
+					Namespace: endStatePolicy.Spec.Conditions[1].Namespace,
 				}
 				err = k8sClient.Get(ctx, conditionNameType, &endStateCondition)
 				Expect(err).To(BeNil())
@@ -645,7 +644,6 @@ var _ = Describe("policy reconciliation", func() {
 		Context("and removing the second condition ", func() {
 			BeforeEach(func() {
 
-
 				policy.Spec.Conditions = []nrv1.PolicyCondition{policy.Spec.Conditions[0]}
 
 			})
@@ -666,8 +664,8 @@ var _ = Describe("policy reconciliation", func() {
 				err = k8sClient.Get(ctx, namespacedName, &endStatePolicy)
 				Expect(err).To(BeNil())
 				conditionNameType := types.NamespacedName{
-					Name: endStatePolicy.Spec.Conditions[0].Name,
-					Namespace:endStatePolicy.Spec.Conditions[0].Namespace,
+					Name:      endStatePolicy.Spec.Conditions[0].Name,
+					Namespace: endStatePolicy.Spec.Conditions[0].Namespace,
 				}
 				err = k8sClient.Get(ctx, conditionNameType, &endStateCondition)
 				Expect(err).To(BeNil())
@@ -678,7 +676,6 @@ var _ = Describe("policy reconciliation", func() {
 				err = k8sClient.Get(ctx, deletedConditionNamespace, &deletedCondition)
 				Expect(err).ToNot(BeNil())
 				Expect(deletedCondition.Name).To(Equal(""))
-
 
 			})
 
@@ -708,13 +705,13 @@ var _ = Describe("policy reconciliation", func() {
 				_, err = r.Reconcile(request)
 				Expect(err).ToNot(HaveOccurred())
 
-				var endStatePolicy nrv1.Policy               //test-policy1942898816
+				var endStatePolicy nrv1.Policy //test-policy1942898816
 				var endStateCondition nrv1.NrqlAlertCondition
 				err = k8sClient.Get(ctx, namespacedName, &endStatePolicy) //1942898816
 				Expect(err).To(BeNil())
 				conditionNameType := types.NamespacedName{
-					Name: endStatePolicy.Spec.Conditions[0].Name,
-					Namespace:endStatePolicy.Spec.Conditions[0].Namespace,
+					Name:      endStatePolicy.Spec.Conditions[0].Name,
+					Namespace: endStatePolicy.Spec.Conditions[0].Namespace,
 				}
 				err = k8sClient.Get(ctx, conditionNameType, &endStateCondition)
 				Expect(err).To(BeNil())

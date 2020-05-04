@@ -3,8 +3,6 @@
 package v1
 
 import (
-
-
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"k8s.io/apimachinery/pkg/api/resource"
@@ -12,16 +10,16 @@ import (
 
 var _ = Describe("Equals", func() {
 	var (
-		p PolicySpec
+		p               PolicySpec
 		policyToCompare PolicySpec
-		output bool
-		condition PolicyCondition
+		output          bool
+		condition       PolicyCondition
 	)
 	BeforeEach(func() {
 		condition = PolicyCondition{
 			Name:      "policy-name",
 			Namespace: "default",
-			Spec:      NrqlAlertConditionSpec{
+			Spec: NrqlAlertConditionSpec{
 				Terms: []AlertConditionTerm{
 					{
 						Duration:     resource.MustParse("30"),
@@ -47,44 +45,43 @@ var _ = Describe("Equals", func() {
 				ExistingPolicyID:    42,
 			},
 		}
-	 p = PolicySpec{
-		 IncidentPreference: "PER_POLICY",
-		 Name:               "test-policy",
-		 APIKey:             "112233",
-		 APIKeySecret:       NewRelicAPIKeySecret{
-			 Name:      "secret",
-			 Namespace: "default",
-			 KeyName:   "api-key",
-		 },
-		 Region:             "us",
-		 Conditions:         []PolicyCondition{condition},
-	 }
-	 policyToCompare = PolicySpec{
-		 IncidentPreference: "PER_POLICY",
-		 Name:               "test-policy",
-		 APIKey:             "112233",
-		 APIKeySecret:       NewRelicAPIKeySecret{
-			 Name:      "secret",
-			 Namespace: "default",
-			 KeyName:   "api-key",
-		 },
-		 Region:             "us",
-		 Conditions:         []PolicyCondition{condition},
-	 }
+		p = PolicySpec{
+			IncidentPreference: "PER_POLICY",
+			Name:               "test-policy",
+			APIKey:             "112233",
+			APIKeySecret: NewRelicAPIKeySecret{
+				Name:      "secret",
+				Namespace: "default",
+				KeyName:   "api-key",
+			},
+			Region:     "us",
+			Conditions: []PolicyCondition{condition},
+		}
+		policyToCompare = PolicySpec{
+			IncidentPreference: "PER_POLICY",
+			Name:               "test-policy",
+			APIKey:             "112233",
+			APIKeySecret: NewRelicAPIKeySecret{
+				Name:      "secret",
+				Namespace: "default",
+				KeyName:   "api-key",
+			},
+			Region:     "us",
+			Conditions: []PolicyCondition{condition},
+		}
 	})
-
 
 	Context("When equal", func() {
 		It("should return true", func() {
 			output = p.Equals(policyToCompare)
-			Expect(output).To (BeTrue())
+			Expect(output).To(BeTrue())
 		})
 	})
 
 	Context("When condition hash matches", func() {
 
 		It("should return true", func() {
-				output = p.Equals(policyToCompare)
+			output = p.Equals(policyToCompare)
 			Expect(output).To(BeTrue())
 		})
 	})
@@ -95,7 +92,7 @@ var _ = Describe("Equals", func() {
 				{
 					Name:      "",
 					Namespace: "",
-					Spec:      NrqlAlertConditionSpec{
+					Spec: NrqlAlertConditionSpec{
 						Terms: []AlertConditionTerm{
 							{
 								Duration:     resource.MustParse("30"),
@@ -133,7 +130,7 @@ var _ = Describe("Equals", func() {
 				{
 					Name:      "policy-name",
 					Namespace: "default",
-					Spec:      NrqlAlertConditionSpec{
+					Spec: NrqlAlertConditionSpec{
 						Name: "test condition 222",
 					},
 				},
@@ -148,24 +145,24 @@ var _ = Describe("Equals", func() {
 		It("should return false", func() {
 			p.Conditions = []PolicyCondition{
 				{
-					Spec:      NrqlAlertConditionSpec{
+					Spec: NrqlAlertConditionSpec{
 						Name: "test condition",
 					},
 				},
 				{
-					Spec:      NrqlAlertConditionSpec{
+					Spec: NrqlAlertConditionSpec{
 						Name: "test condition 2",
 					},
 				},
 			}
 			policyToCompare.Conditions = []PolicyCondition{
 				{
-					Spec:      NrqlAlertConditionSpec{
+					Spec: NrqlAlertConditionSpec{
 						Name: "test condition",
 					},
 				},
 				{
-					Spec:      NrqlAlertConditionSpec{
+					Spec: NrqlAlertConditionSpec{
 						Name: "test condition is awesome",
 					},
 				},
@@ -180,12 +177,12 @@ var _ = Describe("Equals", func() {
 		It("should return false", func() {
 			p.Conditions = []PolicyCondition{
 				{
-					Spec:      NrqlAlertConditionSpec{
+					Spec: NrqlAlertConditionSpec{
 						Name: "test condition",
 					},
 				},
 				{
-					Spec:      NrqlAlertConditionSpec{
+					Spec: NrqlAlertConditionSpec{
 						Name: "test condition 2",
 					},
 				},
@@ -223,6 +220,4 @@ var _ = Describe("Equals", func() {
 		})
 	})
 
-
 })
-

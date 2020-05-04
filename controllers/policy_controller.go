@@ -138,7 +138,7 @@ func (r *PolicyReconciler) createPolicy(policy *nrv1.Policy) error {
 		r.Log.Error(errConditions, "error creating or updating conditions")
 		return errConditions
 	}
-	r.Log.Info("policy after condition creation", "policyCondition", policy.Spec.Conditions, "pointer", &policy )
+	r.Log.Info("policy after condition creation", "policyCondition", policy.Spec.Conditions, "pointer", &policy)
 
 	policy.Status.AppliedSpec = &policy.Spec
 
@@ -193,7 +193,7 @@ func (r *PolicyReconciler) createOrUpdateConditions(policy *nrv1.Policy) error {
 			r.Log.Info("Condition name not set, checking name values")
 			for _, appliedCondition := range policy.Status.AppliedSpec.Conditions {
 
-				if appliedCondition.Spec.Name == condition.Spec.Name{
+				if appliedCondition.Spec.Name == condition.Spec.Name {
 					r.Log.Info("Found matching name")
 					condition.Namespace = appliedCondition.Namespace
 					condition.Name = appliedCondition.Name
@@ -209,41 +209,40 @@ func (r *PolicyReconciler) createOrUpdateConditions(policy *nrv1.Policy) error {
 					return err
 				}
 
-			//add to the list of processed conditions
-			existingConditions[condition.Name] = processedConditions{
-				processed:true,
-				condition:condition,
-			}
-			//Now update the spec
-			policy.Spec.Conditions[i] = condition
-			r.Log.Info("policy spec updated", "policy.Spec.Condition[i]", policy.Spec.Conditions[i])
-			//move to the next
-			continue
+				//add to the list of processed conditions
+				existingConditions[condition.Name] = processedConditions{
+					processed: true,
+					condition: condition,
+				}
+				//Now update the spec
+				policy.Spec.Conditions[i] = condition
+				r.Log.Info("policy spec updated", "policy.Spec.Condition[i]", policy.Spec.Conditions[i])
+				//move to the next
+				continue
 			}
 		}
 
 		r.Log.Info("Now we have a condition name", "conditionName", condition.Name)
 		existingConditions[condition.Name] = processedConditions{
-			processed:true,
-			condition:condition,
+			processed: true,
+			condition: condition,
 		}
 
-		retrievedCondition := r.getNrqlConditionFromPolicyCondition(&condition)// := nrv1.NrqlAlertCondition{}
+		retrievedCondition := r.getNrqlConditionFromPolicyCondition(&condition) // := nrv1.NrqlAlertCondition{}
 
 		r.Log.Info("Found condition to update", "retrievedCondition", retrievedCondition)
 
-
 		//Now check to confirm the NrqlCondition matches out PolicyCondition
-		retrievedPolicyCondition := nrv1.PolicyCondition{Spec:retrievedCondition.Spec}
-		r.Log.Info("spec hash", "retrieved", retrievedPolicyCondition.SpecHash() ,"condition",  condition.SpecHash())
-		r.Log.Info("conditions", "retrieved", retrievedPolicyCondition ,"condition",  condition)
+		retrievedPolicyCondition := nrv1.PolicyCondition{Spec: retrievedCondition.Spec}
+		r.Log.Info("spec hash", "retrieved", retrievedPolicyCondition.SpecHash(), "condition", condition.SpecHash())
+		r.Log.Info("conditions", "retrieved", retrievedPolicyCondition, "condition", condition)
 
 		if retrievedPolicyCondition.SpecHash() == condition.SpecHash() {
 			r.Log.Info("existing NrqlCondition matches going to next")
 			policy.Spec.Conditions[i] = condition
 			continue
 		}
-		r.Log.Info("updating existing condition", "policyRegion", policy.Spec.Region,"policyId", policy.Status.PolicyID )
+		r.Log.Info("updating existing condition", "policyRegion", policy.Spec.Region, "policyId", policy.Status.PolicyID)
 
 		retrievedCondition.Spec = condition.Spec
 		//Set inherited values
@@ -261,14 +260,11 @@ func (r *PolicyReconciler) createOrUpdateConditions(policy *nrv1.Policy) error {
 		policy.Spec.Conditions[i] = condition
 		r.Log.Info("policy spec updated", "policy.Spec.Condotion[i]", policy.Spec.Conditions[i])
 
-
-
-
 	}
 	r.Log.Info("now one last check for stragglers")
 	//now we check for any left behind conditions that weren't processed
 	for conditionName, processedCondition := range existingConditions {
-		r.Log.Info("checking " + processedCondition.condition.Name, "bool is", processedCondition.processed)
+		r.Log.Info("checking "+processedCondition.condition.Name, "bool is", processedCondition.processed)
 		if !processedCondition.processed {
 			r.Log.Info("Need to delete", "ppliedConditionName", conditionName)
 			err := r.deleteCondition(&processedCondition.condition)
@@ -279,8 +275,7 @@ func (r *PolicyReconciler) createOrUpdateConditions(policy *nrv1.Policy) error {
 		}
 
 	}
-	r.Log.Info("all done",  "policy.Spec", policy.Spec, "policy.Status.AppliedSpec.Conditions", policy.Status.AppliedSpec.Conditions)
-
+	r.Log.Info("all done", "policy.Spec", policy.Spec, "policy.Status.AppliedSpec.Conditions", policy.Status.AppliedSpec.Conditions)
 
 	return nil
 }
@@ -318,7 +313,7 @@ func (r *PolicyReconciler) createCondition(policy *nrv1.Policy, condition *nrv1.
 func (r *PolicyReconciler) deleteCondition(condition *nrv1.PolicyCondition) error {
 	r.Log.Info("Deleting condition", "condition", condition.Name, "conditionName", condition.Spec.Name)
 	retrievedCondition := r.getNrqlConditionFromPolicyCondition(condition)
-	r.Log.Info("retrieved condition for deletion","retrievedCondition", retrievedCondition )
+	r.Log.Info("retrieved condition for deletion", "retrievedCondition", retrievedCondition)
 	err := r.Delete(r.ctx, &retrievedCondition)
 	if err != nil {
 		r.Log.Error(err, "error deleting condition resource")
@@ -329,8 +324,8 @@ func (r *PolicyReconciler) deleteCondition(condition *nrv1.PolicyCondition) erro
 
 func (r *PolicyReconciler) getNrqlConditionFromPolicyCondition(condition *nrv1.PolicyCondition) (nrqlAlertCondition nrv1.NrqlAlertCondition) {
 	r.Log.Info("condition before retrieval", "condition", condition)
-
-	r.Client.Get(r.ctx, condition.GetNamespace(), &nrqlAlertCondition)
+	//throw away the error since empty conditions are expected
+	_ = r.Client.Get(r.ctx, condition.GetNamespace(), &nrqlAlertCondition)
 	r.Log.Info("retrieved condition", "nrqlAlertCondition", nrqlAlertCondition, "namespace", condition.GetNamespace())
 	return
 }

@@ -17,10 +17,11 @@ package v1
 
 import (
 	"encoding/json"
-	"github.com/davecgh/go-spew/spew"
-	"github.com/newrelic/newrelic-client-go/pkg/alerts"
 	"hash"
 	"hash/fnv"
+
+	"github.com/davecgh/go-spew/spew"
+	"github.com/newrelic/newrelic-client-go/pkg/alerts"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 )
@@ -40,9 +41,9 @@ type PolicySpec struct {
 
 //PolicyCondition defined the conditions contained within a a policy
 type PolicyCondition struct {
-	Name string                 `json:"name"`
-	Namespace string			`json:"namespace"`
-	Spec NrqlAlertConditionSpec `json:"spec,omitempty"`
+	Name      string                 `json:"name"`
+	Namespace string                 `json:"namespace"`
+	Spec      NrqlAlertConditionSpec `json:"spec,omitempty"`
 	//SpecHash uint32					`json:"specHash,omitempty"`
 }
 
@@ -103,7 +104,7 @@ func DeepHashObject(hasher hash.Hash, objectToWrite interface{}) {
 func (p *PolicyCondition) SpecHash() uint32 {
 	//remove api keys and condition from object to enable comparison minus inherited fields
 	strippedPolicy := PolicyCondition{
-		Spec:      p.Spec,
+		Spec: p.Spec,
 	}
 	strippedPolicy.Spec.APIKeySecret = NewRelicAPIKeySecret{}
 	strippedPolicy.Spec.APIKey = ""
@@ -121,31 +122,30 @@ func (p *PolicyCondition) GetNamespace() types.NamespacedName {
 	}
 }
 
-
 //Equals - comparator function to check for equality
-func (p PolicySpec) Equals(policyToCompare PolicySpec) bool {
-	if p.IncidentPreference != policyToCompare.IncidentPreference {
+func (in PolicySpec) Equals(policyToCompare PolicySpec) bool {
+	if in.IncidentPreference != policyToCompare.IncidentPreference {
 		return false
 	}
-	if p.Name != policyToCompare.Name {
+	if in.Name != policyToCompare.Name {
 		return false
 	}
-	if p.APIKey != policyToCompare.APIKey {
+	if in.APIKey != policyToCompare.APIKey {
 		return false
 	}
-	if p.Region != policyToCompare.Region {
+	if in.Region != policyToCompare.Region {
 		return false
 	}
-	if p.APIKeySecret != policyToCompare.APIKeySecret {
+	if in.APIKeySecret != policyToCompare.APIKeySecret {
 		return false
 	}
-	if len(p.Conditions) != len(policyToCompare.Conditions) {
+	if len(in.Conditions) != len(policyToCompare.Conditions) {
 		return false
 	}
 
 	checkedHashes := make(map[uint32]bool)
 
-	for _, condition := range p.Conditions {
+	for _, condition := range in.Conditions {
 		checkedHashes[condition.SpecHash()] = true
 	}
 

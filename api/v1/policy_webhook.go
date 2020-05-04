@@ -149,5 +149,3 @@ func (r *Policy) CheckForAPIKeyOrSecret() error {
 	}
 	return errors.New("either api_key or api_key_secret must be set")
 }
-
-
