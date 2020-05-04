@@ -18,6 +18,7 @@ package v1
 import (
 	"context"
 	"errors"
+	"strings"
 
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/types"
@@ -157,20 +158,16 @@ func (r *NrqlAlertCondition) CheckForAPIKeyOrSecret() error {
 }
 
 func (r *NrqlAlertCondition) CheckRequiredFields() error {
-// will need this in imports at top of file
-// import (
-//    "strings"
-//)
 
-	missing_fields := []string{}
+	missingFields := []string{}
 	if r.Spec.Region == "" {
-		append(missing_fields, "region")
+		missingFields = append(missingFields, "region")
 	}
 	if r.Spec.ExistingPolicyID == 0 {
-		append(missing_fields, "existing_policy_id")
+		missingFields = append(missingFields, "existing_policy_id")
 	}
-	if len(messages) > 0 {
-		return errors.New(strings.Join(missing_fields, " and ") + " must be set")
+	if len(missingFields) > 0 {
+		return errors.New(strings.Join(missingFields, " and ") + " must be set")
 	}
 	return nil
 }

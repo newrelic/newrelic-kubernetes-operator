@@ -248,6 +248,35 @@ var _ = Describe("policy reconciliation", func() {
 
 			})
 
+			Context("when creating a valid policy with conditions with k8 resource name set", func() {
+				It("should create the conditions with an auto-generated name ignoring the manual name", func() {
+
+					policy.Spec.Conditions[0].Name = "my custom name"
+
+					err := k8sClient.Create(ctx, policy)
+					Expect(err).ToNot(HaveOccurred())
+
+					// call reconcile
+					_, err = r.Reconcile(request)
+					Expect(err).ToNot(HaveOccurred())
+
+					Expect(alertsClient.CreatePolicyCallCount()).To(Equal(1))
+
+					var endStatePolicy nrv1.Policy
+					var endStateCondition nrv1.NrqlAlertCondition
+					err = k8sClient.Get(ctx, namespacedName, &endStatePolicy)
+					Expect(err).To(BeNil())
+					conditionNameType := types.NamespacedName{
+						Name:      endStatePolicy.Spec.Conditions[0].Name,
+						Namespace: endStatePolicy.Spec.Conditions[0].Namespace,
+					}
+					err = k8sClient.Get(ctx, conditionNameType, &endStateCondition)
+					Expect(err).To(BeNil())
+					Expect(endStateCondition.Spec.Name).To(Equal("NRQL Condition"))
+					Expect(endStateCondition.Name).ToNot(Equal("my custom name"))
+				})
+			})
+
 		})
 
 		AfterEach(func() {
