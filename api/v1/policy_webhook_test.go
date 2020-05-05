@@ -164,7 +164,9 @@ var _ = Describe("Policy_webhooks", func() {
 					r.Spec.APIKey = ""
 					err := r.ValidateCreate()
 					Expect(err).To(HaveOccurred())
-					Expect(err.Error()).To(Equal("either api_key or api_key_secret must be set"))
+					Expect(err.Error()).To(ContainSubstring("either api_key or api_key_secret must be set"))
+					Expect(err.Error()).To(ContainSubstring("duplicate conditions detected"))
+					Expect(err.Error()).To(ContainSubstring("incident preference must be"))
 				})
 			})
 		})

@@ -213,6 +213,7 @@ var _ = Describe("policy reconciliation", func() {
 				// call reconcile
 				_, reconcileErr := r.Reconcile(request)
 				Expect(reconcileErr).To(HaveOccurred())
+				Expect(reconcileErr.Error()).To(Equal("Any Error Goes Here"))
 
 				var endStatePolicy nrv1.Policy
 				getErr := k8sClient.Get(ctx, namespacedName, &endStatePolicy)

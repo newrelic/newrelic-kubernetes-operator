@@ -25,14 +25,14 @@ import (
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/types"
 
-	"github.com/newrelic/newrelic-kubernetes-operator/interfaces"
-
 	"github.com/go-logr/logr"
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	nrv1 "github.com/newrelic/newrelic-kubernetes-operator/api/v1"
+	customErrors "github.com/newrelic/newrelic-kubernetes-operator/errors"
+	"github.com/newrelic/newrelic-kubernetes-operator/interfaces"
 )
 
 // PolicyReconciler reconciles a Policy object
@@ -153,20 +153,20 @@ func (r *PolicyReconciler) createPolicy(policy *nrv1.Policy) error {
 func (r *PolicyReconciler) createConditions(policy *nrv1.Policy) error {
 
 	r.Log.Info("initial policy creation so create all policies")
-	var collectedErrors []error
+	collectedErrors := new(customErrors.ErrorCollector)
 	for i, condition := range policy.Spec.Conditions {
 		err := r.createCondition(policy, &condition)
 		if err != nil {
 			r.Log.Error(err, "error creating condition")
-			collectedErrors = append(collectedErrors, err)
+			collectedErrors.Collect(err)
 		} else {
 			policy.Spec.Conditions[i] = condition
 		}
 
 	}
-	if len(collectedErrors) > 0 {
+	if len(*collectedErrors) > 0 {
 		r.Log.Info("errors encountered creating conditions", "collectoredErrors", collectedErrors)
-		return collectedErrors[0]
+		return collectedErrors
 	}
 	return nil
 }
@@ -190,7 +190,7 @@ func (r *PolicyReconciler) createOrUpdateConditions(policy *nrv1.Policy) error {
 		}
 	}
 
-	var collectedErrors []error
+	collectedErrors := new(customErrors.ErrorCollector)
 
 	for i, condition := range policy.Spec.Conditions {
 		//loop through the policies, creating/updating as needed
@@ -214,7 +214,7 @@ func (r *PolicyReconciler) createOrUpdateConditions(policy *nrv1.Policy) error {
 				err := r.createCondition(policy, &condition)
 				if err != nil {
 					r.Log.Error(err, "error creating condition")
-					collectedErrors = append(collectedErrors, err)
+					collectedErrors.Collect(err)
 				}
 
 				//add to the list of processed conditions
@@ -262,7 +262,7 @@ func (r *PolicyReconciler) createOrUpdateConditions(policy *nrv1.Policy) error {
 		err := r.Client.Update(r.ctx, &retrievedCondition)
 		if err != nil {
 			r.Log.Error(err, "error updating condition")
-			collectedErrors = append(collectedErrors, err)
+			collectedErrors.Collect(err)
 		}
 		//Now update the spec
 		policy.Spec.Conditions[i] = condition
@@ -280,14 +280,14 @@ func (r *PolicyReconciler) createOrUpdateConditions(policy *nrv1.Policy) error {
 			err := r.deleteCondition(&processedCondition.condition)
 			if err != nil {
 				r.Log.Error(err, "error deleting condition resource")
-				collectedErrors = append(collectedErrors, err)
+				collectedErrors.Collect(err)
 			}
 		}
 
 	}
-	if len(collectedErrors) > 0 {
+	if len(*collectedErrors) > 0 {
 		r.Log.Info("Errors encountered processing conditions", "collectedErrors", collectedErrors)
-		return collectedErrors[0] //can only return 1 error so return the first and log the rest
+		return collectedErrors
 	}
 
 	r.Log.Info("all done", "policy.Spec", policy.Spec, "policy.Status.AppliedSpec.Conditions", policy.Status.AppliedSpec.Conditions)
@@ -397,17 +397,17 @@ func (r *PolicyReconciler) deletePolicy(ctx context.Context, policy *nrv1.Policy
 			policy.Finalizers = removeString(policy.Finalizers, deleteFinalizer)
 		} else {
 			// our finalizer is present, so lets handle any external dependency
-			var collectedErrors []error
+			collectedErrors := new(customErrors.ErrorCollector)
 			for _, condition := range policy.Status.AppliedSpec.Conditions {
 				err := r.deleteCondition(&condition)
 				if err != nil {
 					r.Log.Error(err, "error deleting condition resources")
-					collectedErrors = append(collectedErrors, err)
+					collectedErrors.Collect(err)
 				}
 			}
-			if len(collectedErrors) > 0 {
+			if len(*collectedErrors) > 0 {
 				r.Log.Info("errors deleting condition resources", "collectedErrors", collectedErrors)
-				return ctrl.Result{}, collectedErrors[0]
+				return ctrl.Result{}, collectedErrors
 			}
 
 			if err := r.deleteNewRelicAlertPolicy(policy); err != nil {

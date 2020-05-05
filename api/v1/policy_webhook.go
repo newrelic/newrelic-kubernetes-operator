@@ -23,6 +23,8 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/webhook"
+
+	customErrors "github.com/newrelic/newrelic-kubernetes-operator/errors"
 )
 
 // Log is for emitting logs in this package.
@@ -62,27 +64,25 @@ var _ webhook.Validator = &Policy{}
 func (r *Policy) ValidateCreate() error {
 	Log.Info("validate create", "name", r.Name)
 
-	var collectedErrors []error
+	collectedErrors := new(customErrors.ErrorCollector)
 	err := r.CheckForAPIKeyOrSecret()
 
 	if err != nil {
-		collectedErrors = append(collectedErrors, err)
+		collectedErrors.Collect(err)
 	}
 
 	err = r.CheckForDuplicateConditions()
 	if err != nil {
-		collectedErrors = append(collectedErrors, err)
-
+		collectedErrors.Collect(err)
 	}
 	err = r.ValidateIncidentPreference()
 
 	if err != nil {
-		collectedErrors = append(collectedErrors, err)
-
+		collectedErrors.Collect(err)
 	}
-	if len(collectedErrors) > 0 {
+	if len(*collectedErrors) > 0 {
 		Log.Info("Errors encountered validating policy", "collectedErrors", collectedErrors)
-		return collectedErrors[0]
+		return collectedErrors
 	}
 	return nil
 }
@@ -91,27 +91,26 @@ func (r *Policy) ValidateCreate() error {
 func (r *Policy) ValidateUpdate(old runtime.Object) error {
 	Log.Info("validate update", "name", r.Name)
 
-	var collectedErrors []error
-	err := r.CheckForAPIKeyOrSecret()
+	collectedErrors := new(customErrors.ErrorCollector)
 
+	err := r.CheckForAPIKeyOrSecret()
 	if err != nil {
-		collectedErrors = append(collectedErrors, err)
+		collectedErrors.Collect(err)
 	}
 
 	err = r.CheckForDuplicateConditions()
 	if err != nil {
-		collectedErrors = append(collectedErrors, err)
-
+		collectedErrors.Collect(err)
 	}
+
 	err = r.ValidateIncidentPreference()
-
 	if err != nil {
-		collectedErrors = append(collectedErrors, err)
-
+		collectedErrors.Collect(err)
 	}
-	if len(collectedErrors) > 0 {
+
+	if len(*collectedErrors) > 0 {
 		Log.Info("Errors encountered validating policy", "collectedErrors", collectedErrors)
-		return collectedErrors[0]
+		return collectedErrors
 	}
 
 	return nil
