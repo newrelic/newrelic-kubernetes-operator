@@ -138,6 +138,16 @@ var _ = Describe("ValidateCreate", func() {
 
 		})
 
+		Context("when missing multiple required fields, include all messages in one error", func() {
+			It("should reject resource creation", func() {
+				r.Spec.Region = ""
+				r.Spec.ExistingPolicyID = 0
+				err := r.ValidateCreate()
+				Expect(err).To(HaveOccurred())
+				Expect(err).To(MatchError(errors.New("region and existing_policy_id must be set")))
+			})
+		})
+
 	})
 
 	Describe("CheckExistingPolicyID", func() {

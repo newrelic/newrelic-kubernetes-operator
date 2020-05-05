@@ -391,11 +391,13 @@ var _ = Describe("policy reconciliation", func() {
 				_, err = r.Reconcile(request)
 				Expect(err).ToNot(HaveOccurred())
 
+				Expect(alertsClient.UpdatePolicyCallCount()).To(Equal(0))
+
 				var endStatePolicy nrv1.Policy
 				var endStateCondition nrv1.NrqlAlertCondition
 				err = k8sClient.Get(ctx, namespacedName, &endStatePolicy)
 				Expect(err).To(BeNil())
-				Expect(alertsClient.UpdatePolicyCallCount()).To(Equal(0))
+
 				Expect(endStatePolicy.Status.AppliedSpec.Conditions[0].Name).To(Equal(initialConditionName))
 				conditionNameType := types.NamespacedName{
 					Name:      endStatePolicy.Status.AppliedSpec.Conditions[0].Name,

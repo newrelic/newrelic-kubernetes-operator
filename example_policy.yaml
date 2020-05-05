@@ -3,7 +3,7 @@ kind: Policy
 metadata:
   name: my-policy
 spec:
-  name: k8 created policy
+  name: k8s created policy
   incident_preference: "PER_POLICY"
   region: "us"
   # API_KEY can be specified directly in the yaml file or via a k8 secret

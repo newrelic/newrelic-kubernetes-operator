@@ -85,7 +85,7 @@ var _ = Describe("Equals", func() {
 			Expect(output).To(BeTrue())
 		})
 	})
-	Context("When condition hash matches but condition name doesn't", func() {
+	Context("When condition hash matches but k8 condition name doesn't", func() {
 
 		It("should return true", func() {
 			p.Conditions = []PolicyCondition{
@@ -140,7 +140,7 @@ var _ = Describe("Equals", func() {
 		})
 	})
 
-	Context("When one condition hash doesn't match matches but the other does", func() {
+	Context("When one condition hash doesn't match but the other does", func() {
 
 		It("should return false", func() {
 			p.Conditions = []PolicyCondition{

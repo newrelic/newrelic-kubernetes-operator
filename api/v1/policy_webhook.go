@@ -49,12 +49,6 @@ func (r *Policy) Default() {
 		log.Info("Setting null Applied Spec to empty interface")
 		r.Status.AppliedSpec = &PolicySpec{}
 	}
-	//for i, condition := range r.Spec.Conditions {
-	//	if condition.Status.AppliedSpec == nil {
-	//		log.Info("Setting null Applied Spec to empty interface condition")
-	//		r.Spec.Conditions[i].Status.AppliedSpec = &NrqlAlertConditionSpec{}
-	//	}
-	//}
 
 	r.DefaultIncidentPreference()
 }
@@ -68,32 +62,59 @@ var _ webhook.Validator = &Policy{}
 func (r *Policy) ValidateCreate() error {
 	Log.Info("validate create", "name", r.Name)
 
+	var collectedErrors []error
 	err := r.CheckForAPIKeyOrSecret()
+
 	if err != nil {
-		return err
+		collectedErrors = append(collectedErrors, err)
 	}
 
 	err = r.CheckForDuplicateConditions()
 	if err != nil {
-		return err
+		collectedErrors = append(collectedErrors, err)
+
 	}
-	return r.ValidateIncidentPreference()
+	err = r.ValidateIncidentPreference()
+
+	if err != nil {
+		collectedErrors = append(collectedErrors, err)
+
+	}
+	if len(collectedErrors) > 0 {
+		Log.Info("Errors encountered validating policy", "collectedErrors", collectedErrors)
+		return collectedErrors[0]
+	}
+	return nil
 }
 
 // ValidateUpdate implements webhook.Validator so a webhook will be registered for the type
 func (r *Policy) ValidateUpdate(old runtime.Object) error {
 	Log.Info("validate update", "name", r.Name)
 
+	var collectedErrors []error
 	err := r.CheckForAPIKeyOrSecret()
+
 	if err != nil {
-		return err
+		collectedErrors = append(collectedErrors, err)
 	}
 
 	err = r.CheckForDuplicateConditions()
 	if err != nil {
-		return err
+		collectedErrors = append(collectedErrors, err)
+
 	}
-	return r.ValidateIncidentPreference()
+	err = r.ValidateIncidentPreference()
+
+	if err != nil {
+		collectedErrors = append(collectedErrors, err)
+
+	}
+	if len(collectedErrors) > 0 {
+		Log.Info("Errors encountered validating policy", "collectedErrors", collectedErrors)
+		return collectedErrors[0]
+	}
+
+	return nil
 }
 
 // ValidateDelete implements webhook.Validator so a webhook will be registered for the type

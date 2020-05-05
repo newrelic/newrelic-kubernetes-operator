@@ -153,14 +153,20 @@ func (r *PolicyReconciler) createPolicy(policy *nrv1.Policy) error {
 func (r *PolicyReconciler) createConditions(policy *nrv1.Policy) error {
 
 	r.Log.Info("initial policy creation so create all policies")
+	var collectedErrors []error
 	for i, condition := range policy.Spec.Conditions {
 		err := r.createCondition(policy, &condition)
 		if err != nil {
 			r.Log.Error(err, "error creating condition")
-			return err
+			collectedErrors = append(collectedErrors, err)
+		} else {
+			policy.Spec.Conditions[i] = condition
 		}
 
-		policy.Spec.Conditions[i] = condition
+	}
+	if len(collectedErrors) > 0 {
+		r.Log.Info("errors encountered creating conditions", "collectoredErrors", collectedErrors)
+		return collectedErrors[0]
 	}
 	return nil
 }
@@ -184,6 +190,8 @@ func (r *PolicyReconciler) createOrUpdateConditions(policy *nrv1.Policy) error {
 		}
 	}
 
+	var collectedErrors []error
+
 	for i, condition := range policy.Spec.Conditions {
 		//loop through the policies, creating/updating as needed
 		r.Log.Info("Checking on condition", "resourceName", condition.Name, "conditionName", condition.Spec.Name)
@@ -206,7 +214,7 @@ func (r *PolicyReconciler) createOrUpdateConditions(policy *nrv1.Policy) error {
 				err := r.createCondition(policy, &condition)
 				if err != nil {
 					r.Log.Error(err, "error creating condition")
-					return err
+					collectedErrors = append(collectedErrors, err)
 				}
 
 				//add to the list of processed conditions
@@ -254,15 +262,17 @@ func (r *PolicyReconciler) createOrUpdateConditions(policy *nrv1.Policy) error {
 		err := r.Client.Update(r.ctx, &retrievedCondition)
 		if err != nil {
 			r.Log.Error(err, "error updating condition")
-			return err
+			collectedErrors = append(collectedErrors, err)
 		}
 		//Now update the spec
 		policy.Spec.Conditions[i] = condition
 		r.Log.Info("policy spec updated", "policy.Spec.Condotion[i]", policy.Spec.Conditions[i])
 
 	}
+
 	r.Log.Info("now one last check for stragglers")
 	//now we check for any left behind conditions that weren't processed
+
 	for conditionName, processedCondition := range existingConditions {
 		r.Log.Info("checking "+processedCondition.condition.Name, "bool is", processedCondition.processed)
 		if !processedCondition.processed {
@@ -270,11 +280,16 @@ func (r *PolicyReconciler) createOrUpdateConditions(policy *nrv1.Policy) error {
 			err := r.deleteCondition(&processedCondition.condition)
 			if err != nil {
 				r.Log.Error(err, "error deleting condition resource")
-				return err
+				collectedErrors = append(collectedErrors, err)
 			}
 		}
 
 	}
+	if len(collectedErrors) > 0 {
+		r.Log.Info("Errors encountered processing conditions", "collectedErrors", collectedErrors)
+		return collectedErrors[0] //can only return 1 error so return the first and log the rest
+	}
+
 	r.Log.Info("all done", "policy.Spec", policy.Spec, "policy.Status.AppliedSpec.Conditions", policy.Status.AppliedSpec.Conditions)
 
 	return nil
@@ -382,12 +397,17 @@ func (r *PolicyReconciler) deletePolicy(ctx context.Context, policy *nrv1.Policy
 			policy.Finalizers = removeString(policy.Finalizers, deleteFinalizer)
 		} else {
 			// our finalizer is present, so lets handle any external dependency
+			var collectedErrors []error
 			for _, condition := range policy.Status.AppliedSpec.Conditions {
 				err := r.deleteCondition(&condition)
 				if err != nil {
 					r.Log.Error(err, "error deleting condition resources")
-					return ctrl.Result{}, err
+					collectedErrors = append(collectedErrors, err)
 				}
+			}
+			if len(collectedErrors) > 0 {
+				r.Log.Info("errors deleting condition resources", "collectedErrors", collectedErrors)
+				return ctrl.Result{}, collectedErrors[0]
 			}
 
 			if err := r.deleteNewRelicAlertPolicy(policy); err != nil {
