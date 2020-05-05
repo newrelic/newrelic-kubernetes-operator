@@ -13,7 +13,7 @@ require (
 	github.com/google/go-cmp v0.3.1 // indirect
 	github.com/imdario/mergo v0.3.9 // indirect
 	github.com/maxbrunsfeld/counterfeiter/v6 v6.2.3 // indirect
-	github.com/newrelic/newrelic-client-go v0.22.0
+	github.com/newrelic/newrelic-client-go v0.23.1
 	github.com/onsi/ginkgo v1.12.0
 	github.com/onsi/gomega v1.9.0
 	github.com/psampaz/go-mod-outdated v0.6.0 // indirect
