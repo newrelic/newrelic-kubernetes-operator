@@ -59,6 +59,7 @@ var _ = Describe("Policy_webhooks", func() {
 				r.Spec.APIKey = ""
 				err := r.ValidateCreate()
 				Expect(err).To(HaveOccurred())
+				Expect(err.Error()).To(Equal("either api_key or api_key_secret must be set"))
 			})
 		})
 		Context("when given a valid API key in a secret", func() {
@@ -94,11 +95,11 @@ var _ = Describe("Policy_webhooks", func() {
 				r.Spec.IncidentPreference = "totally bogus"
 				err := r.ValidateCreate()
 				Expect(err).To(HaveOccurred())
+				Expect(err.Error()).To(Equal("incident preference must be PER_POLICY, PER_CONDITION, or PER_CONDITION_AND_TARGET"))
 			})
 		})
 		Context("when given a policy with duplicate conditions", func() {
-			It("should reject the policy", func() {
-
+			BeforeEach(func() {
 				r.Spec.Conditions = []PolicyCondition{
 					{
 						Spec: NrqlAlertConditionSpec{
@@ -151,9 +152,20 @@ var _ = Describe("Policy_webhooks", func() {
 						},
 					},
 				}
-
+			})
+			It("should reject the policy", func() {
 				err := r.ValidateCreate()
 				Expect(err).To(HaveOccurred())
+				Expect(err.Error()).To(Equal("duplicate conditions detected or hash collision"))
+			})
+			Context("and invalid API key and incident_preference", func() {
+				It("should include all errors", func() {
+					r.Spec.IncidentPreference = "totally bogus"
+					r.Spec.APIKey = ""
+					err := r.ValidateCreate()
+					Expect(err).To(HaveOccurred())
+					Expect(err.Error()).To(Equal("either api_key or api_key_secret must be set"))
+				})
 			})
 		})
 
