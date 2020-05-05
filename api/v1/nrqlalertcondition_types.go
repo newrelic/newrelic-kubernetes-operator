@@ -22,10 +22,10 @@ type NrqlAlertConditionSpec struct {
 	ExpectedGroups      int                  `json:"expected_groups,omitempty"`
 	IgnoreOverlap       bool                 `json:"ignore_overlap,omitempty"`
 	Enabled             bool                 `json:"enabled"`
-	ExistingPolicyID    int                  `json:"existing_policy_id"`
+	ExistingPolicyID    int                  `json:"existing_policy_id,omitempty"`
 	APIKey              string               `json:"api_key,omitempty"`
 	APIKeySecret        NewRelicAPIKeySecret `json:"api_key_secret,omitempty"`
-	Region              string               `json:"region"`
+	Region              string               `json:"region,omitempty"`
 }
 
 // NrqlQuery represents a NRQL query to use with a NRQL alert condition

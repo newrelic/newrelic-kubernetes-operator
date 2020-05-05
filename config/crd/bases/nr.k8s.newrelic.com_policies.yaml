@@ -45,6 +45,96 @@ spec:
                 namespace:
                   type: string
               type: object
+            conditions:
+              items:
+                description: PolicyCondition defined the conditions contained within
+                  a a policy
+                properties:
+                  name:
+                    type: string
+                  namespace:
+                    type: string
+                  spec:
+                    description: NrqlAlertConditionSpec defines the desired state
+                      of NrqlAlertCondition
+                    properties:
+                      api_key:
+                        type: string
+                      api_key_secret:
+                        properties:
+                          key_name:
+                            type: string
+                          name:
+                            type: string
+                          namespace:
+                            type: string
+                        type: object
+                      enabled:
+                        type: boolean
+                      existing_policy_id:
+                        type: integer
+                      expected_groups:
+                        type: integer
+                      id:
+                        type: integer
+                      ignore_overlap:
+                        type: boolean
+                      name:
+                        type: string
+                      nrql:
+                        description: NrqlQuery represents a NRQL query to use with
+                          a NRQL alert condition
+                        properties:
+                          query:
+                            type: string
+                          since_value:
+                            type: string
+                        type: object
+                      region:
+                        type: string
+                      runbook_url:
+                        type: string
+                      terms:
+                        items:
+                          description: AlertConditionTerm represents the terms of
+                            a New Relic alert condition.
+                          properties:
+                            duration:
+                              anyOf:
+                              - type: integer
+                              - type: string
+                              pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
+                              x-kubernetes-int-or-string: true
+                            operator:
+                              type: string
+                            priority:
+                              type: string
+                            threshold:
+                              anyOf:
+                              - type: integer
+                              - type: string
+                              pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
+                              x-kubernetes-int-or-string: true
+                            time_function:
+                              type: string
+                          required:
+                          - threshold
+                          type: object
+                        type: array
+                      type:
+                        type: string
+                      value_function:
+                        type: string
+                      violation_time_limit_seconds:
+                        type: integer
+                    required:
+                    - enabled
+                    type: object
+                required:
+                - name
+                - namespace
+                type: object
+              type: array
             incident_preference:
               type: string
             name:
@@ -72,6 +162,96 @@ spec:
                     namespace:
                       type: string
                   type: object
+                conditions:
+                  items:
+                    description: PolicyCondition defined the conditions contained
+                      within a a policy
+                    properties:
+                      name:
+                        type: string
+                      namespace:
+                        type: string
+                      spec:
+                        description: NrqlAlertConditionSpec defines the desired state
+                          of NrqlAlertCondition
+                        properties:
+                          api_key:
+                            type: string
+                          api_key_secret:
+                            properties:
+                              key_name:
+                                type: string
+                              name:
+                                type: string
+                              namespace:
+                                type: string
+                            type: object
+                          enabled:
+                            type: boolean
+                          existing_policy_id:
+                            type: integer
+                          expected_groups:
+                            type: integer
+                          id:
+                            type: integer
+                          ignore_overlap:
+                            type: boolean
+                          name:
+                            type: string
+                          nrql:
+                            description: NrqlQuery represents a NRQL query to use
+                              with a NRQL alert condition
+                            properties:
+                              query:
+                                type: string
+                              since_value:
+                                type: string
+                            type: object
+                          region:
+                            type: string
+                          runbook_url:
+                            type: string
+                          terms:
+                            items:
+                              description: AlertConditionTerm represents the terms
+                                of a New Relic alert condition.
+                              properties:
+                                duration:
+                                  anyOf:
+                                  - type: integer
+                                  - type: string
+                                  pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
+                                  x-kubernetes-int-or-string: true
+                                operator:
+                                  type: string
+                                priority:
+                                  type: string
+                                threshold:
+                                  anyOf:
+                                  - type: integer
+                                  - type: string
+                                  pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
+                                  x-kubernetes-int-or-string: true
+                                time_function:
+                                  type: string
+                              required:
+                              - threshold
+                              type: object
+                            type: array
+                          type:
+                            type: string
+                          value_function:
+                            type: string
+                          violation_time_limit_seconds:
+                            type: integer
+                        required:
+                        - enabled
+                        type: object
+                    required:
+                    - name
+                    - namespace
+                    type: object
+                  type: array
                 incident_preference:
                   type: string
                 name:

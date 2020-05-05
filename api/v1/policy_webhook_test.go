@@ -4,6 +4,7 @@ package v1
 
 import (
 	v1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/newrelic/newrelic-kubernetes-operator/interfaces"
@@ -58,6 +59,7 @@ var _ = Describe("Policy_webhooks", func() {
 				r.Spec.APIKey = ""
 				err := r.ValidateCreate()
 				Expect(err).To(HaveOccurred())
+				Expect(err.Error()).To(Equal("either api_key or api_key_secret must be set"))
 			})
 		})
 		Context("when given a valid API key in a secret", func() {
@@ -93,6 +95,79 @@ var _ = Describe("Policy_webhooks", func() {
 				r.Spec.IncidentPreference = "totally bogus"
 				err := r.ValidateCreate()
 				Expect(err).To(HaveOccurred())
+				Expect(err.Error()).To(Equal("incident preference must be PER_POLICY, PER_CONDITION, or PER_CONDITION_AND_TARGET"))
+			})
+		})
+		Context("when given a policy with duplicate conditions", func() {
+			BeforeEach(func() {
+				r.Spec.Conditions = []PolicyCondition{
+					{
+						Spec: NrqlAlertConditionSpec{
+							Terms: []AlertConditionTerm{
+								{
+									Duration:     resource.MustParse("30"),
+									Operator:     "above",
+									Priority:     "critical",
+									Threshold:    resource.MustParse("5"),
+									TimeFunction: "all",
+								},
+							},
+							Nrql: NrqlQuery{
+								Query:      "SELECT 1 FROM MyEvents",
+								SinceValue: "5",
+							},
+							Type:                "NRQL",
+							Name:                "NRQL Condition",
+							RunbookURL:          "http://test.com/runbook",
+							ValueFunction:       "max",
+							ViolationCloseTimer: 60,
+							ExpectedGroups:      2,
+							IgnoreOverlap:       true,
+							Enabled:             true,
+						},
+					},
+					{
+						Spec: NrqlAlertConditionSpec{
+							Terms: []AlertConditionTerm{
+								{
+									Duration:     resource.MustParse("30"),
+									Operator:     "above",
+									Priority:     "critical",
+									Threshold:    resource.MustParse("5"),
+									TimeFunction: "all",
+								},
+							},
+							Nrql: NrqlQuery{
+								Query:      "SELECT 1 FROM MyEvents",
+								SinceValue: "5",
+							},
+							Type:                "NRQL",
+							Name:                "NRQL Condition",
+							RunbookURL:          "http://test.com/runbook",
+							ValueFunction:       "max",
+							ViolationCloseTimer: 60,
+							ExpectedGroups:      2,
+							IgnoreOverlap:       true,
+							Enabled:             true,
+						},
+					},
+				}
+			})
+			It("should reject the policy", func() {
+				err := r.ValidateCreate()
+				Expect(err).To(HaveOccurred())
+				Expect(err.Error()).To(Equal("duplicate conditions detected or hash collision"))
+			})
+			Context("and invalid API key and incident_preference", func() {
+				It("should include all errors", func() {
+					r.Spec.IncidentPreference = "totally bogus"
+					r.Spec.APIKey = ""
+					err := r.ValidateCreate()
+					Expect(err).To(HaveOccurred())
+					Expect(err.Error()).To(ContainSubstring("either api_key or api_key_secret must be set"))
+					Expect(err.Error()).To(ContainSubstring("duplicate conditions detected"))
+					Expect(err.Error()).To(ContainSubstring("incident preference must be"))
+				})
 			})
 		})
 
@@ -108,6 +183,32 @@ var _ = Describe("Policy_webhooks", func() {
 				Name:               "Test Policy",
 				IncidentPreference: "PER_POLICY",
 				APIKey:             "api-key",
+				Conditions: []PolicyCondition{
+					{Spec: NrqlAlertConditionSpec{
+						Terms: []AlertConditionTerm{
+							{
+								Duration:     resource.MustParse("30"),
+								Operator:     "above",
+								Priority:     "critical",
+								Threshold:    resource.MustParse("5"),
+								TimeFunction: "all",
+							},
+						},
+						Nrql: NrqlQuery{
+							Query:      "SELECT 1 FROM MyEvents",
+							SinceValue: "5",
+						},
+						Type:                "NRQL",
+						Name:                "NRQL Condition",
+						RunbookURL:          "http://test.com/runbook",
+						ValueFunction:       "max",
+						ViolationCloseTimer: 60,
+						ExpectedGroups:      2,
+						IgnoreOverlap:       true,
+						Enabled:             true,
+					},
+					},
+				},
 			},
 		}
 		Context("when given a policy with no incident_preference set", func() {

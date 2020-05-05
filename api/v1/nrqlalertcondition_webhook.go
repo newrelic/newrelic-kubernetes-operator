@@ -18,6 +18,7 @@ package v1
 import (
 	"context"
 	"errors"
+	"strings"
 
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/types"
@@ -75,6 +76,11 @@ func (r *NrqlAlertCondition) ValidateCreate() error {
 	log.Info("validate create", "name", r.Name)
 	//TODO this should write this value TO a new secret so code path always reads from a secret
 	err := r.CheckForAPIKeyOrSecret()
+	if err != nil {
+		return err
+	}
+
+	err = r.CheckRequiredFields()
 	if err != nil {
 		return err
 	}
@@ -149,4 +155,19 @@ func (r *NrqlAlertCondition) CheckForAPIKeyOrSecret() error {
 		}
 	}
 	return errors.New("either api_key or api_key_secret must be set")
+}
+
+func (r *NrqlAlertCondition) CheckRequiredFields() error {
+
+	missingFields := []string{}
+	if r.Spec.Region == "" {
+		missingFields = append(missingFields, "region")
+	}
+	if r.Spec.ExistingPolicyID == 0 {
+		missingFields = append(missingFields, "existing_policy_id")
+	}
+	if len(missingFields) > 0 {
+		return errors.New(strings.Join(missingFields, " and ") + " must be set")
+	}
+	return nil
 }

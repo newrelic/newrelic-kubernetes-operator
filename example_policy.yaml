@@ -3,12 +3,39 @@ kind: Policy
 metadata:
   name: my-policy
 spec:
-  name: k8 created policy is awesome
+  name: k8s created policy
   incident_preference: "PER_POLICY"
-  region: "staging"
-# API_KEY can be specified directly in the yaml file or via a k8 secret
-#  api_key: API_KEY
+  region: "us"
+  # API_KEY can be specified directly in the yaml file or via a k8 secret
+#  api_key: APIKEY
   api_key_secret:
     name: nr-api-key
     namespace: default
     key_name: api-key
+  conditions:
+    - spec:
+        nrql:
+          query: "SELECT count(*) FROM Transactions"
+          since_value: "10"
+        enabled: true
+        terms:
+          - threshold: "75.0"
+            time_function: "all"
+            duration: "5"
+            priority: "critical"
+            operator: "above"
+        name: "K8s generated alert condition"
+    - spec:
+        nrql:
+          query: "SELECT count(*) FROM Transactions"
+          since_value: "5"
+        enabled: true
+        terms:
+          - threshold: "150.0"
+            time_function: "all"
+            duration: "5"
+            priority: "critical"
+            operator: "above"
+        name: "K8s generated alert condition 2"
+
+

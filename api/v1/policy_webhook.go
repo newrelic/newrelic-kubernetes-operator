@@ -23,6 +23,8 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/webhook"
+
+	customErrors "github.com/newrelic/newrelic-kubernetes-operator/errors"
 )
 
 // Log is for emitting logs in this package.
@@ -49,6 +51,7 @@ func (r *Policy) Default() {
 		log.Info("Setting null Applied Spec to empty interface")
 		r.Status.AppliedSpec = &PolicySpec{}
 	}
+
 	r.DefaultIncidentPreference()
 }
 
@@ -61,26 +64,66 @@ var _ webhook.Validator = &Policy{}
 func (r *Policy) ValidateCreate() error {
 	Log.Info("validate create", "name", r.Name)
 
+	collectedErrors := new(customErrors.ErrorCollector)
 	err := r.CheckForAPIKeyOrSecret()
+
 	if err != nil {
-		return err
+		collectedErrors.Collect(err)
 	}
 
-	return r.ValidateIncidentPreference()
+	err = r.CheckForDuplicateConditions()
+	if err != nil {
+		collectedErrors.Collect(err)
+	}
+	err = r.ValidateIncidentPreference()
+
+	if err != nil {
+		collectedErrors.Collect(err)
+	}
+	if len(*collectedErrors) > 0 {
+		Log.Info("Errors encountered validating policy", "collectedErrors", collectedErrors)
+		return collectedErrors
+	}
+	return nil
 }
 
 // ValidateUpdate implements webhook.Validator so a webhook will be registered for the type
 func (r *Policy) ValidateUpdate(old runtime.Object) error {
 	Log.Info("validate update", "name", r.Name)
 
-	return r.ValidateIncidentPreference()
+	collectedErrors := new(customErrors.ErrorCollector)
+
+	err := r.CheckForAPIKeyOrSecret()
+	if err != nil {
+		collectedErrors.Collect(err)
+	}
+
+	err = r.CheckForDuplicateConditions()
+	if err != nil {
+		collectedErrors.Collect(err)
+	}
+
+	err = r.ValidateIncidentPreference()
+	if err != nil {
+		collectedErrors.Collect(err)
+	}
+
+	if len(*collectedErrors) > 0 {
+		Log.Info("Errors encountered validating policy", "collectedErrors", collectedErrors)
+		return collectedErrors
+	}
+
+	return nil
 }
 
 // ValidateDelete implements webhook.Validator so a webhook will be registered for the type
 func (r *Policy) ValidateDelete() error {
 	Log.Info("validate delete", "name", r.Name)
 
-	// TODO(user): fill in your validation logic upon object deletion.
+	err := r.CheckForAPIKeyOrSecret()
+	if err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -92,12 +135,26 @@ func (r *Policy) DefaultIncidentPreference() {
 
 }
 
+func (r *Policy) CheckForDuplicateConditions() error {
+
+	var conditionHashMap = make(map[uint32]bool)
+	for _, condition := range r.Spec.Conditions {
+		conditionHashMap[condition.SpecHash()] = true
+	}
+	if len(conditionHashMap) != len(r.Spec.Conditions) {
+		log.Info("duplicate conditions detected or hash collision", "conditionHash", conditionHashMap)
+		return errors.New("duplicate conditions detected or hash collision")
+	}
+
+	return nil
+}
+
 func (r *Policy) ValidateIncidentPreference() error {
 	switch r.Spec.IncidentPreference {
 	case "PER_POLICY", "PER_CONDITION", "PER_CONDITION_AND_TARGET":
 		return nil
 	}
-
+	log.Info("Incident preference must be PER_POLICY, PER_CONDITION, or PER_CONDITION_AND_TARGET", "IncidentPreference value", r.Spec.IncidentPreference)
 	return errors.New("incident preference must be PER_POLICY, PER_CONDITION, or PER_CONDITION_AND_TARGET")
 }
 

@@ -17,9 +17,13 @@ package v1
 
 import (
 	"encoding/json"
+	"hash"
+	"hash/fnv"
 
+	"github.com/davecgh/go-spew/spew"
 	"github.com/newrelic/newrelic-client-go/pkg/alerts"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/types"
 )
 
 // EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
@@ -32,6 +36,15 @@ type PolicySpec struct {
 	APIKey             string               `json:"api_key,omitempty"`
 	APIKeySecret       NewRelicAPIKeySecret `json:"api_key_secret,omitempty"`
 	Region             string               `json:"region"`
+	Conditions         []PolicyCondition    `json:"conditions,omitempty"`
+}
+
+//PolicyCondition defined the conditions contained within a a policy
+type PolicyCondition struct {
+	Name      string                 `json:"name"`
+	Namespace string                 `json:"namespace"`
+	Spec      NrqlAlertConditionSpec `json:"spec,omitempty"`
+	//SpecHash uint32					`json:"specHash,omitempty"`
 }
 
 // PolicyStatus defines the observed state of Policy
@@ -72,4 +85,74 @@ func (in PolicySpec) APIPolicy() alerts.Policy {
 	//APICondition.PolicyID = spec.ExistingPolicyId
 
 	return APIPolicy
+}
+
+// DeepHashObject writes specified object to hash using the spew library
+// which follows pointers and prints actual values of the nested objects
+// ensuring the hash does not change when a pointer changes.
+func DeepHashObject(hasher hash.Hash, objectToWrite interface{}) {
+	hasher.Reset()
+	printer := spew.ConfigState{
+		Indent:         " ",
+		SortKeys:       true,
+		DisableMethods: true,
+		SpewKeys:       true,
+	}
+	printer.Fprintf(hasher, "%#v", objectToWrite)
+}
+
+func (p *PolicyCondition) SpecHash() uint32 {
+	//remove api keys and condition from object to enable comparison minus inherited fields
+	strippedPolicy := PolicyCondition{
+		Spec: p.Spec,
+	}
+	strippedPolicy.Spec.APIKeySecret = NewRelicAPIKeySecret{}
+	strippedPolicy.Spec.APIKey = ""
+	strippedPolicy.Spec.Region = ""
+	strippedPolicy.Spec.ExistingPolicyID = 0
+	conditionTemplateSpecHasher := fnv.New32a()
+	DeepHashObject(conditionTemplateSpecHasher, strippedPolicy)
+	return conditionTemplateSpecHasher.Sum32()
+}
+
+func (p *PolicyCondition) GetNamespace() types.NamespacedName {
+	return types.NamespacedName{
+		Namespace: p.Namespace,
+		Name:      p.Name,
+	}
+}
+
+//Equals - comparator function to check for equality
+func (in PolicySpec) Equals(policyToCompare PolicySpec) bool {
+	if in.IncidentPreference != policyToCompare.IncidentPreference {
+		return false
+	}
+	if in.Name != policyToCompare.Name {
+		return false
+	}
+	if in.APIKey != policyToCompare.APIKey {
+		return false
+	}
+	if in.Region != policyToCompare.Region {
+		return false
+	}
+	if in.APIKeySecret != policyToCompare.APIKeySecret {
+		return false
+	}
+	if len(in.Conditions) != len(policyToCompare.Conditions) {
+		return false
+	}
+
+	checkedHashes := make(map[uint32]bool)
+
+	for _, condition := range in.Conditions {
+		checkedHashes[condition.SpecHash()] = true
+	}
+
+	for _, conditionToCompare := range policyToCompare.Conditions {
+		if _, ok := checkedHashes[conditionToCompare.SpecHash()]; !ok {
+			return false
+		}
+	}
+	return true
 }

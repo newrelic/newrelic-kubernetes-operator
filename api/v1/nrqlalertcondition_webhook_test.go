@@ -59,6 +59,7 @@ var _ = Describe("ValidateCreate", func() {
 				Enabled:             true,
 				ExistingPolicyID:    42,
 				APIKey:              "api-key",
+				Region:              "us",
 			},
 		}
 		alertsClient.GetPolicyStub = func(int) (*alerts.Policy, error) {
@@ -120,6 +121,33 @@ var _ = Describe("ValidateCreate", func() {
 			Expect(err).To(HaveOccurred())
 
 		})
+	})
+	Context("when given a NRQL condition without required field region", func() {
+		It("should reject resource creation", func() {
+			r.Spec.Region = ""
+			err := r.ValidateCreate()
+			Expect(err).To(HaveOccurred())
+		})
+	})
+
+	Context("when given a NRQL condition without required field ExistingPolicyId", func() {
+		It("should reject resource creation", func() {
+			r.Spec.ExistingPolicyID = 0
+			err := r.ValidateCreate()
+			Expect(err).To(HaveOccurred())
+
+		})
+
+		Context("when missing multiple required fields, include all messages in one error", func() {
+			It("should reject resource creation", func() {
+				r.Spec.Region = ""
+				r.Spec.ExistingPolicyID = 0
+				err := r.ValidateCreate()
+				Expect(err).To(HaveOccurred())
+				Expect(err).To(MatchError(errors.New("region and existing_policy_id must be set")))
+			})
+		})
+
 	})
 
 	Describe("CheckExistingPolicyID", func() {

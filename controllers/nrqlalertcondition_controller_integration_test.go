@@ -4,6 +4,7 @@ package controllers
 
 import (
 	"context"
+	"errors"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -482,6 +483,62 @@ var _ = Describe("NrqlCondition reconciliation", func() {
 				})
 
 			})
+			Context("with a condition with no condition ID", func() {
+
+				BeforeEach(func() {
+					condition.Status.ConditionID = 0
+					err := k8sClient.Update(ctx, condition)
+					Expect(err).ToNot(HaveOccurred())
+
+				})
+				It("should just remove the finalizer and delete", func() {
+					err := k8sClient.Delete(ctx, condition)
+					Expect(err).ToNot(HaveOccurred())
+
+					// call reconcile
+					_, err = r.Reconcile(request)
+					Expect(err).ToNot(HaveOccurred())
+
+					Expect(alertsClient.CreateNrqlConditionCallCount()).To(Equal(1)) //This is 1 because the create occurring in the
+					Expect(alertsClient.UpdateNrqlConditionCallCount()).To(Equal(0))
+					Expect(alertsClient.DeleteNrqlConditionCallCount()).To(Equal(0))
+
+					var endStateCondition nralertsv1.NrqlAlertCondition
+					err = k8sClient.Get(ctx, namespacedName, &endStateCondition)
+					Expect(err).To(HaveOccurred())
+					Expect(endStateCondition.Name).To(Equal(""))
+				})
+
+			})
+
+			Context("when the Alerts API reports no condition found ", func() {
+
+				BeforeEach(func() {
+					alertsClient.DeleteNrqlConditionStub = func(int) (*alerts.NrqlCondition, error) {
+						return &alerts.NrqlCondition{}, errors.New("resource not found")
+					}
+
+				})
+				It("should just remove the finalizer and delete", func() {
+					err := k8sClient.Delete(ctx, condition)
+					Expect(err).ToNot(HaveOccurred())
+
+					// call reconcile
+					_, err = r.Reconcile(request)
+					Expect(err).ToNot(HaveOccurred())
+
+					Expect(alertsClient.CreateNrqlConditionCallCount()).To(Equal(1)) //This is 1 because the create occurring in the
+					Expect(alertsClient.UpdateNrqlConditionCallCount()).To(Equal(0))
+					Expect(alertsClient.DeleteNrqlConditionCallCount()).To(Equal(1))
+
+					var endStateCondition nralertsv1.NrqlAlertCondition
+					err = k8sClient.Get(ctx, namespacedName, &endStateCondition)
+					Expect(err).To(HaveOccurred())
+					Expect(endStateCondition.Name).To(Equal(""))
+				})
+
+			})
+
 		})
 	})
 
