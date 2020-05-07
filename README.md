@@ -11,12 +11,12 @@ Operator to manage New Relic resources.
 
 Currently enables management of Alert Policies and NRQL Alert Conditions.
 
-# Quick start from zero
+# Quick start from zero (will be fixed soon)
 
 Get docker, kubectl, and kind installed
 ``` bash
 brew cask install docker
-brew install kubectl kind
+brew install kustomize kubernetes-cli kind
 ```
 
 Create a test cluster
@@ -26,13 +26,23 @@ kind create cluster --name newrelic
 kubectl cluster-info
 ```
 
-Install the operator in the test cluster
+Install cert-manager
 
 ``` bash
-export URL=https://newrelic.github.io/newrelic-kubernetes-operator/config
-kubectl apply -f $URL/crd
-kubectl apply -f $URL/rbac
-kubectl apply -f $URL/deployment
+kubectl apply --validate=false -f https://github.com/jetstack/cert-manager/releases/download/v0.15.0/cert-manager.yaml
+```
+
+Install the operator in the test cluster. (This is where it breaks)
+
+``` bash
+kubectl apply -f https://newrelic.github.io/newrelic-kubernetes-operator/config/k8s-operator.yaml
+```
+
+# Deploy with a custom container
+
+``` bash
+# TBD
+kustomize something something $DOCKER_IMAGE | kubectl apply -
 ```
 
 # Development Prerequisites
@@ -40,7 +50,7 @@ kubectl apply -f $URL/deployment
 In addition to the quick start...
 
 ```bash
-brew install kubebuilder kustomize
+brew install kubebuilder
 ```
 
 # Install the operator in a cluster
@@ -148,23 +158,13 @@ $ diff -u resources-installed.txt resources-uninstalled.txt
 --- resources-installed.txt	2020-01-23 12:55:53.000000000 -0700
 +++ resources-uninstalled.txt	2020-01-23 12:56:23.000000000 -0700
 @@ -40,7 +40,6 @@
- ingresses                         ing          networking.k8s.io              true         Ingress
- networkpolicies                   netpol       networking.k8s.io              true         NetworkPolicy
- runtimeclasses                                 node.k8s.io                    false        RuntimeClass
--nrqlalertconditions                            nr.k8s.newrelic.com     true         NrqlAlertCondition
- poddisruptionbudgets              pdb          policy                         true         PodDisruptionBudget
- podsecuritypolicies               psp          policy                         false        PodSecurityPolicy
- clusterrolebindings                            rbac.authorization.k8s.io      false        ClusterRoleBinding
-```
+ ingresses        # New Relic Kubernetes Operator
 
+[![CircleCI](https://circleci.com/gh/newrelic/newrelic-kubernetes-operator.svg?style=svg)](https://circleci.com/gh/newrelic/newrelic-kubernetes-operator)
+[![Go Report Card](https://goreportcard.com/badge/github.com/newrelic/newrelic-cli?style=flat-square)](https://goreportcard.com/report/github.com/newrelic/newrelic-kubernetes-operator)
+[![GoDoc](https://godoc.org/github.com/newrelic/newrelic-kubernetes-operator?status.svg)](https://godoc.org/github.com/newrelic/newrelic-kubernetes-operator)
+[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://github.com/newrelic/newrelic-kubernetes-operator/blob/master/LICENSE)
+[![CLA assistant](https://cla-assistant.io/readme/badge/newrelic/newrelic-kubernetes-operator)](https://cla-assistant.io/newrelic/newrelic-kubernetes-operator)
+[![Release](https://img.shields.io/github/release/newrelic/newrelic-kubernetes-operator/all.svg)](https://github.com/newrelic/newrelic-kubernetes-operator/releases/latest)
 
-# Running the tests
-
-Install kubebuilder https://go.kubebuilder.io/quick-start.html to get `etcd` and `kube-apiserver` needed for the tests
-
-To run the tests the first time
-`make test`
-
-First time running you may get security prompts from `etcd` and `kube-apiserver`
-
-Tests can be run with `ginkgo -r` or `make test`
+Operator to manage New Relic resources
