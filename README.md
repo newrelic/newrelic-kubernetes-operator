@@ -7,21 +7,41 @@
 [![CLA assistant](https://cla-assistant.io/readme/badge/newrelic/newrelic-kubernetes-operator)](https://cla-assistant.io/newrelic/newrelic-kubernetes-operator)
 [![Release](https://img.shields.io/github/release/newrelic/newrelic-kubernetes-operator/all.svg)](https://github.com/newrelic/newrelic-kubernetes-operator/releases/latest)
 
-Operator to manage New Relic resources
+Operator to manage New Relic resources.
+
+Currently enables management of Alert Policies and NRQL Alert Conditions.
+
+# Quick start from zero
+
+Get docker, kubectl, and kind installed
+``` bash
+brew cask install docker
+brew install kubectl kind
+```
+
+Create a test cluster
+
+``` bash
+kind create cluster --name newrelic
+kubectl cluster-info
+```
+
+Install the operator in the test cluster
+
+``` bash
+export URL=https://newrelic.github.io/newrelic-kubernetes-operator/config
+kubectl apply -f $URL/crd
+kubectl apply -f $URL/rbac
+kubectl apply -f $URL/deployment
+```
 
 # Development Prerequisites
 
-To get required tooling:
-
-
+In addition to the quick start...
 
 ```bash
-brew install kubectl kubebuilder kustomize
+brew install kubebuilder kustomize
 ```
-
-
-You will also want to install Docker for Mac and enable its built-in kubernetes cluster functionality.
-
 
 # Install the operator in a cluster
 
@@ -61,10 +81,10 @@ Next, build the image and push it to the desired docker repo
 `make docker-push DOCKER_IMAGE=<some-registry>/<project-name>:tag`
 This must be a container registry accessible to your k8 cluster
 
-If using kind for local development, you can replace this with 
+If using kind for local development, you can replace this with
 `kind load docker-image <some-registry>/<project-name>:tag`
 
-Finally to deploy the image 
+Finally to deploy the image
 
 `make deploy DOCKER_IMAGE=<some-registry>/<project-name>:tag`
 
@@ -148,4 +168,3 @@ To run the tests the first time
 First time running you may get security prompts from `etcd` and `kube-apiserver`
 
 Tests can be run with `ginkgo -r` or `make test`
-
