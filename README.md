@@ -35,7 +35,7 @@ kubectl apply --validate=false -f https://github.com/jetstack/cert-manager/relea
 Install the operator in the test cluster.
 
 ``` bash
-kustomize build https://newrelic.github.io/newrelic-kubernetes-operator/config/default/ \
+kustomize build github.com/newrelic/newrelic-kubernetes-operator/config/default/ \
   | kubectl apply -f -
 ```
 
