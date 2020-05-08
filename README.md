@@ -11,7 +11,7 @@ Operator to manage New Relic resources.
 
 Currently enables management of Alert Policies and NRQL Alert Conditions.
 
-# Quick start from zero (will be fixed soon)
+# Quick start test drive from zero
 
 Get docker, kubectl, and kind installed
 ``` bash
@@ -32,10 +32,11 @@ Install cert-manager
 kubectl apply --validate=false -f https://github.com/jetstack/cert-manager/releases/download/v0.15.0/cert-manager.yaml
 ```
 
-Install the operator in the test cluster. (This is where it breaks)
+Install the operator in the test cluster.
 
 ``` bash
-kubectl apply -f https://newrelic.github.io/newrelic-kubernetes-operator/config/k8s-operator.yaml
+kustomize build https://newrelic.github.io/newrelic-kubernetes-operator/config/default/ \
+  | kubectl apply -f -
 ```
 
 # Deploy with a custom container
