@@ -3,7 +3,7 @@
 #
 
 # Image URL to use all building/pushing image targets
-DOCKER_IMAGE ?= newrelic/kubernetes-operator:snapshot
+DOCKER_IMAGE ?= newrelic/k8s-operator:snapshot
 # Produce CRDs that work back to Kubernetes 1.11 (no version conversion)
 CRD_OPTIONS ?= "crd:trivialVersions=true"
 
@@ -28,4 +28,3 @@ deploy: manifests docker-build
 manifests: tools
 	@echo "=== $(PROJECT_NAME) === [ manifests        ]: Generating manifests..."
 	@$(CONTROLLER_GEN) $(CRD_OPTIONS) rbac:roleName=manager-role webhook paths="./..." output:crd:artifacts:config=config/crd/bases
-
