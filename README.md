@@ -14,36 +14,37 @@ Operator to manage New Relic resources.
 
 Currently enables management of Alert Policies and NRQL Alert Conditions.
 
-# Quick start test drive from zero, running kubernetes in a docker container locally with kind
+# Running kubernetes in a docker container locally with kind
 
-Get docker, kubectl, kustomize and kind installed
-``` bash
-brew cask install docker
-brew install kustomize kubernetes-cli kind
-```
+1. Get docker, kubectl, kustomize and kind installed
 
-Create a test cluster with kind
+   ``` bash
+   brew cask install docker
+   brew install kustomize kubernetes-cli kind
+   ```
 
-``` bash
-kind create cluster --name newrelic
-kubectl cluster-info
-```
+1. Create a test cluster with kind
 
-Install cert-manager
+   ``` bash
+   kind create cluster --name newrelic
+   kubectl cluster-info
+   ```
 
-``` bash
-kubectl apply --validate=false -f https://github.com/jetstack/cert-manager/releases/download/v0.15.0/cert-manager.yaml
-```
+1. Install cert-manager
 
-Note: This takes a minute or two to finish so wait a minute before going on to the next step. 
-You can also confirm it's running with the command `kubectl rollout status deployment -n cert-manager cert-manager-webhook`
+   ``` bash
+   kubectl apply --validate=false -f https://github.com/jetstack/cert-manager/releases/download/v0.15.0/cert-manager.yaml
+   ```
 
-Install the operator in the test cluster.
+   > **Note:** This takes a minute or two to finish so wait a minute before going on to the next step.
 
-``` bash
-kustomize build github.com/newrelic/newrelic-kubernetes-operator/config/default/ \
-  | kubectl apply -f -
-```
+   You can also confirm it's running with the command `kubectl rollout status deployment -n cert-manager cert-manager-webhook`
+
+1. Install the operator in the test cluster.
+
+   ``` bash
+   kustomize build ./configs/default | kubectl apply -f -
+   ```
 
 # Deploy with a custom container
 
@@ -54,7 +55,7 @@ apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 namespace: newrelic-kubernetes-operator-system
 resources:
-  - github.com/newrelic/newrelic-kubernetes-operator/config/default
+  - github.com/newrelic/newrelic-kubernetes-operator/configs/default
 images:
   - name: newrelic/k8s-operator:snapshot
     newName: <CUSTOM_IMAGE>
@@ -71,8 +72,9 @@ kustomize build . | kubectl apply -f -
 
 The operator will create and update alert policies and NRQL alert conditions as needed by applying yaml files with `kubectl apply -f <filename>`
 
-Sample yaml file
-```
+### Sample yaml file
+
+```yaml
 apiVersion: nr.k8s.newrelic.com/v1
 kind: Policy
 metadata:
@@ -115,7 +117,7 @@ spec:
 
 ```
 
-You can also just create NRQL alert conditions directly with files similar to 
+You can also just create NRQL alert conditions directly with files similar to:
 
 ```yaml
 apiVersion: nr.k8s.newrelic.com/v1
@@ -157,7 +159,7 @@ Please note the `existing_policy_id` field which must be set to a currently exis
 The Operator can be removed with the reverse of installation, namely building the kubernetes resource files with `kustomize` and running `kubectl delete`
 
 ``` bash
-kustomize build github.com/newrelic/newrelic-kubernetes-operator/config/default/ | kubectl delete -f -
+kustomize build ./configs/default/ | kubectl delete -f -
 ```
 
 
