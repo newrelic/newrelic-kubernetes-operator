@@ -1,6 +1,7 @@
 # New Relic Kubernetes Operator
 
-[![CircleCI](https://circleci.com/gh/newrelic/newrelic-kubernetes-operator.svg?style=svg)](https://circleci.com/gh/newrelic/newrelic-kubernetes-operator)
+[![Testing](https://github.com/newrelic/newrelic-kubernetes-operator/workflows/Testing/badge.svg)](https://github.com/newrelic/newrelic-kubernetes-operator)
+[![Security Scan](https://github.com/newrelic/newrelic-kubernetes-operator/workflows/Security%20Scan/badge.svg)](https://github.com/newrelic/newrelic-kubernetes-operator)
 [![Go Report Card](https://goreportcard.com/badge/github.com/newrelic/newrelic-cli?style=flat-square)](https://goreportcard.com/report/github.com/newrelic/newrelic-kubernetes-operator)
 [![GoDoc](https://godoc.org/github.com/newrelic/newrelic-kubernetes-operator?status.svg)](https://godoc.org/github.com/newrelic/newrelic-kubernetes-operator)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://github.com/newrelic/newrelic-kubernetes-operator/blob/master/LICENSE)
