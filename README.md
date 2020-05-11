@@ -11,15 +11,15 @@ Operator to manage New Relic resources.
 
 Currently enables management of Alert Policies and NRQL Alert Conditions.
 
-# Quick start test drive from zero
+# Quick start test drive from zero, running kubernetes in a docker container locally with kind
 
-Get docker, kubectl, and kind installed
+Get docker, kubectl, kustomize and kind installed
 ``` bash
 brew cask install docker
 brew install kustomize kubernetes-cli kind
 ```
 
-Create a test cluster
+Create a test cluster with kind
 
 ``` bash
 kind create cluster --name newrelic
@@ -32,6 +32,9 @@ Install cert-manager
 kubectl apply --validate=false -f https://github.com/jetstack/cert-manager/releases/download/v0.15.0/cert-manager.yaml
 ```
 
+Note: This takes a minute or two to finish so wait a minute before going on to the next step. 
+You can also confirm it's running with the command `kubectl rollout status deployment -n cert-manager cert-manager-webhook`
+
 Install the operator in the test cluster.
 
 ``` bash
@@ -41,81 +44,81 @@ kustomize build github.com/newrelic/newrelic-kubernetes-operator/config/default/
 
 # Deploy with a custom container
 
+If you want to deploy the operator in a custom container you can override the image name with a `kustomize` yaml file
+
+```yaml
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: newrelic-kubernetes-operator-system
+resources:
+  - github.com/newrelic/newrelic-kubernetes-operator/config/default
+images:
+  - name: newrelic/k8s-operator:snapshot
+    newName: <CUSTOM_IMAGE>
+    newTag: <CUSTOM_TAG>>
+```
+
+The apply the file with 
+
 ``` bash
-# TBD
-kustomize something something $DOCKER_IMAGE | kubectl apply -
+kustomize build . | kubectl apply -f -
 ```
-
-# Development Prerequisites
-
-In addition to the quick start...
-
-```bash
-brew install kubebuilder
-```
-
-# Install the operator in a cluster
-
-*Note: this will install operator on whatever kubernetes cluster `kubectl` is configured to use.*
-
-```bash
-$ kubectl api-resources > resources-before.txt
-
-$ make install
-
-$ kubectl api-resources > resources-installed.txt
-
-$ diff -u resources-before.txt resources-installed.txt
-```
-
-**Confirm the installation:**
-
-```diff
---- resources-before.txt	2020-01-23 12:55:32.000000000 -0700
-+++ resources-installed.txt	2020-01-23 12:55:53.000000000 -0700
-@@ -40,6 +40,7 @@
- ingresses                         ing          networking.k8s.io              true         Ingress
- networkpolicies                   netpol       networking.k8s.io              true         NetworkPolicy
- runtimeclasses                                 node.k8s.io                    false        RuntimeClass
-+nrqlalertconditions                            nr.k8s.newrelic.com     true         NrqlAlertCondition
- poddisruptionbudgets              pdb          policy                         true         PodDisruptionBudget
- podsecuritypolicies               psp          policy                         false        PodSecurityPolicy
- clusterrolebindings                            rbac.authorization.k8s.io      false        ClusterRoleBinding
-```
-
-Now install a Certificate manager, we recommend https://cert-manager.io/docs/installation/kubernetes/#installing-with-regular-manifests
-
-Next, build the image and push it to the desired docker repo
-
-`make docker-build docker-push DOCKER_IMAGE=<some-registry>/<project-name>:tag`
-
-`make docker-push DOCKER_IMAGE=<some-registry>/<project-name>:tag`
-This must be a container registry accessible to your k8 cluster
-
-If using kind for local development, you can replace this with
-`kind load docker-image <some-registry>/<project-name>:tag`
-
-Finally to deploy the image
-
-`make deploy DOCKER_IMAGE=<some-registry>/<project-name>:tag`
-
-Handy shortcut command to run these steps at once
-`export DOCKER_IMAGE=newrelic/kubernetes-operator:snapshot && make docker-build && kind load docker-image $DOCKER_IMAGE && make deploy`
-
-The newrelic-kubernetes-operator should now be running in your kubernetes cluster.
-
-As an alternative to running the operator in the Kubernetes cluster, you can run the operator locally with `make run`.
 
 # Using the operator
 
-The operator will create and update conditions as needed by applying yaml files with `kubectl apply -f <filename>`
+The operator will create and update alert policies and NRQL alert conditions as needed by applying yaml files with `kubectl apply -f <filename>`
 
 Sample yaml file
 ```
 apiVersion: nr.k8s.newrelic.com/v1
+kind: Policy
+metadata:
+  name: my-policy
+spec:
+  name: k8s created policy
+  incident_preference: "PER_POLICY"
+  region: "us"
+  # API_KEY can be specified directly in the yaml file or via a k8 secret
+#  api_key: APIKEY
+  api_key_secret:
+    name: nr-api-key
+    namespace: default
+    key_name: api-key
+  conditions:
+    - spec:
+        nrql:
+          query: "SELECT count(*) FROM Transactions"
+          since_value: "10"
+        enabled: true
+        terms:
+          - threshold: "75.0"
+            time_function: "all"
+            duration: "5"
+            priority: "critical"
+            operator: "above"
+        name: "K8s generated alert condition"
+    - spec:
+        nrql:
+          query: "SELECT count(*) FROM Transactions"
+          since_value: "5"
+        enabled: true
+        terms:
+          - threshold: "150.0"
+            time_function: "all"
+            duration: "5"
+            priority: "critical"
+            operator: "above"
+        name: "K8s generated alert condition 2"
+
+```
+
+You can also just create NRQL alert conditions directly with files similar to 
+
+```yaml
+apiVersion: nr.k8s.newrelic.com/v1
 kind: NrqlAlertCondition
 metadata:
-  name: my-alert
+  name: my-alert-condition
 spec:
   nrql:
     query: "SELECT count(*) FROM Transactions"
@@ -129,43 +132,45 @@ spec:
       operator: "above"
   name: "K8s generated alert condition"
   existing_policy_id: 26458
+  region: "us"
+# API_KEY can be specified directly in the yaml file or via a k8 secret
+#  api_key: API_KEY
   api_key_secret:
     name: nr-api-key
     namespace: default
     key_name: api-key
-  region: "us"
+
 ```
 
 Please note the `existing_policy_id` field which must be set to a currently existing policy ID in the account configured
 
-`kubectl describe nrqlalertconditions` - describes currently configured alert conditions
+`kubectl describe nrqlalertconditions.nr.k8s.newrelic.com` - describes currently configured alert conditions
 
+`kubectl describe policies.nr.k8s.newrelic.com` - describes currently configured alert conditions
 
 
 # Uninstall the operator
 
+The Operator can be removed with the reverse of installation, namely building the kubernetes resource files with `kustomize` and running `kubectl delete`
+
 ``` bash
-$ make uninstall
-
-$ kubectl api-resources > resources-uninstalled.txt
-
-$ diff -u resources-installed.txt resources-uninstalled.txt
+kustomize build github.com/newrelic/newrelic-kubernetes-operator/config/default/ | kubectl delete -f -
 ```
 
 
-**Confirm the operator was removed:**
+# Development Prerequisites
 
-``` diff
---- resources-installed.txt	2020-01-23 12:55:53.000000000 -0700
-+++ resources-uninstalled.txt	2020-01-23 12:56:23.000000000 -0700
-@@ -40,7 +40,6 @@
- ingresses        # New Relic Kubernetes Operator
+In addition to the quick start...
 
-[![CircleCI](https://circleci.com/gh/newrelic/newrelic-kubernetes-operator.svg?style=svg)](https://circleci.com/gh/newrelic/newrelic-kubernetes-operator)
-[![Go Report Card](https://goreportcard.com/badge/github.com/newrelic/newrelic-cli?style=flat-square)](https://goreportcard.com/report/github.com/newrelic/newrelic-kubernetes-operator)
-[![GoDoc](https://godoc.org/github.com/newrelic/newrelic-kubernetes-operator?status.svg)](https://godoc.org/github.com/newrelic/newrelic-kubernetes-operator)
-[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://github.com/newrelic/newrelic-kubernetes-operator/blob/master/LICENSE)
-[![CLA assistant](https://cla-assistant.io/readme/badge/newrelic/newrelic-kubernetes-operator)](https://cla-assistant.io/newrelic/newrelic-kubernetes-operator)
-[![Release](https://img.shields.io/github/release/newrelic/newrelic-kubernetes-operator/all.svg)](https://github.com/newrelic/newrelic-kubernetes-operator/releases/latest)
+Install kubebuilder https://go.kubebuilder.io/quick-start.html to get `etcd` and `kube-apiserver` needed for the tests
 
-Operator to manage New Relic resources
+Note: The brew kubebuilder package will not provide all the necessary dependencies for running the tests. 
+
+You can run the tests with 
+`make test` or directly with ginkgo
+
+`ginkgo --tags integration -r ./`
+
+The lint rules can be run with 
+`make lint`
+
