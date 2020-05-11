@@ -3,7 +3,7 @@
 #
 
 CONTROLLER_GEN    ?= controller-gen
-HEADER_FILE       ?= $(SRCDIR)/hack/boilerplate.go.txt
+HEADER_FILE       ?= $(SRCDIR)/build/generate/boilerplate.go.txt
 
 GOTOOLS += sigs.k8s.io/controller-tools/cmd/controller-gen
 
