@@ -4,6 +4,8 @@ import (
 	"github.com/newrelic/newrelic-client-go/pkg/alerts"
 	"github.com/newrelic/newrelic-client-go/pkg/config"
 	"github.com/newrelic/newrelic-client-go/pkg/region"
+
+	"github.com/newrelic/newrelic-kubernetes-operator/internal/info"
 )
 
 //go:generate go run github.com/maxbrunsfeld/counterfeiter/v6 . NewRelicAlertsClient
@@ -22,6 +24,8 @@ type NewRelicAlertsClient interface {
 func InitializeAlertsClient(apiKey string, regionName string) (NewRelicAlertsClient, error) {
 	configuration := config.New()
 	configuration.PersonalAPIKey = apiKey
+	configuration.ServiceName = info.Name
+	configuration.UserAgent = info.UserAgent()
 
 	regName, err := region.Parse(regionName)
 	if err != nil {

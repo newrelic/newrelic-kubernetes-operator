@@ -27,14 +27,11 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 
 	nrv1 "github.com/newrelic/newrelic-kubernetes-operator/api/v1"
+	"github.com/newrelic/newrelic-kubernetes-operator/internal/info"
 	// +kubebuilder:scaffold:imports
 )
 
-const appName = "newrelic-kubernetes-operator"
-
 var (
-	version = "dev"
-
 	scheme   = runtime.NewScheme()
 	setupLog = ctrl.Log.WithName("setup")
 )
@@ -59,7 +56,7 @@ func main() {
 	flag.Parse()
 
 	if showVersion {
-		fmt.Printf("%s version %s\n", appName, version)
+		fmt.Printf("%s version %s\n", info.Name, info.Version)
 		os.Exit(0)
 	}
 
