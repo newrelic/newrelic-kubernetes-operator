@@ -50,12 +50,12 @@ func main() {
 	var metricsAddr string
 	var enableLeaderElection bool
 	var showVersion bool
-	var devLogging bool
+	var devMode bool
 
 	flag.StringVar(&metricsAddr, "metrics-addr", ":8080", "The address the metric endpoint binds to.")
 	flag.BoolVar(&enableLeaderElection, "enable-leader-election", false, "Enable leader election for controller manager. Enabling this will ensure there is only one active controller manager.")
 	flag.BoolVar(&showVersion, "version", false, "Show version information.")
-	flag.BoolVar(&devLogging, "dev-logging", false, "Enable development level logging (stacktraces on warnings, no sampling)")
+	flag.BoolVar(&devMode, "dev-mode", false, "Enable development level logging (stacktraces on warnings, no sampling)")
 	flag.Parse()
 
 	if showVersion {
@@ -63,9 +63,8 @@ func main() {
 		os.Exit(0)
 	}
 
-	ctrl.SetLogger(zap.New(func(o *zap.Options) {
-		o.Development = devLogging
-	}))
+	logger := zap.New(zap.UseDevMode(devMode))
+	ctrl.SetLogger(logger)
 
 	opts := ctrl.Options{
 		Scheme:             scheme,
