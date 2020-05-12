@@ -62,6 +62,8 @@ var _ = Describe("ValidateCreate", func() {
 				Region:              "us",
 			},
 		}
+
+		// TODO: Make this a true integration test if possible
 		alertsClient.GetPolicyStub = func(int) (*alerts.Policy, error) {
 			return &alerts.Policy{
 				ID: 42,
@@ -75,6 +77,7 @@ var _ = Describe("ValidateCreate", func() {
 			Expect(err).ToNot(HaveOccurred())
 		})
 	})
+
 	Context("When given an invalid API key", func() {
 		It("should return an error", func() {
 			r.Spec.APIKey = ""
@@ -82,6 +85,7 @@ var _ = Describe("ValidateCreate", func() {
 			Expect(err).To(HaveOccurred())
 		})
 	})
+
 	Context("when given a valid API key in a secret", func() {
 		It("should not return an error", func() {
 			r.Spec.APIKey = ""
@@ -102,13 +106,13 @@ var _ = Describe("ValidateCreate", func() {
 			k8Client.Create(ctx, secret)
 			err := r.ValidateCreate()
 			Expect(err).ToNot(HaveOccurred())
-
 		})
+
 		AfterEach(func() {
 			k8Client.Delete(ctx, secret)
-
 		})
 	})
+
 	Context("when given an API key in a secret that can't be read", func() {
 		It("should return an error", func() {
 			r.Spec.APIKey = ""
@@ -119,9 +123,9 @@ var _ = Describe("ValidateCreate", func() {
 			}
 			err := r.ValidateCreate()
 			Expect(err).To(HaveOccurred())
-
 		})
 	})
+
 	Context("when given a NRQL condition without required field region", func() {
 		It("should reject resource creation", func() {
 			r.Spec.Region = ""
@@ -135,7 +139,6 @@ var _ = Describe("ValidateCreate", func() {
 			r.Spec.ExistingPolicyID = 0
 			err := r.ValidateCreate()
 			Expect(err).To(HaveOccurred())
-
 		})
 
 		Context("when missing multiple required fields, include all messages in one error", func() {
@@ -147,35 +150,33 @@ var _ = Describe("ValidateCreate", func() {
 				Expect(err).To(MatchError(errors.New("region and existing_policy_id must be set")))
 			})
 		})
-
 	})
 
 	Describe("CheckExistingPolicyID", func() {
-		BeforeEach(func() {
+		BeforeEach(func() {})
 
-		})
 		Context("With a valid API Key", func() {
-			BeforeEach(func() {
+			BeforeEach(func() {})
 
-			})
 			It("verifies existing policies exist", func() {
 				err := r.CheckExistingPolicyID()
 				Expect(err).To(BeNil())
 				Expect(r.Spec.ExistingPolicyID).To(Equal(42))
 			})
 		})
+
 		Context("With an invalid API Key", func() {
 			BeforeEach(func() {
 				alertsClient.GetPolicyStub = func(int) (*alerts.Policy, error) {
 					return nil, errors.New("401 response returned: The API key provided is invalid")
 				}
 			})
+
 			It("returns an error", func() {
 				err := r.CheckExistingPolicyID()
 				Expect(err).To(Not(BeNil()))
 			})
 		})
-
 	})
 
 	Describe("InvalidPolicyID", func() {
@@ -183,6 +184,7 @@ var _ = Describe("ValidateCreate", func() {
 			BeforeEach(func() {
 				r.Spec.ExistingPolicyID = 0
 			})
+
 			It("returns an error", func() {
 				err := r.ValidateCreate()
 				Expect(err).To(HaveOccurred())

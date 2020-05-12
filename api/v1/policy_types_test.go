@@ -15,6 +15,7 @@ var _ = Describe("Equals", func() {
 		output          bool
 		condition       PolicyCondition
 	)
+
 	BeforeEach(func() {
 		condition = PolicyCondition{
 			Name:      "policy-name",
@@ -45,6 +46,7 @@ var _ = Describe("Equals", func() {
 				ExistingPolicyID:    42,
 			},
 		}
+
 		p = PolicySpec{
 			IncidentPreference: "PER_POLICY",
 			Name:               "test-policy",
@@ -57,6 +59,7 @@ var _ = Describe("Equals", func() {
 			Region:     "us",
 			Conditions: []PolicyCondition{condition},
 		}
+
 		policyToCompare = PolicySpec{
 			IncidentPreference: "PER_POLICY",
 			Name:               "test-policy",
@@ -79,14 +82,13 @@ var _ = Describe("Equals", func() {
 	})
 
 	Context("When condition hash matches", func() {
-
 		It("should return true", func() {
 			output = p.Equals(policyToCompare)
 			Expect(output).To(BeTrue())
 		})
 	})
-	Context("When condition hash matches but k8s condition name doesn't", func() {
 
+	Context("When condition hash matches but k8s condition name doesn't", func() {
 		It("should return true", func() {
 			p.Conditions = []PolicyCondition{
 				{
@@ -123,8 +125,8 @@ var _ = Describe("Equals", func() {
 			Expect(output).To(BeTrue())
 		})
 	})
-	Context("When condition hash doesn't match matches but name does", func() {
 
+	Context("When condition hash doesn't match matches but name does", func() {
 		It("should return false", func() {
 			p.Conditions = []PolicyCondition{
 				{
@@ -141,7 +143,6 @@ var _ = Describe("Equals", func() {
 	})
 
 	Context("When one condition hash doesn't match but the other does", func() {
-
 		It("should return false", func() {
 			p.Conditions = []PolicyCondition{
 				{
@@ -173,7 +174,6 @@ var _ = Describe("Equals", func() {
 	})
 
 	Context("When different number of conditions exist", func() {
-
 		It("should return false", func() {
 			p.Conditions = []PolicyCondition{
 				{
@@ -191,24 +191,24 @@ var _ = Describe("Equals", func() {
 			Expect(output).ToNot(BeTrue())
 		})
 	})
-	Context("When Incident preference doesn't match", func() {
 
+	Context("When Incident preference doesn't match", func() {
 		It("should return false", func() {
 			p.IncidentPreference = "PER_CONDITION"
 			output = p.Equals(policyToCompare)
 			Expect(output).ToNot(BeTrue())
 		})
 	})
-	Context("When region doesn't match", func() {
 
+	Context("When region doesn't match", func() {
 		It("should return false", func() {
 			p.Region = "eu"
 			output = p.Equals(policyToCompare)
 			Expect(output).ToNot(BeTrue())
 		})
 	})
-	Context("When APIKeysecret doesn't match", func() {
 
+	Context("When APIKeysecret doesn't match", func() {
 		It("should return false", func() {
 			p.APIKeySecret = NewRelicAPIKeySecret{
 				Name:      "new secret",
@@ -219,5 +219,4 @@ var _ = Describe("Equals", func() {
 			Expect(output).ToNot(BeTrue())
 		})
 	})
-
 })
