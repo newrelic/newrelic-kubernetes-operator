@@ -30,8 +30,9 @@ import (
 	// +kubebuilder:scaffold:imports
 )
 
+const appName = "newrelic-kubernetes-operator"
+
 var (
-	appName = "newrelic-kubernetes-operator"
 	version = "dev"
 
 	scheme   = runtime.NewScheme()
