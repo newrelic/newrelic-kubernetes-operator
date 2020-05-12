@@ -28,5 +28,5 @@ deploy: manifests docker-build
 # Generate manifests e.g. CRD, RBAC etc.
 manifests: tools
 	@echo "=== $(PROJECT_NAME) === [ manifests        ]: Generating manifests..."
-	@$(CONTROLLER_GEN) $(CRD_OPTIONS) rbac:roleName=$(RBAC_ROLE_NAME) webhook paths="./..." output:crd:artifacts:config=$(CONFIG_ROOT)/crd/bases
+	@$(CONTROLLER_GEN) $(CRD_OPTIONS) rbac:roleName=$(RBAC_ROLE_NAME) webhook output:dir=$(CONFIG_ROOT) paths="./..." output:crd:artifacts:config=$(CONFIG_ROOT)/crd/bases
 
