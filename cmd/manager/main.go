@@ -20,8 +20,6 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/newrelic/newrelic-kubernetes-operator/interfaces"
-
 	"k8s.io/apimachinery/pkg/runtime"
 	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
 	_ "k8s.io/client-go/plugin/pkg/client/auth/gcp"
@@ -29,7 +27,6 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 
 	nrv1 "github.com/newrelic/newrelic-kubernetes-operator/api/v1"
-	"github.com/newrelic/newrelic-kubernetes-operator/controllers"
 	// +kubebuilder:scaffold:imports
 )
 
@@ -67,47 +64,25 @@ func main() {
 		o.Development = true
 	}))
 
-	mgr, err := ctrl.NewManager(ctrl.GetConfigOrDie(), ctrl.Options{
+	opts := ctrl.Options{
 		Scheme:             scheme,
 		MetricsBindAddress: metricsAddr,
 		LeaderElection:     enableLeaderElection,
 		Port:               9443,
-	})
+	}
+
+	mgr, err := ctrl.NewManager(ctrl.GetConfigOrDie(), opts)
 	if err != nil {
-		setupLog.Error(err, "unable to start manager")
+		setupLog.Error(err, "unable to create manager")
 		os.Exit(1)
 	}
 
-	if err = (&controllers.NrqlAlertConditionReconciler{
-		Client:          mgr.GetClient(),
-		Log:             ctrl.Log.WithName("controllers").WithName("NrqlAlertCondition"),
-		Scheme:          mgr.GetScheme(),
-		AlertClientFunc: interfaces.InitializeAlertsClient,
-	}).SetupWithManager(mgr); err != nil {
-		setupLog.Error(err, "unable to create controller", "controller", "NrqlAlertCondition")
+	// Register Alerts
+	err = registerAlerts(&mgr)
+	if err != nil {
+		setupLog.Error(err, "unable to register alerts")
 		os.Exit(1)
 	}
-
-	if err = (&nrv1.NrqlAlertCondition{}).SetupWebhookWithManager(mgr); err != nil {
-		setupLog.Error(err, "unable to create webhook", "webhook", "NrqlAlertCondition")
-		os.Exit(1)
-	}
-
-	if err = (&controllers.PolicyReconciler{
-		Client:          mgr.GetClient(),
-		Log:             ctrl.Log.WithName("controllers").WithName("Policy"),
-		Scheme:          mgr.GetScheme(),
-		AlertClientFunc: interfaces.InitializeAlertsClient,
-	}).SetupWithManager(mgr); err != nil {
-		setupLog.Error(err, "unable to create controller", "controller", "Policy")
-		os.Exit(1)
-	}
-
-	if err = (&nrv1.Policy{}).SetupWebhookWithManager(mgr); err != nil {
-		setupLog.Error(err, "unable to create webhook", "webhook", "Policy")
-		os.Exit(1)
-	}
-	// +kubebuilder:scaffold:builder
 
 	setupLog.Info("starting manager")
 	if err := mgr.Start(ctrl.SetupSignalHandler()); err != nil {
