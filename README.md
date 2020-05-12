@@ -14,7 +14,11 @@ Operator to manage New Relic resources.
 
 Currently enables management of Alert Policies and NRQL Alert Conditions.
 
-# Running kubernetes in a docker container locally with kind
+# Quick Start
+
+**Note:** These quick start instructions do **not** require you to clone the repo
+
+## Running kubernetes in a docker container locally with kind
 
 1. Get docker, kubectl, kustomize and kind installed
 
@@ -43,30 +47,32 @@ Currently enables management of Alert Policies and NRQL Alert Conditions.
 1. Install the operator in the test cluster.
 
    ``` bash
-   kustomize build ./configs/default | kubectl apply -f -
+   kustomize build github.com/newrelic/newrelic-kubernetes-operator/configs/default | kubectl apply -f -
    ```
 
-# Deploy with a custom container
+## Using a custom container
 
 If you want to deploy the operator in a custom container you can override the image name with a `kustomize` yaml file
 
-```yaml
-apiVersion: kustomize.config.k8s.io/v1beta1
-kind: Kustomization
-namespace: newrelic-kubernetes-operator-system
-resources:
-  - github.com/newrelic/newrelic-kubernetes-operator/configs/default
-images:
-  - name: newrelic/k8s-operator:snapshot
-    newName: <CUSTOM_IMAGE>
-    newTag: <CUSTOM_TAG>>
-```
+1. Create a new kustomize.yaml file
 
-The apply the file with 
+   ```yaml
+   apiVersion: kustomize.config.k8s.io/v1beta1
+   kind: Kustomization
+   namespace: newrelic-kubernetes-operator-system
+   resources:
+     - github.com/newrelic/newrelic-kubernetes-operator/configs/default
+   images:
+     - name: newrelic/k8s-operator:snapshot
+       newName: <CUSTOM_IMAGE>
+       newTag: <CUSTOM_TAG>>
+   ```
 
-``` bash
-kustomize build . | kubectl apply -f -
-```
+1. The apply the file with:
+
+   ``` bash
+   kustomize build . | kubectl apply -f -
+   ```
 
 # Using the operator
 
