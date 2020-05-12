@@ -7,7 +7,7 @@ BUILD_DIR  ?= ./bin/
 PROJECT_MODULE ?= $(shell $(GO) list -m)
 # $b replaced by the binary name in the compile loop, -s/w remove debug symbols
 # TODO: Remove the compile time 'main.NewRelicAPIKey'
-LDFLAGS    ?= "-s -w -X main.NewRelicAPIKey=${NEWRELIC_API_KEY} -X main.version=$(PROJECT_VER) -X main.appName=$$b"
+LDFLAGS    ?= "-s -w -X $(PROJECT_NAME)/internal/info.Name=$(PROJECT_NAME) -X $(PROJECT_MODULE)/internal/info.Version=$(PROJECT_VER)"
 SRCDIR     ?= .
 COMPILE_OS ?= darwin linux windows
 

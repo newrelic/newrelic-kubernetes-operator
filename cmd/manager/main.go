@@ -17,9 +17,8 @@ package main
 
 import (
 	"flag"
+	"fmt"
 	"os"
-
-	"github.com/newrelic/newrelic-kubernetes-operator/interfaces"
 
 	"k8s.io/apimachinery/pkg/runtime"
 	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
@@ -27,9 +26,8 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 
-	nralertsv1 "github.com/newrelic/newrelic-kubernetes-operator/api/v1"
 	nrv1 "github.com/newrelic/newrelic-kubernetes-operator/api/v1"
-	"github.com/newrelic/newrelic-kubernetes-operator/controllers"
+	"github.com/newrelic/newrelic-kubernetes-operator/internal/info"
 	// +kubebuilder:scaffold:imports
 )
 
@@ -41,7 +39,6 @@ var (
 func init() {
 	_ = clientgoscheme.AddToScheme(scheme)
 
-	_ = nralertsv1.AddToScheme(scheme)
 	_ = nrv1.AddToScheme(scheme)
 	// +kubebuilder:scaffold:scheme
 }
@@ -49,54 +46,42 @@ func init() {
 func main() {
 	var metricsAddr string
 	var enableLeaderElection bool
+	var showVersion bool
+	var devMode bool
 
 	flag.StringVar(&metricsAddr, "metrics-addr", ":8080", "The address the metric endpoint binds to.")
-	flag.BoolVar(&enableLeaderElection, "enable-leader-election", false,
-		"Enable leader election for controller manager. Enabling this will ensure there is only one active controller manager.")
+	flag.BoolVar(&enableLeaderElection, "enable-leader-election", false, "Enable leader election for controller manager. Enabling this will ensure there is only one active controller manager.")
+	flag.BoolVar(&showVersion, "version", false, "Show version information.")
+	flag.BoolVar(&devMode, "dev-mode", false, "Enable development level logging (stacktraces on warnings, no sampling)")
 	flag.Parse()
 
-	ctrl.SetLogger(zap.New(func(o *zap.Options) {
-		o.Development = true
-	}))
+	if showVersion {
+		fmt.Printf("%s version %s\n", info.Name, info.Version)
+		os.Exit(0)
+	}
 
-	mgr, err := ctrl.NewManager(ctrl.GetConfigOrDie(), ctrl.Options{
+	logger := zap.New(zap.UseDevMode(devMode))
+	ctrl.SetLogger(logger)
+
+	opts := ctrl.Options{
 		Scheme:             scheme,
 		MetricsBindAddress: metricsAddr,
 		LeaderElection:     enableLeaderElection,
 		Port:               9443,
-	})
+	}
+
+	mgr, err := ctrl.NewManager(ctrl.GetConfigOrDie(), opts)
 	if err != nil {
-		setupLog.Error(err, "unable to start manager")
+		setupLog.Error(err, "unable to create manager")
 		os.Exit(1)
 	}
 
-	if err = (&controllers.NrqlAlertConditionReconciler{
-		Client:          mgr.GetClient(),
-		Log:             ctrl.Log.WithName("controllers").WithName("NrqlAlertCondition"),
-		Scheme:          mgr.GetScheme(),
-		AlertClientFunc: interfaces.InitializeAlertsClient,
-	}).SetupWithManager(mgr); err != nil {
-		setupLog.Error(err, "unable to create controller", "controller", "NrqlAlertCondition")
+	// Register Alerts
+	err = registerAlerts(&mgr)
+	if err != nil {
+		setupLog.Error(err, "unable to register alerts")
 		os.Exit(1)
 	}
-	if err = (&nralertsv1.NrqlAlertCondition{}).SetupWebhookWithManager(mgr); err != nil {
-		setupLog.Error(err, "unable to create webhook", "webhook", "NrqlAlertCondition")
-		os.Exit(1)
-	}
-	if err = (&controllers.PolicyReconciler{
-		Client:          mgr.GetClient(),
-		Log:             ctrl.Log.WithName("controllers").WithName("Policy"),
-		Scheme:          mgr.GetScheme(),
-		AlertClientFunc: interfaces.InitializeAlertsClient,
-	}).SetupWithManager(mgr); err != nil {
-		setupLog.Error(err, "unable to create controller", "controller", "Policy")
-		os.Exit(1)
-	}
-	if err = (&nrv1.Policy{}).SetupWebhookWithManager(mgr); err != nil {
-		setupLog.Error(err, "unable to create webhook", "webhook", "Policy")
-		os.Exit(1)
-	}
-	// +kubebuilder:scaffold:builder
 
 	setupLog.Info("starting manager")
 	if err := mgr.Start(ctrl.SetupSignalHandler()); err != nil {

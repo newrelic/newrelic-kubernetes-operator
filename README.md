@@ -14,65 +14,73 @@ Operator to manage New Relic resources.
 
 Currently enables management of Alert Policies and NRQL Alert Conditions.
 
-# Quick start test drive from zero, running kubernetes in a docker container locally with kind
+# Quick Start
 
-Get docker, kubectl, kustomize and kind installed
-``` bash
-brew cask install docker
-brew install kustomize kubernetes-cli kind
-```
+**Note:** These quick start instructions do **not** require you to clone the repo
 
-Create a test cluster with kind
+## Running kubernetes in a docker container locally with kind
 
-``` bash
-kind create cluster --name newrelic
-kubectl cluster-info
-```
+1. Get docker, kubectl, kustomize and kind installed
 
-Install cert-manager
+   ``` bash
+   brew cask install docker
+   brew install kustomize kubernetes-cli kind
+   ```
 
-``` bash
-kubectl apply --validate=false -f https://github.com/jetstack/cert-manager/releases/download/v0.15.0/cert-manager.yaml
-```
+1. Create a test cluster with kind
 
-Note: This takes a minute or two to finish so wait a minute before going on to the next step. 
-You can also confirm it's running with the command `kubectl rollout status deployment -n cert-manager cert-manager-webhook`
+   ``` bash
+   kind create cluster --name newrelic
+   kubectl cluster-info
+   ```
 
-Install the operator in the test cluster.
+1. Install cert-manager
 
-``` bash
-kustomize build github.com/newrelic/newrelic-kubernetes-operator/config/default/ \
-  | kubectl apply -f -
-```
+   ``` bash
+   kubectl apply --validate=false -f https://github.com/jetstack/cert-manager/releases/download/v0.15.0/cert-manager.yaml
+   ```
 
-# Deploy with a custom container
+   > **Note:** This takes a minute or two to finish so wait a minute before going on to the next step.
+
+   You can also confirm it's running with the command `kubectl rollout status deployment -n cert-manager cert-manager-webhook`
+
+1. Install the operator in the test cluster.
+
+   ``` bash
+   kustomize build github.com/newrelic/newrelic-kubernetes-operator/configs/default | kubectl apply -f -
+   ```
+
+## Using a custom container
 
 If you want to deploy the operator in a custom container you can override the image name with a `kustomize` yaml file
 
-```yaml
-apiVersion: kustomize.config.k8s.io/v1beta1
-kind: Kustomization
-namespace: newrelic-kubernetes-operator-system
-resources:
-  - github.com/newrelic/newrelic-kubernetes-operator/config/default
-images:
-  - name: newrelic/k8s-operator:snapshot
-    newName: <CUSTOM_IMAGE>
-    newTag: <CUSTOM_TAG>>
-```
+1. Create a new kustomize.yaml file
 
-The apply the file with 
+   ```yaml
+   apiVersion: kustomize.config.k8s.io/v1beta1
+   kind: Kustomization
+   namespace: newrelic-kubernetes-operator-system
+   resources:
+     - github.com/newrelic/newrelic-kubernetes-operator/configs/default
+   images:
+     - name: newrelic/k8s-operator:snapshot
+       newName: <CUSTOM_IMAGE>
+       newTag: <CUSTOM_TAG>>
+   ```
 
-``` bash
-kustomize build . | kubectl apply -f -
-```
+1. The apply the file with:
+
+   ``` bash
+   kustomize build . | kubectl apply -f -
+   ```
 
 # Using the operator
 
 The operator will create and update alert policies and NRQL alert conditions as needed by applying yaml files with `kubectl apply -f <filename>`
 
-Sample yaml file
-```
+### Sample yaml file
+
+```yaml
 apiVersion: nr.k8s.newrelic.com/v1
 kind: Policy
 metadata:
@@ -115,7 +123,7 @@ spec:
 
 ```
 
-You can also just create NRQL alert conditions directly with files similar to 
+You can also just create NRQL alert conditions directly with files similar to:
 
 ```yaml
 apiVersion: nr.k8s.newrelic.com/v1
@@ -157,7 +165,7 @@ Please note the `existing_policy_id` field which must be set to a currently exis
 The Operator can be removed with the reverse of installation, namely building the kubernetes resource files with `kustomize` and running `kubectl delete`
 
 ``` bash
-kustomize build github.com/newrelic/newrelic-kubernetes-operator/config/default/ | kubectl delete -f -
+kustomize build ./configs/default/ | kubectl delete -f -
 ```
 
 
