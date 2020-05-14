@@ -12,4 +12,5 @@ GOTOOLS += sigs.k8s.io/controller-tools/cmd/controller-gen
 generate: tools
 	@echo "=== $(PROJECT_NAME) === [ generate         ]: Running $(CONTROLLER_GEN)..."
 	@$(CONTROLLER_GEN) object:headerFile=$(HEADER_FILE) paths="./..."
+	@cd interfaces/ && $(GO) generate
 
