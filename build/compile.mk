@@ -3,7 +3,7 @@
 #
 
 GO         ?= go
-BUILD_DIR  ?= ./bin/
+BUILD_DIR  ?= ./bin
 PROJECT_MODULE ?= $(shell $(GO) list -m)
 # $b replaced by the binary name in the compile loop, -s/w remove debug symbols
 # TODO: Remove the compile time 'main.NewRelicAPIKey'
@@ -35,7 +35,7 @@ compile-all:
 		done \
 	done
 
-compile-only: 
+compile-only:
 	@echo "=== $(PROJECT_NAME) === [ compile          ]: building commands:"
 	@mkdir -p $(BUILD_DIR)/$(GOOS)
 	@for b in $(BINS); do \
