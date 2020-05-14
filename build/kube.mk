@@ -22,11 +22,10 @@ uninstall: manifests
 # Deploy controller in the configured Kubernetes cluster in ~/.kube/config
 deploy: manifests docker-build
 	@echo "=== $(PROJECT_NAME) === [ deploy           ]: Deploying operator as docker image ${DOCKER_IMAGE}..."
-	@cd config/manager && kustomize edit set image controller=${DOCKER_IMAGE}
+	@cd $(CONFIG_ROOT)/manager && kustomize edit set image controller=${DOCKER_IMAGE}
 	@kustomize build $(CONFIG_ROOT)/default | kubectl apply -f -
 
 # Generate manifests e.g. CRD, RBAC etc.
 manifests: tools
 	@echo "=== $(PROJECT_NAME) === [ manifests        ]: Generating manifests..."
 	@$(CONTROLLER_GEN) $(CRD_OPTIONS) rbac:roleName=$(RBAC_ROLE_NAME) webhook output:dir=$(CONFIG_ROOT) paths="./..." output:crd:artifacts:config=$(CONFIG_ROOT)/crd/bases
-

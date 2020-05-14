@@ -17,9 +17,7 @@ import (
 )
 
 var _ = Describe("Policy_webhooks", func() {
-
 	Describe("validateCreate", func() {
-
 		var (
 			r            Policy
 			alertsClient *interfacesfakes.FakeNewRelicAlertsClient
@@ -41,6 +39,8 @@ var _ = Describe("Policy_webhooks", func() {
 					APIKey:             "api-key",
 				},
 			}
+
+			// TODO: Make this a true integration test if possible
 			alertsClient.GetPolicyStub = func(int) (*alerts.Policy, error) {
 				return &alerts.Policy{
 					ID: 42,
@@ -54,6 +54,7 @@ var _ = Describe("Policy_webhooks", func() {
 				Expect(err).ToNot(HaveOccurred())
 			})
 		})
+
 		Context("When given an invalid API key", func() {
 			It("should return an error", func() {
 				r.Spec.APIKey = ""
@@ -62,6 +63,7 @@ var _ = Describe("Policy_webhooks", func() {
 				Expect(err.Error()).To(Equal("either api_key or api_key_secret must be set"))
 			})
 		})
+
 		Context("when given a valid API key in a secret", func() {
 			It("should not return an error", func() {
 				r.Spec.APIKey = ""
@@ -82,11 +84,9 @@ var _ = Describe("Policy_webhooks", func() {
 				k8Client.Create(ctx, secret)
 				err := r.ValidateCreate()
 				Expect(err).ToNot(HaveOccurred())
-
 			})
 			AfterEach(func() {
 				k8Client.Delete(ctx, secret)
-
 			})
 		})
 
@@ -98,6 +98,7 @@ var _ = Describe("Policy_webhooks", func() {
 				Expect(err.Error()).To(Equal("incident preference must be PER_POLICY, PER_CONDITION, or PER_CONDITION_AND_TARGET"))
 			})
 		})
+
 		Context("when given a policy with duplicate conditions", func() {
 			BeforeEach(func() {
 				r.Spec.Conditions = []PolicyCondition{
@@ -153,11 +154,13 @@ var _ = Describe("Policy_webhooks", func() {
 					},
 				}
 			})
+
 			It("should reject the policy", func() {
 				err := r.ValidateCreate()
 				Expect(err).To(HaveOccurred())
 				Expect(err.Error()).To(Equal("duplicate conditions detected or hash collision"))
 			})
+
 			Context("and invalid API key and incident_preference", func() {
 				It("should include all errors", func() {
 					r.Spec.IncidentPreference = "totally bogus"
@@ -170,11 +173,9 @@ var _ = Describe("Policy_webhooks", func() {
 				})
 			})
 		})
-
 	})
 
 	Describe("Default", func() {
-
 		var (
 			r Policy
 		)
@@ -184,41 +185,41 @@ var _ = Describe("Policy_webhooks", func() {
 				IncidentPreference: "PER_POLICY",
 				APIKey:             "api-key",
 				Conditions: []PolicyCondition{
-					{Spec: NrqlAlertConditionSpec{
-						Terms: []AlertConditionTerm{
-							{
-								Duration:     resource.MustParse("30"),
-								Operator:     "above",
-								Priority:     "critical",
-								Threshold:    resource.MustParse("5"),
-								TimeFunction: "all",
+					{
+						Spec: NrqlAlertConditionSpec{
+							Terms: []AlertConditionTerm{
+								{
+									Duration:     resource.MustParse("30"),
+									Operator:     "above",
+									Priority:     "critical",
+									Threshold:    resource.MustParse("5"),
+									TimeFunction: "all",
+								},
 							},
+							Nrql: NrqlQuery{
+								Query:      "SELECT 1 FROM MyEvents",
+								SinceValue: "5",
+							},
+							Type:                "NRQL",
+							Name:                "NRQL Condition",
+							RunbookURL:          "http://test.com/runbook",
+							ValueFunction:       "max",
+							ViolationCloseTimer: 60,
+							ExpectedGroups:      2,
+							IgnoreOverlap:       true,
+							Enabled:             true,
 						},
-						Nrql: NrqlQuery{
-							Query:      "SELECT 1 FROM MyEvents",
-							SinceValue: "5",
-						},
-						Type:                "NRQL",
-						Name:                "NRQL Condition",
-						RunbookURL:          "http://test.com/runbook",
-						ValueFunction:       "max",
-						ViolationCloseTimer: 60,
-						ExpectedGroups:      2,
-						IgnoreOverlap:       true,
-						Enabled:             true,
-					},
 					},
 				},
 			},
 		}
+
 		Context("when given a policy with no incident_preference set", func() {
 			It("should set default value of PER_POLICY", func() {
 				r.Spec.IncidentPreference = ""
 				r.Default()
-
 				Expect(r.Spec.IncidentPreference).To(Equal(defaultPolicyIncidentPreference))
 			})
-
 		})
 
 		Context("when given a policy with a lower case incident preference", func() {
@@ -226,10 +227,7 @@ var _ = Describe("Policy_webhooks", func() {
 				r.Spec.IncidentPreference = "awesome-preference"
 				r.Default()
 				Expect(r.Spec.IncidentPreference).To(Equal("AWESOME-PREFERENCE"))
-
 			})
 		})
-
 	})
-
 })

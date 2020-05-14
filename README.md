@@ -14,17 +14,21 @@ Operator to manage New Relic resources.
 
 Currently enables management of Alert Policies and NRQL Alert Conditions.
 
+- [Quick Start](#quick-start)
+- [Using the Operator](#using-the-operator)
+- [Development](#development)
+
 # Quick Start
 
-**Note:** These quick start instructions do **not** require you to clone the repo
+**Note:** These quick start instructions do **not** require you to clone the repo.
 
-## Running kubernetes in a docker container locally with kind
+## Running Kubernetes in a Docker container locally with [kind](https://kind.sigs.k8s.io/)
 
-1. Get docker, kubectl, kustomize and kind installed
+1. Install docker, kubectl, kustomize, and kind
 
    ``` bash
    brew cask install docker
-   brew install kustomize kubernetes-cli kind
+   brew install kubernetes-cli kustomize kind
    ```
 
 1. Create a test cluster with kind
@@ -40,7 +44,7 @@ Currently enables management of Alert Policies and NRQL Alert Conditions.
    kubectl apply --validate=false -f https://github.com/jetstack/cert-manager/releases/download/v0.15.0/cert-manager.yaml
    ```
 
-   > **Note:** This takes a minute or two to finish so wait a minute before going on to the next step.
+   > <small>**Note:** This takes a minute or two to finish so wait a minute before going on to the next step.</small>
 
    You can also confirm it's running with the command `kubectl rollout status deployment -n cert-manager cert-manager-webhook`
 
@@ -49,12 +53,13 @@ Currently enables management of Alert Policies and NRQL Alert Conditions.
    ``` bash
    kustomize build github.com/newrelic/newrelic-kubernetes-operator/configs/default | kubectl apply -f -
    ```
+   > <small>**Note:** This will install operator on whatever kubernetes cluster kubectl is configured to use.</small>
 
 ## Using a custom container
 
-If you want to deploy the operator in a custom container you can override the image name with a `kustomize` yaml file
+If you want to deploy the operator in a custom container you can override the image name with a `kustomize.yaml` file.
 
-1. Create a new kustomize.yaml file
+1. Create a new `kustomize.yaml` file
 
    ```yaml
    apiVersion: kustomize.config.k8s.io/v1beta1
@@ -65,7 +70,7 @@ If you want to deploy the operator in a custom container you can override the im
    images:
      - name: newrelic/k8s-operator:snapshot
        newName: <CUSTOM_IMAGE>
-       newTag: <CUSTOM_TAG>>
+       newTag: <CUSTOM_TAG>
    ```
 
 1. The apply the file with:
@@ -78,8 +83,7 @@ If you want to deploy the operator in a custom container you can override the im
 
 The operator will create and update alert policies and NRQL alert conditions as needed by applying yaml files with `kubectl apply -f <filename>`
 
-### Sample yaml file
-
+#### Create an alert policy with a NRQL alert condition
 ```yaml
 apiVersion: nr.k8s.newrelic.com/v1
 kind: Policy
@@ -89,8 +93,8 @@ spec:
   name: k8s created policy
   incident_preference: "PER_POLICY"
   region: "us"
-  # API_KEY can be specified directly in the yaml file or via a k8 secret
-#  api_key: APIKEY
+  # API_KEY can be specified directly in the yaml file or via a k8s secret
+  #api_key: APIKEY
   api_key_secret:
     name: nr-api-key
     namespace: default
@@ -98,7 +102,11 @@ spec:
   conditions:
     - spec:
         nrql:
-          query: "SELECT count(*) FROM Transactions"
+          # Note: This is just an example.
+          # You'll want to use a query with parameters that are
+          # more specific to the needs for targeting associated
+          # kubernetes objects.
+          query: "SELECT count(*) FROM Transactions WHERE ..."
           since_value: "10"
         enabled: true
         terms:
@@ -110,7 +118,7 @@ spec:
         name: "K8s generated alert condition"
     - spec:
         nrql:
-          query: "SELECT count(*) FROM Transactions"
+          query: "SELECT count(*) FROM Transactions WHERE ..."
           since_value: "5"
         enabled: true
         terms:
@@ -120,11 +128,10 @@ spec:
             priority: "critical"
             operator: "above"
         name: "K8s generated alert condition 2"
-
 ```
+<br>
 
-You can also just create NRQL alert conditions directly with files similar to:
-
+#### Create a NRQL alert condition and add it to an existing alert policy
 ```yaml
 apiVersion: nr.k8s.newrelic.com/v1
 kind: NrqlAlertCondition
@@ -132,6 +139,10 @@ metadata:
   name: my-alert-condition
 spec:
   nrql:
+    # Note: This is just an example.
+    # You'll want to use a query with parameters that are
+    # more specific to the needs for targeting associated
+    # kubernetes objects.
     query: "SELECT count(*) FROM Transactions"
     since_value: "10"
   enabled: true
@@ -142,46 +153,66 @@ spec:
       priority: "critical"
       operator: "above"
   name: "K8s generated alert condition"
-  existing_policy_id: 26458
+  existing_policy_id: 26458245 # Note: this must match an existing policy in your account
   region: "us"
-# API_KEY can be specified directly in the yaml file or via a k8 secret
-#  api_key: API_KEY
+  # API_KEY can be specified directly in the yaml file or via a k8s secret
+  #api_key: API_KEY
   api_key_secret:
     name: nr-api-key
     namespace: default
     key_name: api-key
-
 ```
 
-Please note the `existing_policy_id` field which must be set to a currently existing policy ID in the account configured
+### Helpful commands
 
-`kubectl describe nrqlalertconditions.nr.k8s.newrelic.com` - describes currently configured alert conditions
+- `kubectl describe nrqlalertconditions.nr.k8s.newrelic.com` - describes currently configured alert conditions
 
-`kubectl describe policies.nr.k8s.newrelic.com` - describes currently configured alert conditions
+- `kubectl describe policies.nr.k8s.newrelic.com` - describes currently configured alert conditions
 
-
-# Uninstall the operator
+### Uninstall the operator
 
 The Operator can be removed with the reverse of installation, namely building the kubernetes resource files with `kustomize` and running `kubectl delete`
 
-``` bash
-kustomize build ./configs/default/ | kubectl delete -f -
+```bash
+kustomize build github.com/newrelic/newrelic-kubernetes-operator/configs/default | kubectl delete -f -
 ```
+<br>
 
+# Development
 
-# Development Prerequisites
+This section should get you set up properly for doing development on the operator.
 
-In addition to the quick start...
+#### Requirements
+- [Go](https://golang.org/) v1.13+
+- [Docker](https://www.docker.com/get-started) (with Kubernetes enabled)
+- [kubectl](https://kubernetes.io/docs/tasks/tools/install-kubectl/)
+- [kustomize](https://kustomize.io/)
+- [kubebuilder](https://book.kubebuilder.io/quick-start.html)
 
-Install kubebuilder https://go.kubebuilder.io/quick-start.html to get `etcd` and `kube-apiserver` needed for the tests
+#### Code
+1. Clone the repo
+    ```bash
+    git clone git@github.com:newrelic/newrelic-kubernetes-operator.git
+    ```
 
-Note: The brew kubebuilder package will not provide all the necessary dependencies for running the tests. 
+1. Perform the steps from the [Quick Start](#quick-start) section, which walk through the initial required installations steps for development.
 
-You can run the tests with 
-`make test` or directly with ginkgo
+1. Install [kubebuilder](https://go.kubebuilder.io/quick-start.html#prerequisites) following the instructions for your operating system. This installation will also get `etcd` and `kube-apiserver` which are needed for the tests. <br>
+    > <small>**Note:** Do **_not_** install `kubebuilder` with `brew`. Homebrew's `kubebuilder` package will not provide all the necessary dependencies for running the tests.</small>
 
-`ginkgo --tags integration -r ./`
-
-The lint rules can be run with 
-`make lint`
-
+1. Run the test suite, which uses the [Ginkgo](http://onsi.github.io/ginkgo/) testing framework. Executing tests can be done in a few ways, but using the `make` targets is the quickest way to get started with testing.
+    - Running tests with `make`
+      ```bash
+      make test              # runs all tests
+      make test-unit         # only runs unit tests
+      make test-integration  # only runs integration tests
+      ```
+    - Running tests with `ginkgo`
+      ```bash
+      ginkgo --tags unit -r ./          # only runs unit tests
+      ginkgo --tags integration -r ./   # only runs integrations tests
+      ```
+    - Linting the codebase
+      ```bash
+      make lint
+      ```
