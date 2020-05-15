@@ -22,6 +22,8 @@ import (
 	"github.com/newrelic/newrelic-kubernetes-operator/interfaces/interfacesfakes"
 )
 
+var alertsClient *interfacesfakes.FakeNewRelicAlertsClient
+
 var _ = Describe("NrqlCondition reconciliation", func() {
 	var (
 		ctx context.Context
