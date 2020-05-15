@@ -7,6 +7,11 @@ kind: NrqlAlertCondition
 metadata:
   name: alert-1029266
 spec:
+  api_key: <your New Relic personal API key>
+  # api_key_secret:
+  #   name: nr-api-key
+  #   namespace: default
+  #   key_name: api-key
   nrql:
     query: "SELECT count(*) FROM Transactions"
     since_value: "10"
@@ -21,8 +26,3 @@ spec:
   # Must reference an existing New Relic alert policy from your account
   existing_policy_id: 26458
   region: "us"
-  api_key: <your New Relic personal API key>
-  # api_key_secret:
-  #   name: nr-api-key
-  #   namespace: default
-  #   key_name: api-key

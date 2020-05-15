@@ -7,14 +7,14 @@ kind: Policy
 metadata:
   name: my-policy
 spec:
-  name: sblue testing k8s created policy
-  incident_preference: "PER_POLICY"
-  region: "us"
   api_key: <your New Relic personal API key>
   # api_key_secret:
   #   name: nr-api-key
   #   namespace: default
   #   key_name: api-key
+  name: k8s created policy
+  incident_preference: "PER_POLICY"
+  region: "us"
   conditions:
     - spec:
         nrql:
