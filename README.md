@@ -10,37 +10,43 @@
 [![CLA assistant](https://cla-assistant.io/readme/badge/newrelic/newrelic-kubernetes-operator)](https://cla-assistant.io/newrelic/newrelic-kubernetes-operator)
 [![Release](https://img.shields.io/github/release/newrelic/newrelic-kubernetes-operator/all.svg)](https://github.com/newrelic/newrelic-kubernetes-operator/releases/latest)
 
-Operator to manage New Relic resources.
-
-Currently enables management of Alert Policies and NRQL Alert Conditions.
-
+- [Overview](#overview)
 - [Quick Start](#quick-start)
 - [Using the Operator](#using-the-operator)
 - [Development](#development)
 
-# Quick Start
 
-**Note:** These quick start instructions do **not** require you to clone the repo.
+# Overview
+
+The **newrelic-kubernetes-operator** is a [Kubernetes Operator](https://kubernetes.io/docs/concepts/extend-kubernetes/operator/) that facilitates management of New Relic resources from within your Kubernetes configuration. Managing New Relic resources via [custom Kubernetes objects](https://github.com/newrelic/newrelic-kubernetes-operator/blob/master/examples/example.yaml#L2) can be done the same way you manage built-in [Kubernetes objects](https://kubernetes.io/docs/concepts/overview/working-with-objects/kubernetes-objects/#describing-a-kubernetes-object).
+
+Currently the operator supports managing the following resources:
+- Alert Policies
+- NRQL Alert Conditions.
+
+
+# Quick Start
+> <small>**Note:** These quick start instructions do **not** require you to clone the repo.</small>
 
 ## Running Kubernetes in a Docker container locally with [kind](https://kind.sigs.k8s.io/)
 
 1. Install docker, kubectl, kustomize, and kind
 
-   ``` bash
+   ```bash
    brew cask install docker
    brew install kubernetes-cli kustomize kind
    ```
 
 1. Create a test cluster with kind
 
-   ``` bash
+   ```bash
    kind create cluster --name newrelic
    kubectl cluster-info
    ```
 
 1. Install cert-manager
 
-   ``` bash
+   ```bash
    kubectl apply --validate=false -f https://github.com/jetstack/cert-manager/releases/download/v0.15.0/cert-manager.yaml
    ```
 
@@ -50,7 +56,7 @@ Currently enables management of Alert Policies and NRQL Alert Conditions.
 
 1. Install the operator in the test cluster.
 
-   ``` bash
+   ```bash
    kustomize build github.com/newrelic/newrelic-kubernetes-operator/configs/default | kubectl apply -f -
    ```
    > <small>**Note:** This will install operator on whatever kubernetes cluster kubectl is configured to use.</small>
@@ -75,7 +81,7 @@ If you want to deploy the operator in a custom container you can override the im
 
 1. The apply the file with:
 
-   ``` bash
+   ```bash
    kustomize build . | kubectl apply -f -
    ```
 
@@ -195,8 +201,6 @@ This section should get you set up properly for doing development on the operato
     git clone git@github.com:newrelic/newrelic-kubernetes-operator.git
     ```
 
-1. Perform the steps from the [Quick Start](#quick-start) section, which walk through the initial required installations steps for development.
-
 1. Install [kubebuilder](https://go.kubebuilder.io/quick-start.html#prerequisites) following the instructions for your operating system. This installation will also get `etcd` and `kube-apiserver` which are needed for the tests. <br>
     > <small>**Note:** Do **_not_** install `kubebuilder` with `brew`. Homebrew's `kubebuilder` package will not provide all the necessary dependencies for running the tests.</small>
 
@@ -216,3 +220,28 @@ This section should get you set up properly for doing development on the operato
       ```bash
       make lint
       ```
+1. Perform the steps from the [Quick Start](#quick-start) section, which walk through the initial required setup and get you going with your first `kubectl apply` of the operator configuration.
+
+1. Confirm your configuration was deployed to your local kubernetes cluster (the one that we created with `kind`). <br>
+    - Show your namespaces. You should see `newrelic-kubernetes-operator-system` in the list of namespaces.
+      ```bash
+      kubectl get namespaces
+      ```
+    - Show the nodes within the `newrelic-kubernetes-operator-system` namespace.
+      ```bash
+      kubectl get nodes -n newrelic-kubernetes-operator-system
+      ```
+      You should see something similar to the following output:
+      ```
+      NAME                     STATUS   ROLES    AGE    VERSION
+      newrelic-control-plane   Ready    master   163m   v1.18.2
+      ```
+
+1. Now we can try creating a New Relic alert policy with an [example config](/examples/example_policy.yaml). You will need to update the [`api_key`](/examples/example_policy.yaml#10) field with your New Relic [personal API key](https://docs.newrelic.com/docs/apis/get-started/intro-apis/types-new-relic-api-keys#personal-api-key).
+   ```bash
+   kubectl apply -f examples/examply_policy.yaml
+   ```
+   ```bash
+
+   ```
+   > <small>**Note:** Secrets management for your New Relic personal API key can also be referenced as [Kubernetes secret](https://kubernetes.io/docs/concepts/configuration/secret/). We've provided an [example secret config](/examples/example_secret.yaml) file for you in case you want to use this method.</small>
