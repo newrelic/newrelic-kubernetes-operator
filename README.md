@@ -213,22 +213,18 @@ This section should get you set up properly for doing development on the operato
 1. Install [kubebuilder](https://go.kubebuilder.io/quick-start.html#prerequisites) following the instructions for your operating system. This installation will also get `etcd` and `kube-apiserver` which are needed for the tests. <br>
     > <small>**Note:** Do **_not_** install `kubebuilder` with `brew`. Homebrew's `kubebuilder` package will not provide all the necessary dependencies for running the tests.</small>
 
-1. Run the test suite, which uses the [Ginkgo](http://onsi.github.io/ginkgo/) testing framework. Executing tests can be done in a few ways, but using the `make` targets is the quickest way to get started with testing.
+1. Run the test suite, which uses the [Ginkgo](http://onsi.github.io/ginkgo/) testing framework. Using the `make` targets is the quickest way to get started with testing.
     - Running tests with `make`
       ```bash
       make test              # runs all tests
       make test-unit         # only runs unit tests
       make test-integration  # only runs integration tests
       ```
-    - Running tests with `ginkgo`
-      ```bash
-      ginkgo --tags unit -r ./          # only runs unit tests
-      ginkgo --tags integration -r ./   # only runs integrations tests
-      ```
     - Linting the codebase
       ```bash
       make lint
       ```
+
 1. Perform the steps from the [Quick Start](#quick-start) section, which walk through the initial required setup and get you going with your first `kubectl apply` of the operator configuration.
 
 1. Confirm your configuration was deployed to your local Kubernetes cluster (the one that we created with `kind`). <br>
