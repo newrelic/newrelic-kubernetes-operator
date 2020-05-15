@@ -1,6 +1,9 @@
 package interfaces
 
 import (
+	"fmt"
+
+	"github.com/newrelic/newrelic-client-go/newrelic"
 	"github.com/newrelic/newrelic-client-go/pkg/alerts"
 	"github.com/newrelic/newrelic-client-go/pkg/config"
 	"github.com/newrelic/newrelic-client-go/pkg/region"
@@ -21,27 +24,31 @@ type NewRelicAlertsClient interface {
 	ListPolicies(*alerts.ListPoliciesParams) ([]alerts.Policy, error)
 }
 
+func NewClient(apiKey string, regionValue string) (*newrelic.NewRelic, error) {
+	cfg := config.New()
+
+	client, err := newrelic.New(
+		newrelic.ConfigPersonalAPIKey(apiKey),
+		newrelic.ConfigLogLevel(cfg.LogLevel),
+		newrelic.ConfigRegion(region.Name(regionValue)),
+		newrelic.ConfigUserAgent(info.UserAgent()),
+		newrelic.ConfigServiceName(info.Name),
+	)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return client, nil
+}
+
 func InitializeAlertsClient(apiKey string, regionName string) (NewRelicAlertsClient, error) {
-	configuration := config.New()
-	configuration.PersonalAPIKey = apiKey
-	configuration.ServiceName = info.Name
-	configuration.UserAgent = info.UserAgent()
-
-	regName, err := region.Parse(regionName)
+	client, err := NewClient(apiKey, regionName)
 	if err != nil {
-		return nil, err
-	}
-	reg, err := region.Get(regName)
-	if err != nil {
-		return nil, err
-	}
-	err = configuration.SetRegion(reg)
-	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("unable to create New Relic client with error: %s", err)
 	}
 
-	alertsClientthing := alerts.New(configuration)
-	return &alertsClientthing, nil
+	return &client.Alerts, nil
 }
 
 //PartialAPIKey - Returns a partial API key to ensure we don't log the full API Key
