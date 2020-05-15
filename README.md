@@ -12,13 +12,15 @@
 
 - [Overview](#overview)
 - [Quick Start](#quick-start)
-- [Using the Operator](#using-the-operator)
+- [Using the Operator to Provision Resources](#provision-new-relic-resources-with-the-operator)
+  - [Create a New Relic alert policy](##create-a-new-relic-alert-policy-with-nrql-alert-conditions)
+  - [Create a New Relic NRQL alert condition](#create-a-nrql-alert-condition-and-add-it-to-an-existing-alert-policy)
 - [Development](#development)
 
 
 # Overview
 
-The **newrelic-kubernetes-operator** is a [Kubernetes Operator](https://kubernetes.io/docs/concepts/extend-kubernetes/operator/) that facilitates management of New Relic resources from within your Kubernetes configuration. Managing New Relic resources via [custom Kubernetes objects](https://github.com/newrelic/newrelic-kubernetes-operator/blob/master/examples/example.yaml#L2) can be done the same way you manage built-in [Kubernetes objects](https://kubernetes.io/docs/concepts/overview/working-with-objects/kubernetes-objects/#describing-a-kubernetes-object).
+The **newrelic-kubernetes-operator** is a [Kubernetes Operator](https://kubernetes.io/docs/concepts/extend-kubernetes/operator/) that facilitates management of New Relic resources from within your Kubernetes configuration. Managing New Relic resources via [custom Kubernetes objects](https://github.com/newrelic/newrelic-kubernetes-operator/blob/master/examples/example.yaml#L2) can be done the same way you manage built-in Kubernetes objects.
 
 Currently the operator supports managing the following resources:
 - Alert Policies
@@ -84,6 +86,8 @@ If you want to deploy the operator in a custom container you can override the im
    ```bash
    kustomize build . | kubectl apply -f -
    ```
+
+<br>
 
 # Provision New Relic resources with the operator
 
@@ -227,7 +231,7 @@ This section should get you set up properly for doing development on the operato
       ```
 1. Perform the steps from the [Quick Start](#quick-start) section, which walk through the initial required setup and get you going with your first `kubectl apply` of the operator configuration.
 
-1. Confirm your configuration was deployed to your local kubernetes cluster (the one that we created with `kind`). <br>
+1. Confirm your configuration was deployed to your local Kubernetes cluster (the one that we created with `kind`). <br>
     - Show your namespaces. You should see `newrelic-kubernetes-operator-system` in the list of namespaces.
       ```bash
       kubectl get namespaces
@@ -242,10 +246,11 @@ This section should get you set up properly for doing development on the operato
       newrelic-control-plane   Ready    master   163m   v1.18.2
       ```
 
-1. Next steps
-    - [Create a New Relic alert policy](#create-a-new-relic-alert-policy-with-nrql-alert conditions)
-    - [Create a New Relic NRQL alert condition](#create-a-nrql-alert-condition-and-add-it-to an-existing-alert-policy)
+1. Next steps:
+    - [Create a New Relic alert policy](#create-a-new-relic-alert-policy-with-nrql-alert-conditions)
+    - [Create a New Relic NRQL alert condition](#create-a-nrql-alert-condition-and-add-it-to-an-existing-alert-policy)
 
+<br>
 
 ## Helpful commands
 
