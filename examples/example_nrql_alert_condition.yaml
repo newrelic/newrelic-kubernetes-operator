@@ -1,8 +1,17 @@
+# Note: If using a k8s secret, remove `api_key`, uncomment `api_key_secret`,
+# add your API key to examples/example_secret.yaml, and run
+# `kubectl apply -f examples/example_secret.yaml`
+
 apiVersion: nr.k8s.newrelic.com/v1
 kind: NrqlAlertCondition
 metadata:
   name: alert-1029266
 spec:
+  api_key: <your New Relic personal API key>
+  # api_key_secret:
+  #   name: nr-api-key
+  #   namespace: default
+  #   key_name: api-key
   nrql:
     query: "SELECT count(*) FROM Transactions"
     since_value: "10"
@@ -14,11 +23,6 @@ spec:
       priority: "critical"
       operator: "above"
   name: "K8s generated alert condition"
+  # Must reference an existing New Relic alert policy from your account
   existing_policy_id: 26458
   region: "us"
-# API_KEY can be specified directly in the yaml file or via a k8 secret
-#  api_key: API_KEY
-  api_key_secret:
-    name: nr-api-key
-    namespace: default
-    key_name: api-key
