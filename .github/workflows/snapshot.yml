@@ -33,5 +33,5 @@ jobs:
         password: ${{ secrets.DOCKER_PASSWORD }}
         repository: newrelic/k8s-operator
         tags: snapshot
-        add_git_lables: true
+        add_git_labels: true
 
