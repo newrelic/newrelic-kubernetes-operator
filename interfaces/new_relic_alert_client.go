@@ -10,17 +10,24 @@ import (
 
 //go:generate go run github.com/maxbrunsfeld/counterfeiter/v6 . NewRelicAlertsClient
 type NewRelicAlertsClient interface {
-	CreateNrqlCondition(int, alerts.NrqlCondition) (*alerts.NrqlCondition, error)
-	UpdateNrqlCondition(alerts.NrqlCondition) (*alerts.NrqlCondition, error)
-	ListNrqlConditions(int) ([]*alerts.NrqlCondition, error)
+	// CreateNrqlCondition(int, alerts.NrqlCondition) (*alerts.NrqlCondition, error)
+	// UpdateNrqlCondition(alerts.NrqlCondition) (*alerts.NrqlCondition, error)
+	// ListNrqlConditions(int) ([]*alerts.NrqlCondition, error)
 	DeleteNrqlCondition(int) (*alerts.NrqlCondition, error)
+
 	GetPolicy(id int) (*alerts.Policy, error)
 	CreatePolicy(alerts.Policy) (*alerts.Policy, error)
 	UpdatePolicy(alerts.Policy) (*alerts.Policy, error)
 	DeletePolicy(int) (*alerts.Policy, error)
 	ListPolicies(*alerts.ListPoliciesParams) ([]alerts.Policy, error)
+
+	// NerdGraph
+	SearchNrqlConditionsQuery(accountID int, searchCriteria alerts.NrqlConditionsSearchCriteria) ([]*alerts.NrqlAlertCondition, error)
+	CreateNrqlConditionStaticMutation(accountID int, policyID int, nrqlCondition alerts.NrqlConditionInput) (*alerts.NrqlAlertCondition, error)
+	UpdateNrqlConditionStaticMutation(accountID int, conditionID int, nrqlCondition alerts.NrqlConditionInput) (*alerts.NrqlAlertCondition, error)
 }
 
+// InitializeAlertsClient creates a new Alerts client.
 func InitializeAlertsClient(apiKey string, regionName string) (NewRelicAlertsClient, error) {
 	configuration := config.New()
 	configuration.PersonalAPIKey = apiKey
@@ -31,10 +38,12 @@ func InitializeAlertsClient(apiKey string, regionName string) (NewRelicAlertsCli
 	if err != nil {
 		return nil, err
 	}
+
 	reg, err := region.Get(regName)
 	if err != nil {
 		return nil, err
 	}
+
 	err = configuration.SetRegion(reg)
 	if err != nil {
 		return nil, err
