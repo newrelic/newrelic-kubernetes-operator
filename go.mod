@@ -17,10 +17,13 @@ require (
 	github.com/onsi/ginkgo v1.12.0
 	github.com/onsi/gomega v1.10.0
 	github.com/psampaz/go-mod-outdated v0.6.0 // indirect
-	golang.org/x/tools v0.0.0-20200511202723-1762287ae9dd
+	github.com/sirupsen/logrus v1.6.0
+	golang.org/x/tools v0.0.0-20200515204822-0aa9f2fd802d
 	k8s.io/api v0.17.5
 	k8s.io/apimachinery v0.17.5
 	k8s.io/client-go v0.17.5
 	sigs.k8s.io/controller-runtime v0.4.0
 	sigs.k8s.io/controller-tools v0.2.8
 )
+
+replace github.com/newrelic/newrelic-client-go => /Users/zleslie/go/src/github.com/newrelic/newrelic-client-go
