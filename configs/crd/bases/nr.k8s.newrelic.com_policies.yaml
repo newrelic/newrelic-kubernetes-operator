@@ -70,10 +70,8 @@ spec:
                       enabled:
                         type: boolean
                       existing_policy_id:
-                        description: Enabled             bool                 `json:"enabled"`
                         type: integer
                       expected_groups:
-                        description: ViolationCloseTimer int                  `json:"violation_time_limit_seconds,omitempty"`
                         type: integer
                       id:
                         type: integer
@@ -97,13 +95,6 @@ spec:
                         items:
                           description: AlertConditionTerm represents the terms of a New Relic alert condition.
                           properties:
-                            duration:
-                              anyOf:
-                              - type: integer
-                              - type: string
-                              description: TODO deprecate duration.  Nerdgraph has replaced this with ThresholdDuration.
-                              pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
-                              x-kubernetes-int-or-string: true
                             operator:
                               description: NrqlConditionOperator specifies the operator for alert condition terms.
                               type: string
@@ -125,7 +116,7 @@ spec:
                         description: NrqlConditionType specifies the type of NRQL alert condition.
                         type: string
                       valueFunction:
-                        description: Terms               []AlertConditionTerm `json:"terms,omitempty"` Nrql                NrqlQuery            `json:"nrql,omitempty"` Type                string               `json:"type,omitempty"` Name                string               `json:"name,omitempty"` RunbookURL          string               `json:"runbook_url,omitempty"` ValueFunction       string               `json:"value_function,omitempty"`
+                        description: NrqlConditionValueFunction specifies the value function of NRQL alert condition.
                         type: string
                       violationTimeLimit:
                         description: NrqlConditionValueFunction specifies the value function of NRQL alert condition.
@@ -194,10 +185,8 @@ spec:
                           enabled:
                             type: boolean
                           existing_policy_id:
-                            description: Enabled             bool                 `json:"enabled"`
                             type: integer
                           expected_groups:
-                            description: ViolationCloseTimer int                  `json:"violation_time_limit_seconds,omitempty"`
                             type: integer
                           id:
                             type: integer
@@ -221,13 +210,6 @@ spec:
                             items:
                               description: AlertConditionTerm represents the terms of a New Relic alert condition.
                               properties:
-                                duration:
-                                  anyOf:
-                                  - type: integer
-                                  - type: string
-                                  description: TODO deprecate duration.  Nerdgraph has replaced this with ThresholdDuration.
-                                  pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
-                                  x-kubernetes-int-or-string: true
                                 operator:
                                   description: NrqlConditionOperator specifies the operator for alert condition terms.
                                   type: string
@@ -249,7 +231,7 @@ spec:
                             description: NrqlConditionType specifies the type of NRQL alert condition.
                             type: string
                           valueFunction:
-                            description: Terms               []AlertConditionTerm `json:"terms,omitempty"` Nrql                NrqlQuery            `json:"nrql,omitempty"` Type                string               `json:"type,omitempty"` Name                string               `json:"name,omitempty"` RunbookURL          string               `json:"runbook_url,omitempty"` ValueFunction       string               `json:"value_function,omitempty"`
+                            description: NrqlConditionValueFunction specifies the value function of NRQL alert condition.
                             type: string
                           violationTimeLimit:
                             description: NrqlConditionValueFunction specifies the value function of NRQL alert condition.

@@ -6,8 +6,6 @@ import (
 	"context"
 	"errors"
 
-	"k8s.io/apimachinery/pkg/api/resource"
-
 	"github.com/newrelic/newrelic-client-go/pkg/alerts"
 	ctrl "sigs.k8s.io/controller-runtime"
 
@@ -68,25 +66,24 @@ var _ = Describe("policy reconciliation", func() {
 		conditionSpec = &nrv1.NrqlAlertConditionSpec{
 			Terms: []nrv1.AlertConditionTerm{
 				{
-					Duration:     resource.MustParse("30"),
 					Operator:     "above",
 					Priority:     "critical",
-					Threshold:    resource.MustParse("5"),
+					Threshold:    "5.1",
 					TimeFunction: "all",
 				},
 			},
-			Nrql: nrv1.NrqlQuery{
-				Query:      "SELECT 1 FROM MyEvents",
-				SinceValue: "5",
+			Nrql: alerts.NrqlConditionQuery{
+				Query:            "SELECT 1 FROM MyEvents",
+				EvaluationOffset: 5,
 			},
-			Type:                "NRQL",
-			Name:                "NRQL Condition",
-			RunbookURL:          "http://test.com/runbook",
-			ValueFunction:       "max",
-			ViolationCloseTimer: 60,
-			ExpectedGroups:      2,
-			IgnoreOverlap:       true,
-			Enabled:             true,
+			Type:               "NRQL",
+			Name:               "NRQL Condition",
+			RunbookURL:         "http://test.com/runbook",
+			ValueFunction:      &alerts.NrqlConditionValueFunctions.Sum,
+			ViolationTimeLimit: alerts.NrqlConditionViolationTimeLimits.OneHour,
+			ExpectedGroups:     2,
+			IgnoreOverlap:      true,
+			Enabled:            true,
 		}
 
 		policy = &nrv1.Policy{
@@ -167,7 +164,7 @@ var _ = Describe("policy reconciliation", func() {
 				err = k8sClient.Get(ctx, conditionNameType, &endStateCondition)
 				Expect(err).To(BeNil())
 				Expect(endStateCondition.Spec.Nrql.Query).To(Equal("SELECT 1 FROM MyEvents"))
-				Expect(endStateCondition.Spec.Terms[0].Priority).To(Equal("critical"))
+				Expect(endStateCondition.Spec.Terms[0].Priority).To(Equal(alerts.NrqlConditionPriority("critical")))
 				Expect(endStateCondition.Spec.Enabled).To(BeTrue())
 
 			})
@@ -558,14 +555,13 @@ var _ = Describe("policy reconciliation", func() {
 				secondConditionSpec := nrv1.NrqlAlertConditionSpec{
 					Terms: []nrv1.AlertConditionTerm{
 						{
-							Duration:     resource.MustParse("30"),
 							Operator:     "above",
 							Priority:     "critical",
-							Threshold:    resource.MustParse("5"),
+							Threshold:    "5.1",
 							TimeFunction: "all",
 						},
 					},
-					Nrql:    nrv1.NrqlQuery{},
+					Nrql:    alerts.NrqlConditionQuery{},
 					Type:    "",
 					Name:    "second alert condition",
 					Enabled: true,
@@ -636,14 +632,13 @@ var _ = Describe("policy reconciliation", func() {
 			secondConditionSpec := nrv1.NrqlAlertConditionSpec{
 				Terms: []nrv1.AlertConditionTerm{
 					{
-						Duration:     resource.MustParse("30"),
 						Operator:     "above",
 						Priority:     "critical",
-						Threshold:    resource.MustParse("5"),
+						Threshold:    "5.1",
 						TimeFunction: "all",
 					},
 				},
-				Nrql:    nrv1.NrqlQuery{},
+				Nrql:    alerts.NrqlConditionQuery{},
 				Type:    "",
 				Name:    "second alert condition",
 				Enabled: true,
