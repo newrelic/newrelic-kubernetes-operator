@@ -20,11 +20,18 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v2
 
-    - name: Publish Snapshot to Docker
+    - name: Build artifact
       shell: bash
-      env:
-        DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
-        DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
-        DOCKER_IMAGE: newrelic/k8s-operator:snapshot
-      run: make docker-push
+      run: make compile-linux
+
+    - name: Publish Snapshot to Docker
+      uses: docker/build-push-action@v1
+      with:
+        path: bin/linux/
+        dockerfile: build/package/Dockerfile
+        username: ${{ secrets.DOCKER_USERNAME }}
+        password: ${{ secrets.DOCKER_PASSWORD }}
+        repository: newrelic/k8s-operator
+        tags: snapshot
+        add_git_lables: true
 
