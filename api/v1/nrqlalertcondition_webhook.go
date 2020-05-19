@@ -40,7 +40,7 @@ var (
 	ctx             context.Context
 )
 
-func (r *NrqlAlertCondition) SetupWebhookWithManager(mgr ctrl.Manager) error {
+func (r *NrqlConditionSchema) SetupWebhookWithManager(mgr ctrl.Manager) error {
 	alertClientFunc = interfaces.InitializeAlertsClient
 	k8Client = mgr.GetClient()
 	ctx = context.Background()
@@ -53,15 +53,15 @@ func (r *NrqlAlertCondition) SetupWebhookWithManager(mgr ctrl.Manager) error {
 
 // +kubebuilder:webhook:path=/mutate-nr-k8s-newrelic-com-v1-nrqlalertcondition,mutating=true,failurePolicy=fail,groups=nr.k8s.newrelic.com,resources=nrqlalertconditions,verbs=create;update,versions=v1,name=mnrqlalertcondition.kb.io
 
-var _ webhook.Defaulter = &NrqlAlertCondition{}
+var _ webhook.Defaulter = &NrqlConditionSchema{}
 
 // Default implements webhook.Defaulter so a webhook will be registered for the type
-func (r *NrqlAlertCondition) Default() {
+func (r *NrqlConditionSchema) Default() {
 	log.Info("default", "name", r.Name)
 
 	if r.Status.AppliedSpec == nil {
 		log.Info("Setting null Applied Spec to empty interface")
-		r.Status.AppliedSpec = &NrqlAlertConditionSpec{}
+		r.Status.AppliedSpec = &NrqlConditionSpec{}
 	}
 	log.Info("r.Status.AppliedSpec after", "r.Status.AppliedSpec", r.Status.AppliedSpec)
 }
@@ -69,10 +69,10 @@ func (r *NrqlAlertCondition) Default() {
 // TODO(user): change verbs to "verbs=create;update;delete" if you want to enable deletion validation.
 // +kubebuilder:webhook:verbs=create;update,path=/validate-nr-k8s-newrelic-com-v1-nrqlalertcondition,mutating=false,failurePolicy=fail,groups=nr.k8s.newrelic.com,resources=nrqlalertconditions,versions=v1,name=vnrqlalertcondition.kb.io
 
-var _ webhook.Validator = &NrqlAlertCondition{}
+var _ webhook.Validator = &NrqlConditionSchema{}
 
 // ValidateCreate implements webhook.Validator so a webhook will be registered for the type
-func (r *NrqlAlertCondition) ValidateCreate() error {
+func (r *NrqlConditionSchema) ValidateCreate() error {
 	log.Info("validate create", "name", r.Name)
 	//TODO this should write this value TO a new secret so code path always reads from a secret
 	err := r.CheckForAPIKeyOrSecret()
@@ -88,7 +88,7 @@ func (r *NrqlAlertCondition) ValidateCreate() error {
 }
 
 // ValidateUpdate implements webhook.Validator so a webhook will be registered for the type
-func (r *NrqlAlertCondition) ValidateUpdate(old runtime.Object) error {
+func (r *NrqlConditionSchema) ValidateUpdate(old runtime.Object) error {
 	log.Info("validate update", "name", r.Name)
 
 	// TODO(user): fill in your validation logic upon object update.
@@ -96,14 +96,14 @@ func (r *NrqlAlertCondition) ValidateUpdate(old runtime.Object) error {
 }
 
 // ValidateDelete implements webhook.Validator so a webhook will be registered for the type
-func (r *NrqlAlertCondition) ValidateDelete() error {
+func (r *NrqlConditionSchema) ValidateDelete() error {
 	log.Info("validate delete", "name", r.Name)
 
 	// TODO(user): fill in your validation logic upon object deletion.
 	return nil
 }
 
-func (r *NrqlAlertCondition) CheckExistingPolicyID() error {
+func (r *NrqlConditionSchema) CheckExistingPolicyID() error {
 	log.Info("Checking existing", "policyId", r.Spec.ExistingPolicyID)
 	var apiKey string
 	if r.Spec.APIKey == "" {
@@ -145,7 +145,7 @@ func (r *NrqlAlertCondition) CheckExistingPolicyID() error {
 	return nil
 }
 
-func (r *NrqlAlertCondition) CheckForAPIKeyOrSecret() error {
+func (r *NrqlConditionSchema) CheckForAPIKeyOrSecret() error {
 	if r.Spec.APIKey != "" {
 		return nil
 	}
@@ -157,7 +157,7 @@ func (r *NrqlAlertCondition) CheckForAPIKeyOrSecret() error {
 	return errors.New("either api_key or api_key_secret must be set")
 }
 
-func (r *NrqlAlertCondition) CheckRequiredFields() error {
+func (r *NrqlConditionSchema) CheckRequiredFields() error {
 
 	missingFields := []string{}
 	if r.Spec.Region == "" {

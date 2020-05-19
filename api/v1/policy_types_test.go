@@ -13,15 +13,15 @@ var _ = Describe("Equals", func() {
 		p               PolicySpec
 		policyToCompare PolicySpec
 		output          bool
-		condition       PolicyCondition
+		condition       PolicyConditionSchema
 	)
 
 	BeforeEach(func() {
-		condition = PolicyCondition{
+		condition = PolicyConditionSchema{
 			Name:      "policy-name",
 			Namespace: "default",
-			Spec: NrqlAlertConditionSpec{
-				Terms: []AlertConditionTerm{
+			Spec: NrqlConditionSpec{
+				Terms: []ConditionTerm{
 					{
 						Duration:     resource.MustParse("30"),
 						Operator:     "above",
@@ -57,7 +57,7 @@ var _ = Describe("Equals", func() {
 				KeyName:   "api-key",
 			},
 			Region:     "us",
-			Conditions: []PolicyCondition{condition},
+			Conditions: []PolicyConditionSchema{condition},
 		}
 
 		policyToCompare = PolicySpec{
@@ -70,7 +70,7 @@ var _ = Describe("Equals", func() {
 				KeyName:   "api-key",
 			},
 			Region:     "us",
-			Conditions: []PolicyCondition{condition},
+			Conditions: []PolicyConditionSchema{condition},
 		}
 	})
 
@@ -90,12 +90,12 @@ var _ = Describe("Equals", func() {
 
 	Context("When condition hash matches but k8s condition name doesn't", func() {
 		It("should return true", func() {
-			p.Conditions = []PolicyCondition{
+			p.Conditions = []PolicyConditionSchema{
 				{
 					Name:      "",
 					Namespace: "",
-					Spec: NrqlAlertConditionSpec{
-						Terms: []AlertConditionTerm{
+					Spec: NrqlConditionSpec{
+						Terms: []ConditionTerm{
 							{
 								Duration:     resource.MustParse("30"),
 								Operator:     "above",
@@ -128,11 +128,11 @@ var _ = Describe("Equals", func() {
 
 	Context("When condition hash doesn't match matches but name does", func() {
 		It("should return false", func() {
-			p.Conditions = []PolicyCondition{
+			p.Conditions = []PolicyConditionSchema{
 				{
 					Name:      "policy-name",
 					Namespace: "default",
-					Spec: NrqlAlertConditionSpec{
+					Spec: NrqlConditionSpec{
 						Name: "test condition 222",
 					},
 				},
@@ -144,26 +144,26 @@ var _ = Describe("Equals", func() {
 
 	Context("When one condition hash doesn't match but the other does", func() {
 		It("should return false", func() {
-			p.Conditions = []PolicyCondition{
+			p.Conditions = []PolicyConditionSchema{
 				{
-					Spec: NrqlAlertConditionSpec{
+					Spec: NrqlConditionSpec{
 						Name: "test condition",
 					},
 				},
 				{
-					Spec: NrqlAlertConditionSpec{
+					Spec: NrqlConditionSpec{
 						Name: "test condition 2",
 					},
 				},
 			}
-			policyToCompare.Conditions = []PolicyCondition{
+			policyToCompare.Conditions = []PolicyConditionSchema{
 				{
-					Spec: NrqlAlertConditionSpec{
+					Spec: NrqlConditionSpec{
 						Name: "test condition",
 					},
 				},
 				{
-					Spec: NrqlAlertConditionSpec{
+					Spec: NrqlConditionSpec{
 						Name: "test condition is awesome",
 					},
 				},
@@ -175,14 +175,14 @@ var _ = Describe("Equals", func() {
 
 	Context("When different number of conditions exist", func() {
 		It("should return false", func() {
-			p.Conditions = []PolicyCondition{
+			p.Conditions = []PolicyConditionSchema{
 				{
-					Spec: NrqlAlertConditionSpec{
+					Spec: NrqlConditionSpec{
 						Name: "test condition",
 					},
 				},
 				{
-					Spec: NrqlAlertConditionSpec{
+					Spec: NrqlConditionSpec{
 						Name: "test condition 2",
 					},
 				},

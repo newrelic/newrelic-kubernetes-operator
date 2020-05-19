@@ -19,7 +19,7 @@ import (
 var _ = Describe("Policy_webhooks", func() {
 	Describe("validateCreate", func() {
 		var (
-			r            Policy
+			r            PolicySchema
 			alertsClient *interfacesfakes.FakeNewRelicAlertsClient
 			secret       *v1.Secret
 		)
@@ -32,7 +32,7 @@ var _ = Describe("Policy_webhooks", func() {
 			}
 			alertClientFunc = fakeAlertFunc
 
-			r = Policy{
+			r = PolicySchema{
 				Spec: PolicySpec{
 					Name:               "Test Policy",
 					IncidentPreference: "PER_POLICY",
@@ -101,10 +101,10 @@ var _ = Describe("Policy_webhooks", func() {
 
 		Context("when given a policy with duplicate conditions", func() {
 			BeforeEach(func() {
-				r.Spec.Conditions = []PolicyCondition{
+				r.Spec.Conditions = []PolicyConditionSchema{
 					{
-						Spec: NrqlAlertConditionSpec{
-							Terms: []AlertConditionTerm{
+						Spec: NrqlConditionSpec{
+							Terms: []ConditionTerm{
 								{
 									Duration:     resource.MustParse("30"),
 									Operator:     "above",
@@ -128,8 +128,8 @@ var _ = Describe("Policy_webhooks", func() {
 						},
 					},
 					{
-						Spec: NrqlAlertConditionSpec{
-							Terms: []AlertConditionTerm{
+						Spec: NrqlConditionSpec{
+							Terms: []ConditionTerm{
 								{
 									Duration:     resource.MustParse("30"),
 									Operator:     "above",
@@ -177,17 +177,17 @@ var _ = Describe("Policy_webhooks", func() {
 
 	Describe("Default", func() {
 		var (
-			r Policy
+			r PolicySchema
 		)
-		r = Policy{
+		r = PolicySchema{
 			Spec: PolicySpec{
 				Name:               "Test Policy",
 				IncidentPreference: "PER_POLICY",
 				APIKey:             "api-key",
-				Conditions: []PolicyCondition{
+				Conditions: []PolicyConditionSchema{
 					{
-						Spec: NrqlAlertConditionSpec{
-							Terms: []AlertConditionTerm{
+						Spec: NrqlConditionSpec{
+							Terms: []ConditionTerm{
 								{
 									Duration:     resource.MustParse("30"),
 									Operator:     "above",

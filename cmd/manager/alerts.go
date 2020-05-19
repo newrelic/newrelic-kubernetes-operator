@@ -28,7 +28,7 @@ import (
 )
 
 func registerAlerts(mgr *ctrl.Manager) error {
-	nrqlReconciler := &controllers.NrqlAlertConditionReconciler{
+	nrqlReconciler := &controllers.NrqlConditionReconciler{
 		Client:          (*mgr).GetClient(),
 		Log:             ctrl.Log.WithName("controllers").WithName("NrqlAlertCondition"),
 		Scheme:          (*mgr).GetScheme(),
@@ -40,17 +40,17 @@ func registerAlerts(mgr *ctrl.Manager) error {
 		os.Exit(1)
 	}
 
-	nrqlAlertCondition := &nrv1.NrqlAlertCondition{}
+	nrqlAlertCondition := &nrv1.NrqlConditionSchema{}
 	if err := nrqlAlertCondition.SetupWebhookWithManager(*mgr); err != nil {
 		setupLog.Error(err, "unable to create webhook", "webhook", "NrqlAlertCondition")
 		os.Exit(1)
 	}
 
 	policyReconciler := &controllers.PolicyReconciler{
-		Client:          (*mgr).GetClient(),
-		Log:             ctrl.Log.WithName("controllers").WithName("Policy"),
-		Scheme:          (*mgr).GetScheme(),
-		AlertClientFunc: interfaces.InitializeAlertsClient,
+		Client:     (*mgr).GetClient(),
+		Log:        ctrl.Log.WithName("controllers").WithName("Policy"),
+		Scheme:     (*mgr).GetScheme(),
+		ClientFunc: interfaces.InitializeAlertsClient,
 	}
 
 	if err := policyReconciler.SetupWithManager(*mgr); err != nil {
@@ -58,7 +58,7 @@ func registerAlerts(mgr *ctrl.Manager) error {
 		os.Exit(1)
 	}
 
-	policy := &nrv1.Policy{}
+	policy := &nrv1.PolicySchema{}
 
 	if err := policy.SetupWebhookWithManager(*mgr); err != nil {
 		setupLog.Error(err, "unable to create webhook", "webhook", "Policy")

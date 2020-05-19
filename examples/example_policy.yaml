@@ -12,7 +12,7 @@ spec:
   #   name: nr-api-key
   #   namespace: default
   #   key_name: api-key
-  name: k8s created policy
+  name: Trombs k8s created policy
   incident_preference: "PER_POLICY"
   region: "us"
   conditions:

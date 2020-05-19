@@ -1,0 +1,281 @@
+
+---
+apiVersion: apiextensions.k8s.io/v1beta1
+kind: CustomResourceDefinition
+metadata:
+  annotations:
+    controller-gen.kubebuilder.io/version: v0.2.8
+  creationTimestamp: null
+  name: policyschemas.nr.k8s.newrelic.com
+spec:
+  group: nr.k8s.newrelic.com
+  names:
+    kind: PolicySchema
+    listKind: PolicySchemaList
+    plural: policyschemas
+    singular: policyschema
+  scope: Namespaced
+  validation:
+    openAPIV3Schema:
+      description: PolicySchema is the Schema for the policies API
+      properties:
+        apiVersion:
+          description: 'APIVersion defines the versioned schema of this representation
+            of an object. Servers should convert recognized schemas to the latest
+            internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+          type: string
+        kind:
+          description: 'Kind is a string value representing the REST resource this
+            object represents. Servers may infer this from the endpoint the client
+            submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+          type: string
+        metadata:
+          type: object
+        spec:
+          description: PolicySpec defines the desired state of Policy
+          properties:
+            api_key:
+              type: string
+            api_key_secret:
+              properties:
+                key_name:
+                  type: string
+                name:
+                  type: string
+                namespace:
+                  type: string
+              type: object
+            conditions:
+              items:
+                description: PolicyConditionSchema defined the conditions contained
+                  within a a policy
+                properties:
+                  name:
+                    type: string
+                  namespace:
+                    type: string
+                  spec:
+                    description: NrqlConditionSpec defines the desired state of NrqlAlertCondition
+                    properties:
+                      api_key:
+                        type: string
+                      api_key_secret:
+                        properties:
+                          key_name:
+                            type: string
+                          name:
+                            type: string
+                          namespace:
+                            type: string
+                        type: object
+                      enabled:
+                        type: boolean
+                      existing_policy_id:
+                        type: integer
+                      expected_groups:
+                        type: integer
+                      id:
+                        type: integer
+                      ignore_overlap:
+                        type: boolean
+                      name:
+                        type: string
+                      nrql:
+                        description: NrqlQuery represents a NRQL query to use with
+                          a NRQL alert condition
+                        properties:
+                          query:
+                            type: string
+                          since_value:
+                            type: string
+                        type: object
+                      region:
+                        type: string
+                      runbook_url:
+                        type: string
+                      terms:
+                        items:
+                          description: ConditionTerm represents the terms of a New
+                            Relic alert condition.
+                          properties:
+                            duration:
+                              anyOf:
+                              - type: integer
+                              - type: string
+                              pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
+                              x-kubernetes-int-or-string: true
+                            operator:
+                              type: string
+                            priority:
+                              type: string
+                            threshold:
+                              anyOf:
+                              - type: integer
+                              - type: string
+                              pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
+                              x-kubernetes-int-or-string: true
+                            time_function:
+                              type: string
+                          required:
+                          - threshold
+                          type: object
+                        type: array
+                      type:
+                        type: string
+                      value_function:
+                        type: string
+                      violation_time_limit_seconds:
+                        type: integer
+                    required:
+                    - enabled
+                    type: object
+                required:
+                - name
+                - namespace
+                type: object
+              type: array
+            incident_preference:
+              type: string
+            name:
+              type: string
+            region:
+              type: string
+          required:
+          - name
+          - region
+          type: object
+        status:
+          description: PolicyStatus defines the observed state of Policy
+          properties:
+            applied_spec:
+              description: PolicySpec defines the desired state of Policy
+              properties:
+                api_key:
+                  type: string
+                api_key_secret:
+                  properties:
+                    key_name:
+                      type: string
+                    name:
+                      type: string
+                    namespace:
+                      type: string
+                  type: object
+                conditions:
+                  items:
+                    description: PolicyConditionSchema defined the conditions contained
+                      within a a policy
+                    properties:
+                      name:
+                        type: string
+                      namespace:
+                        type: string
+                      spec:
+                        description: NrqlConditionSpec defines the desired state of
+                          NrqlAlertCondition
+                        properties:
+                          api_key:
+                            type: string
+                          api_key_secret:
+                            properties:
+                              key_name:
+                                type: string
+                              name:
+                                type: string
+                              namespace:
+                                type: string
+                            type: object
+                          enabled:
+                            type: boolean
+                          existing_policy_id:
+                            type: integer
+                          expected_groups:
+                            type: integer
+                          id:
+                            type: integer
+                          ignore_overlap:
+                            type: boolean
+                          name:
+                            type: string
+                          nrql:
+                            description: NrqlQuery represents a NRQL query to use
+                              with a NRQL alert condition
+                            properties:
+                              query:
+                                type: string
+                              since_value:
+                                type: string
+                            type: object
+                          region:
+                            type: string
+                          runbook_url:
+                            type: string
+                          terms:
+                            items:
+                              description: ConditionTerm represents the terms of a
+                                New Relic alert condition.
+                              properties:
+                                duration:
+                                  anyOf:
+                                  - type: integer
+                                  - type: string
+                                  pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
+                                  x-kubernetes-int-or-string: true
+                                operator:
+                                  type: string
+                                priority:
+                                  type: string
+                                threshold:
+                                  anyOf:
+                                  - type: integer
+                                  - type: string
+                                  pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
+                                  x-kubernetes-int-or-string: true
+                                time_function:
+                                  type: string
+                              required:
+                              - threshold
+                              type: object
+                            type: array
+                          type:
+                            type: string
+                          value_function:
+                            type: string
+                          violation_time_limit_seconds:
+                            type: integer
+                        required:
+                        - enabled
+                        type: object
+                    required:
+                    - name
+                    - namespace
+                    type: object
+                  type: array
+                incident_preference:
+                  type: string
+                name:
+                  type: string
+                region:
+                  type: string
+              required:
+              - name
+              - region
+              type: object
+            policy_id:
+              type: integer
+          required:
+          - applied_spec
+          - policy_id
+          type: object
+      type: object
+  version: v1
+  versions:
+  - name: v1
+    served: true
+    storage: true
+status:
+  acceptedNames:
+    kind: ""
+    plural: ""
+  conditions: []
+  storedVersions: []

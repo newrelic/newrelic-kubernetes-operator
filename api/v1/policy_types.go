@@ -31,20 +31,19 @@ import (
 
 // PolicySpec defines the desired state of Policy
 type PolicySpec struct {
-	IncidentPreference string               `json:"incident_preference,omitempty"`
-	Name               string               `json:"name"`
-	APIKey             string               `json:"api_key,omitempty"`
-	APIKeySecret       NewRelicAPIKeySecret `json:"api_key_secret,omitempty"`
-	Region             string               `json:"region"`
-	Conditions         []PolicyCondition    `json:"conditions,omitempty"`
+	APIKey             string                  `json:"api_key,omitempty"`
+	APIKeySecret       NewRelicAPIKeySecret    `json:"api_key_secret,omitempty"`
+	Conditions         []PolicyConditionSchema `json:"conditions,omitempty"`
+	IncidentPreference string                  `json:"incident_preference,omitempty"`
+	Name               string                  `json:"name"`
+	Region             string                  `json:"region"`
 }
 
-//PolicyCondition defined the conditions contained within a a policy
-type PolicyCondition struct {
-	Name      string                 `json:"name"`
-	Namespace string                 `json:"namespace"`
-	Spec      NrqlAlertConditionSpec `json:"spec,omitempty"`
-	//SpecHash uint32					`json:"specHash,omitempty"`
+//PolicyConditionSchema defined the conditions contained within a a policy
+type PolicyConditionSchema struct {
+	Name      string            `json:"name"`
+	Namespace string            `json:"namespace"`
+	Spec      NrqlConditionSpec `json:"spec,omitempty"`
 }
 
 // PolicyStatus defines the observed state of Policy
@@ -55,8 +54,8 @@ type PolicyStatus struct {
 
 // +kubebuilder:object:root=true
 
-// Policy is the Schema for the policies API
-type Policy struct {
+// PolicySchema is the Schema for the policies API
+type PolicySchema struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 
@@ -70,21 +69,20 @@ type Policy struct {
 type PolicyList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`
-	Items           []Policy `json:"items"`
+
+	Items []PolicySchema `json:"items"`
 }
 
 func init() {
-	SchemeBuilder.Register(&Policy{}, &PolicyList{})
+	SchemeBuilder.Register(&PolicySchema{}, &PolicyList{})
 }
 
-func (in PolicySpec) APIPolicy() alerts.Policy {
-	jsonString, _ := json.Marshal(in)
-	var APIPolicy alerts.Policy
-	json.Unmarshal(jsonString, &APIPolicy) //nolint
+func (spec PolicySpec) ToPolicy() alerts.Policy {
+	jsonString, _ := json.Marshal(spec)
+	var policy alerts.Policy
+	json.Unmarshal(jsonString, &policy) //nolint
 
-	//APICondition.PolicyID = spec.ExistingPolicyId
-
-	return APIPolicy
+	return policy
 }
 
 // DeepHashObject writes specified object to hash using the spew library
@@ -101,9 +99,9 @@ func DeepHashObject(hasher hash.Hash, objectToWrite interface{}) {
 	printer.Fprintf(hasher, "%#v", objectToWrite)
 }
 
-func (p *PolicyCondition) SpecHash() uint32 {
+func (p *PolicyConditionSchema) SpecHash() uint32 {
 	//remove api keys and condition from object to enable comparison minus inherited fields
-	strippedPolicy := PolicyCondition{
+	strippedPolicy := NrqlConditionSchema{
 		Spec: p.Spec,
 	}
 	strippedPolicy.Spec.APIKeySecret = NewRelicAPIKeySecret{}
@@ -115,7 +113,7 @@ func (p *PolicyCondition) SpecHash() uint32 {
 	return conditionTemplateSpecHasher.Sum32()
 }
 
-func (p *PolicyCondition) GetNamespace() types.NamespacedName {
+func (p *PolicyConditionSchema) GetNamespace() types.NamespacedName {
 	return types.NamespacedName{
 		Namespace: p.Namespace,
 		Name:      p.Name,

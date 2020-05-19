@@ -30,86 +30,100 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	nrv1 "github.com/newrelic/newrelic-kubernetes-operator/api/v1"
+	operatorAPI "github.com/newrelic/newrelic-kubernetes-operator/api/v1"
 	customErrors "github.com/newrelic/newrelic-kubernetes-operator/errors"
 	"github.com/newrelic/newrelic-kubernetes-operator/interfaces"
 )
 
+const (
+	deleteFinalizer = "policies.finalizers.nr.k8s.newrelic.com"
+)
+
 // PolicyReconciler reconciles a Policy object
 type PolicyReconciler struct {
+	ClientFunc func(string, string) (interfaces.NewRelicAlertsClient, error)
+	Alerts     interfaces.NewRelicAlertsClient
+	Log        logr.Logger
+	Scheme     *runtime.Scheme
+	apiKey     string
 	client.Client
-	Log             logr.Logger
-	Scheme          *runtime.Scheme
-	AlertClientFunc func(string, string) (interfaces.NewRelicAlertsClient, error)
-	apiKey          string
-	Alerts          interfaces.NewRelicAlertsClient
-	ctx             context.Context
+	ctx context.Context
+}
+
+type processedConditions struct {
+	processed bool
+	condition operatorAPI.PolicyConditionSchema
+}
+
+// SetupWithManager creates a managed policy controller.
+func (r *PolicyReconciler) SetupWithManager(mgr ctrl.Manager) error {
+	return ctrl.NewControllerManagedBy(mgr).
+		For(&operatorAPI.PolicySchema{}).
+		Complete(r)
 }
 
 // +kubebuilder:rbac:groups=nr.k8s.newrelic.com,resources=policies,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=nr.k8s.newrelic.com,resources=policies/status,verbs=get;update;patch
 
+// Reconcile performs the work to bring about the desired state of the policy.
 func (r *PolicyReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 	r.ctx = context.Background()
 	_ = r.Log.WithValues("policy", req.NamespacedName)
 
-	var policy nrv1.Policy
-	err := r.Client.Get(r.ctx, req.NamespacedName, &policy)
+	var policySchema operatorAPI.PolicySchema
+	err := r.Client.Get(r.ctx, req.NamespacedName, &policySchema)
 	if err != nil {
+		// It is normal to Policy not found after deletion is normal
 		if strings.Contains(err.Error(), " not found") {
-			r.Log.Info("Policy 'not found' after being deleted. This is expected and no cause for alarm", "error", err)
 			return ctrl.Result{}, nil
 		}
-		r.Log.Error(err, "Failed to GET policy", "name", req.NamespacedName.String())
+		r.Log.Error(err, "Failed to get policy from cluster", "name", req.NamespacedName.String())
 		return ctrl.Result{}, nil
 	}
-	r.Log.Info("Starting reconcile action")
-	r.Log.Info("policy", "policy.Spec.Condition", policy.Spec.Conditions, "policy.status.applied.conditions", policy.Status.AppliedSpec.Conditions)
 
-	r.apiKey = r.getAPIKeyOrSecret(policy)
-
-	if r.apiKey == "" {
-		return ctrl.Result{}, errors.New("api key is blank")
+	apiKey, err := r.getAPIKey(policySchema)
+	if err != nil {
+		r.Log.Error(err, "Failed to get API key")
+		return ctrl.Result{}, err
 	}
-	//initial alertsClient
-	alertsClient, errAlertsClient := r.AlertClientFunc(r.apiKey, policy.Spec.Region)
-	if errAlertsClient != nil {
-		r.Log.Error(errAlertsClient, "Failed to create AlertsClient")
-		return ctrl.Result{}, errAlertsClient
+
+	// Initialize the HTTP client
+	client, err := r.ClientFunc(apiKey, policySchema.Spec.Region)
+	if err != nil {
+		r.Log.Error(err, "Failed to create HTTP client")
+		return ctrl.Result{}, err
 	}
-	r.Alerts = alertsClient
 
-	deleteFinalizer := "policies.finalizers.nr.k8s.newrelic.com"
+	r.Alerts = client
 
-	//examine DeletionTimestamp to determine if object is under deletion
-	if policy.DeletionTimestamp.IsZero() {
-		if !containsString(policy.Finalizers, deleteFinalizer) {
-			policy.Finalizers = append(policy.Finalizers, deleteFinalizer)
+	// Examine DeletionTimestamp to determine if object is under deletion
+	if policySchema.DeletionTimestamp.IsZero() {
+		if !containsString(policySchema.Finalizers, deleteFinalizer) {
+			policySchema.Finalizers = append(policySchema.Finalizers, deleteFinalizer)
 		}
 	} else {
-		return r.deletePolicy(r.ctx, &policy, deleteFinalizer)
+		return r.deletePolicy(r.ctx, &policySchema, deleteFinalizer)
 	}
 
-	//if reflect.DeepEqual(&policy.Spec, policy.Status.AppliedSpec) {
-	//	return ctrl.Result{}, nil
-	//}
-
-	if policy.Spec.Equals(*policy.Status.AppliedSpec) {
+	// No-op if there is no work to do
+	if policySchema.Spec.Equals(*policySchema.Status.AppliedSpec) {
 		return ctrl.Result{}, nil
 	}
 
-	r.Log.Info("Reconciling", "policy", policy.Name)
+	r.Log.Info("Reconciling",
+		"policy.Spec.Conditions", policySchema.Spec.Conditions,
+		"policy.Status.AppliedSpec.Conditions", policySchema.Status.AppliedSpec.Conditions)
 
-	r.checkForExistingPolicy(&policy)
+	r.setExistingPolicyIDs(&policySchema)
 
-	if policy.Status.PolicyID != 0 {
-		err := r.updatePolicy(&policy)
+	if policySchema.Status.PolicyID != 0 {
+		err := r.updatePolicy(&policySchema)
 		if err != nil {
-			r.Log.Error(err, "error updating policy")
+			r.Log.Error(err, "Error updating policy")
 			return ctrl.Result{}, err
 		}
 	} else {
-		err := r.createPolicy(&policy)
+		err := r.createPolicy(&policySchema)
 		if err != nil {
 			r.Log.Error(err, "Error creating policy")
 			return ctrl.Result{}, err
@@ -119,69 +133,103 @@ func (r *PolicyReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 	return ctrl.Result{}, nil
 }
 
-func (r *PolicyReconciler) createPolicy(policy *nrv1.Policy) error {
-	r.Log.Info("Creating policy", "PolicyName", policy.Name)
-	APIPolicy := policy.Spec.APIPolicy()
-	createdPolicy, err := r.Alerts.CreatePolicy(APIPolicy)
+func (r *PolicyReconciler) createPolicy(policySchema *operatorAPI.PolicySchema) error {
+	r.Log.Info("Creating policy", "name", policySchema.Name)
+
+	created, err := r.Alerts.CreatePolicy(policySchema.Spec.ToPolicy())
 	if err != nil {
-		r.Log.Error(err, "failed to create policy via New Relic API",
-			"policyId", policy.Status.PolicyID,
-			"region", policy.Spec.Region,
-			"Api Key", interfaces.PartialAPIKey(r.apiKey),
-		)
 		return err
 	}
-	policy.Status.PolicyID = createdPolicy.ID
 
-	errConditions := r.createConditions(policy)
-	if errConditions != nil {
-		r.Log.Error(errConditions, "error creating or updating conditions")
-		return errConditions
-	}
-	r.Log.Info("policy after condition creation", "policyCondition", policy.Spec.Conditions, "pointer", &policy)
+	policySchema.Status.PolicyID = created.ID
 
-	policy.Status.AppliedSpec = &policy.Spec
-
-	err = r.Client.Update(r.ctx, policy)
-	if err != nil {
-		r.Log.Error(err, "tried updating policy status", "name", policy.Name)
+	if err = r.createConditions(policySchema); err != nil {
 		return err
 	}
+
+	policySchema.Status.AppliedSpec = &policySchema.Spec
+
+	if err = r.Client.Update(r.ctx, policySchema); err != nil {
+		return err
+	}
+
 	return nil
 }
 
-func (r *PolicyReconciler) createConditions(policy *nrv1.Policy) error {
+func (r *PolicyReconciler) createConditions(policy *operatorAPI.PolicySchema) error {
+	r.Log.Info("Creating conditions")
 
-	r.Log.Info("initial policy creation so create all policies")
 	collectedErrors := new(customErrors.ErrorCollector)
 	for i, condition := range policy.Spec.Conditions {
 		err := r.createCondition(policy, &condition)
 		if err != nil {
-			r.Log.Error(err, "error creating condition")
 			collectedErrors.Collect(err)
 		} else {
 			policy.Spec.Conditions[i] = condition
 		}
-
 	}
+
 	if len(*collectedErrors) > 0 {
-		r.Log.Info("errors encountered creating conditions", "collectoredErrors", collectedErrors)
 		return collectedErrors
 	}
+
 	return nil
 }
 
-type processedConditions struct {
-	processed bool
-	condition nrv1.PolicyCondition
+func (r *PolicyReconciler) createOrUpdateCondition(policy *operatorAPI.PolicySchema, conditionSchema operatorAPI.PolicyConditionSchema) (*operatorAPI.PolicyConditionSchema, error) {
+	r.Log.Info("Visiting condition", "resourceName", conditionSchema.Name, "conditionName", conditionSchema.Spec.Name)
+
+	if conditionSchema.Name == "" {
+		for _, appliedCondition := range policy.Status.AppliedSpec.Conditions {
+			if appliedCondition.Spec.Name == conditionSchema.Spec.Name {
+				conditionSchema.Namespace = appliedCondition.Namespace
+				conditionSchema.Name = appliedCondition.Name
+				break
+			}
+		}
+
+		// Condition needs to be created
+		if conditionSchema.Name == "" {
+			if err := r.createCondition(policy, &conditionSchema); err != nil {
+				return nil, err
+			}
+
+			return &conditionSchema, nil
+		}
+	}
+
+	// Swallow error since this condition may not exist
+	var nrqlConditionSchema operatorAPI.NrqlConditionSchema
+	_ = r.Client.Get(r.ctx, conditionSchema.GetNamespace(), &nrqlConditionSchema)
+
+	retrievedConditionSchema := operatorAPI.PolicyConditionSchema{Spec: nrqlConditionSchema.Spec}
+
+	// No-op if there is no work to do
+	if retrievedConditionSchema.SpecHash() == conditionSchema.SpecHash() {
+		return &conditionSchema, nil
+	}
+
+	// Update the condition
+	nrqlConditionSchema.Spec = conditionSchema.Spec
+	nrqlConditionSchema.Spec.Region = policy.Spec.Region
+	nrqlConditionSchema.Spec.ExistingPolicyID = policy.Status.PolicyID
+	nrqlConditionSchema.Spec.APIKey = policy.Spec.APIKey
+	nrqlConditionSchema.Spec.APIKeySecret = policy.Spec.APIKeySecret
+
+	if err := r.Client.Update(r.ctx, &nrqlConditionSchema); err != nil {
+		return nil, err
+	}
+
+	return &conditionSchema, nil
 }
 
-func (r *PolicyReconciler) createOrUpdateConditions(policy *nrv1.Policy) error {
+func (r *PolicyReconciler) createOrUpdateConditions(policy *operatorAPI.PolicySchema) error {
+	// No-op if there is no work to do
 	if reflect.DeepEqual(policy.Spec.Conditions, policy.Status.AppliedSpec.Conditions) {
 		return nil
 	}
 
-	//build map of existing conditions so we can mark them off as processed and delete anything left over
+	// Mark existing conditions as processed
 	var existingConditions = make(map[string]processedConditions)
 	for _, existing := range policy.Status.AppliedSpec.Conditions {
 		existingConditions[existing.Name] = processedConditions{
@@ -190,88 +238,19 @@ func (r *PolicyReconciler) createOrUpdateConditions(policy *nrv1.Policy) error {
 		}
 	}
 
-	collectedErrors := new(customErrors.ErrorCollector)
-
+	errCollector := new(customErrors.ErrorCollector)
 	for i, condition := range policy.Spec.Conditions {
-		//loop through the policies, creating/updating as needed
-		r.Log.Info("Checking on condition", "resourceName", condition.Name, "conditionName", condition.Spec.Name)
-		//first we check to see if the name is set
-		if condition.Name == "" {
-			//If resource name is not set, let's see if a appliedSpec matches the NR condition name
-			r.Log.Info("Condition name not set, checking name values")
-			for _, appliedCondition := range policy.Status.AppliedSpec.Conditions {
-
-				if appliedCondition.Spec.Name == condition.Spec.Name {
-					r.Log.Info("Found matching name")
-					condition.Namespace = appliedCondition.Namespace
-					condition.Name = appliedCondition.Name
-					break
-				}
-			}
-
-			if condition.Name == "" {
-				r.Log.Info("made it through all existing appliedConditions, creating a new one")
-				err := r.createCondition(policy, &condition)
-				if err != nil {
-					r.Log.Error(err, "error creating condition")
-					collectedErrors.Collect(err)
-				}
-
-				//add to the list of processed conditions
-				existingConditions[condition.Name] = processedConditions{
-					processed: true,
-					condition: condition,
-				}
-				//Now update the spec
-				policy.Spec.Conditions[i] = condition
-				r.Log.Info("policy spec updated", "policy.Spec.Condition[i]", policy.Spec.Conditions[i])
-				//move to the next
-				continue
-			}
+		conditionSchema, err := r.createOrUpdateCondition(policy, condition)
+		if err != nil {
+			errCollector.Collect(err)
 		}
 
-		r.Log.Info("Now we have a condition name", "conditionName", condition.Name)
+		policy.Spec.Conditions[i] = *conditionSchema
 		existingConditions[condition.Name] = processedConditions{
 			processed: true,
 			condition: condition,
 		}
-
-		retrievedCondition := r.getNrqlConditionFromPolicyCondition(&condition) // := nrv1.NrqlAlertCondition{}
-
-		r.Log.Info("Found condition to update", "retrievedCondition", retrievedCondition)
-
-		//Now check to confirm the NrqlCondition matches out PolicyCondition
-		retrievedPolicyCondition := nrv1.PolicyCondition{Spec: retrievedCondition.Spec}
-		r.Log.Info("spec hash", "retrieved", retrievedPolicyCondition.SpecHash(), "condition", condition.SpecHash())
-		r.Log.Info("conditions", "retrieved", retrievedPolicyCondition, "condition", condition)
-
-		if retrievedPolicyCondition.SpecHash() == condition.SpecHash() {
-			r.Log.Info("existing NrqlCondition matches going to next")
-			policy.Spec.Conditions[i] = condition
-			continue
-		}
-		r.Log.Info("updating existing condition", "policyRegion", policy.Spec.Region, "policyId", policy.Status.PolicyID)
-
-		retrievedCondition.Spec = condition.Spec
-		//Set inherited values
-		retrievedCondition.Spec.Region = policy.Spec.Region
-		retrievedCondition.Spec.ExistingPolicyID = policy.Status.PolicyID
-		retrievedCondition.Spec.APIKey = policy.Spec.APIKey
-		retrievedCondition.Spec.APIKeySecret = policy.Spec.APIKeySecret
-
-		err := r.Client.Update(r.ctx, &retrievedCondition)
-		if err != nil {
-			r.Log.Error(err, "error updating condition")
-			collectedErrors.Collect(err)
-		}
-		//Now update the spec
-		policy.Spec.Conditions[i] = condition
-		r.Log.Info("policy spec updated", "policy.Spec.Condotion[i]", policy.Spec.Conditions[i])
-
 	}
-
-	r.Log.Info("now one last check for stragglers")
-	//now we check for any left behind conditions that weren't processed
 
 	for conditionName, processedCondition := range existingConditions {
 		r.Log.Info("checking "+processedCondition.condition.Name, "bool is", processedCondition.processed)
@@ -280,14 +259,14 @@ func (r *PolicyReconciler) createOrUpdateConditions(policy *nrv1.Policy) error {
 			err := r.deleteCondition(&processedCondition.condition)
 			if err != nil {
 				r.Log.Error(err, "error deleting condition resource")
-				collectedErrors.Collect(err)
+				errCollector.Collect(err)
 			}
 		}
 
 	}
-	if len(*collectedErrors) > 0 {
-		r.Log.Info("Errors encountered processing conditions", "collectedErrors", collectedErrors)
-		return collectedErrors
+	if len(*errCollector) > 0 {
+		r.Log.Info("Errors encountered processing conditions", "collectedErrors", errCollector)
+		return errCollector
 	}
 
 	r.Log.Info("all done", "policy.Spec", policy.Spec, "policy.Status.AppliedSpec.Conditions", policy.Status.AppliedSpec.Conditions)
@@ -295,207 +274,150 @@ func (r *PolicyReconciler) createOrUpdateConditions(policy *nrv1.Policy) error {
 	return nil
 }
 
-func (r *PolicyReconciler) createCondition(policy *nrv1.Policy, condition *nrv1.PolicyCondition) error {
-	var nrqlAlertCondition nrv1.NrqlAlertCondition
-	nrqlAlertCondition.GenerateName = policy.Name + "-condition-"
-	nrqlAlertCondition.Namespace = policy.Namespace
-	nrqlAlertCondition.Labels = policy.Labels
-	//TODO: no clue if this is needed, I'm guessing no
-	//condition.OwnerReferences: []metav1.OwnerReference{*metav1.NewControllerRef(policy, conditionKind)},
+func (r *PolicyReconciler) createCondition(policy *operatorAPI.PolicySchema, conditionSchema *operatorAPI.PolicyConditionSchema) error {
+	var condition operatorAPI.NrqlConditionSchema
+	condition.GenerateName = policy.Name + "-condition-"
+	condition.Namespace = policy.Namespace
+	condition.Labels = policy.Labels
+	condition.Spec = conditionSchema.Spec
+	condition.Spec.Region = policy.Spec.Region
+	condition.Spec.ExistingPolicyID = policy.Status.PolicyID
+	condition.Spec.APIKey = policy.Spec.APIKey
+	condition.Spec.APIKeySecret = policy.Spec.APIKeySecret
+	condition.Status.AppliedSpec = &operatorAPI.NrqlConditionSpec{}
 
-	nrqlAlertCondition.Spec = condition.Spec
-	nrqlAlertCondition.Spec.Region = policy.Spec.Region
-	nrqlAlertCondition.Spec.ExistingPolicyID = policy.Status.PolicyID
-	nrqlAlertCondition.Spec.APIKey = policy.Spec.APIKey
-	nrqlAlertCondition.Spec.APIKeySecret = policy.Spec.APIKeySecret
-	nrqlAlertCondition.Status.AppliedSpec = &nrv1.NrqlAlertConditionSpec{}
+	r.Log.Info("Creating condition",
+		"condition", conditionSchema.Name,
+		"conditionName", conditionSchema.Spec.Name,
+		"nrqlAlertCondition", condition)
 
-	r.Log.Info("creating condition", "condition", condition.Name, "conditionName", condition.Spec.Name, "nrqlAlertCondition", nrqlAlertCondition)
-	errCondition := r.Create(r.ctx, &nrqlAlertCondition)
-	if errCondition != nil {
-		r.Log.Error(errCondition, "error creating condition")
-		return errCondition
-	}
-	condition.Name = nrqlAlertCondition.Name //created from generated name
-	condition.Namespace = nrqlAlertCondition.Namespace
-	//condition.SpecHash = nrv1.ComputeHash(&condition.Spec)
-
-	r.Log.Info("created condition", "condition", condition.Name, "conditionName", condition.Spec.Name, "nrqlAlertCondition", nrqlAlertCondition)
-
-	return nil
-}
-
-func (r *PolicyReconciler) deleteCondition(condition *nrv1.PolicyCondition) error {
-	r.Log.Info("Deleting condition", "condition", condition.Name, "conditionName", condition.Spec.Name)
-	retrievedCondition := r.getNrqlConditionFromPolicyCondition(condition)
-	r.Log.Info("retrieved condition for deletion", "retrievedCondition", retrievedCondition)
-	err := r.Delete(r.ctx, &retrievedCondition)
+	err := r.Create(r.ctx, &condition)
 	if err != nil {
-		r.Log.Error(err, "error deleting condition resource")
 		return err
 	}
+
+	conditionSchema.Name = condition.Name
+	conditionSchema.Namespace = condition.Namespace
+
 	return nil
 }
 
-func (r *PolicyReconciler) getNrqlConditionFromPolicyCondition(condition *nrv1.PolicyCondition) (nrqlAlertCondition nrv1.NrqlAlertCondition) {
-	r.Log.Info("condition before retrieval", "condition", condition)
-	//throw away the error since empty conditions are expected
-	_ = r.Client.Get(r.ctx, condition.GetNamespace(), &nrqlAlertCondition)
-	r.Log.Info("retrieved condition", "nrqlAlertCondition", nrqlAlertCondition, "namespace", condition.GetNamespace())
-	return
+func (r *PolicyReconciler) deleteCondition(conditionSchema *operatorAPI.PolicyConditionSchema) error {
+	r.Log.Info("Deleting condition", "condition", conditionSchema.Name, "conditionName", conditionSchema.Spec.Name)
+
+	var retrievedCondition operatorAPI.NrqlConditionSchema
+	r.Client.Get(r.ctx, conditionSchema.GetNamespace(), &retrievedCondition)
+	if err := r.Delete(r.ctx, &retrievedCondition); err != nil {
+		return err
+	}
+
+	return nil
 }
 
-func (r *PolicyReconciler) updatePolicy(policy *nrv1.Policy) error {
-	r.Log.Info("updating policy", "PolicyName", policy.Name)
+func (r *PolicyReconciler) updatePolicy(policySchema *operatorAPI.PolicySchema) error {
+	r.Log.Info("updating policy", "PolicyName", policySchema.Name)
 
-	//only update policy if policy fields have changed
-	APIPolicy := policy.Spec.APIPolicy()
-	APIPolicy.ID = policy.Status.PolicyID
-	var updatedPolicy *alerts.Policy
-	var err error
+	policy := policySchema.Spec.ToPolicy()
+	policy.ID = policySchema.Status.PolicyID
 
-	if string(APIPolicy.IncidentPreference) != policy.Status.AppliedSpec.IncidentPreference || APIPolicy.Name != policy.Status.AppliedSpec.Name {
-		r.Log.Info("need to update alert policy via New Relic API",
-			"Alert Policy Name", APIPolicy.Name,
-			"incident preference ", policy.Status.AppliedSpec.IncidentPreference,
-		)
-		updatedPolicy, err = r.Alerts.UpdatePolicy(APIPolicy)
+	if policyRequiresUpdate(policy, policySchema) {
+		updatedPolicy, err := r.Alerts.UpdatePolicy(policy)
 		if err != nil {
-			r.Log.Error(err, "failed to update policy via New Relic API",
-				"policyId", policy.Status.PolicyID,
-				"region", policy.Spec.Region,
-				"Api Key", interfaces.PartialAPIKey(r.apiKey),
-			)
 			return err
 		}
-		policy.Status.PolicyID = updatedPolicy.ID
+
+		policySchema.Status.PolicyID = updatedPolicy.ID
 	}
 
-	errConditions := r.createOrUpdateConditions(policy)
+	errConditions := r.createOrUpdateConditions(policySchema)
 	if errConditions != nil {
-		r.Log.Error(errConditions, "error creating or updating conditions")
 		return errConditions
 	}
-	r.Log.Info("policySpecx before update", "policy.Spec", policy.Spec)
 
-	policy.Status.AppliedSpec = &policy.Spec
+	policySchema.Status.AppliedSpec = &policySchema.Spec
 
-	err = r.Client.Update(r.ctx, policy)
-	if err != nil {
-		r.Log.Error(err, "failed to update policy status", "name", policy.Name)
+	if err := r.Client.Update(r.ctx, policySchema); err != nil {
 		return err
 	}
+
 	return nil
 }
 
-func (r *PolicyReconciler) deletePolicy(ctx context.Context, policy *nrv1.Policy, deleteFinalizer string) (ctrl.Result, error) {
-	// The object is being deleted
-	if containsString(policy.Finalizers, deleteFinalizer) {
-		// catch invalid state
-		if policy.Status.PolicyID == 0 {
-			r.Log.Info("No Condition ID set, just removing finalizer")
-			policy.Finalizers = removeString(policy.Finalizers, deleteFinalizer)
-		} else {
-			// our finalizer is present, so lets handle any external dependency
-			collectedErrors := new(customErrors.ErrorCollector)
-			for _, condition := range policy.Status.AppliedSpec.Conditions {
-				err := r.deleteCondition(&condition)
-				if err != nil {
-					r.Log.Error(err, "error deleting condition resources")
-					collectedErrors.Collect(err)
-				}
-			}
-			if len(*collectedErrors) > 0 {
-				r.Log.Info("errors deleting condition resources", "collectedErrors", collectedErrors)
-				return ctrl.Result{}, collectedErrors
-			}
+func policyRequiresUpdate(policy alerts.Policy, policySchema *operatorAPI.PolicySchema) bool {
+	return string(policy.IncidentPreference) != policySchema.Status.AppliedSpec.IncidentPreference ||
+		policy.Name != policySchema.Status.AppliedSpec.Name
+}
 
-			if err := r.deleteNewRelicAlertPolicy(policy); err != nil {
-				// if fail to delete the external dependency here, return with error
-				// so that it can be retried
-				r.Log.Error(err, "Failed to delete Alert Policy via New Relic API",
-					"policyId", policy.Status.PolicyID,
-					"region", policy.Spec.Region,
-					"Api Key", interfaces.PartialAPIKey(r.apiKey),
-				)
-				return ctrl.Result{}, err
-			}
-			// remove our finalizer from the list and update it.
-			r.Log.Info("New Relic Alert policy deleted, Removing finalizer")
-			policy.Finalizers = removeString(policy.Finalizers, deleteFinalizer)
-			if err := r.Client.Update(ctx, policy); err != nil {
-				r.Log.Error(err, "Failed to update k8s records for this policy after successfully deleting the policy via New Relic Alert API")
-				return ctrl.Result{}, err
-			}
-		}
+func (r *PolicyReconciler) deletePolicy(ctx context.Context, policy *operatorAPI.PolicySchema, deleteFinalizer string) (ctrl.Result, error) {
+	if !containsString(policy.Finalizers, deleteFinalizer) {
+		return ctrl.Result{}, nil
 	}
 
-	// Stop reconciliation as the item is being deleted
-	r.Log.Info("All done with policy deletion", "policyName", policy.Spec.Name)
+	r.Log.Info("Deleting policy", "policyName", policy.Spec.Name)
+
+	if policy.Status.PolicyID == 0 {
+		policy.Finalizers = removeStringFromSlice(policy.Finalizers, deleteFinalizer)
+	} else {
+		collectedErrors := new(customErrors.ErrorCollector)
+		for _, condition := range policy.Status.AppliedSpec.Conditions {
+			err := r.deleteCondition(&condition)
+			if err != nil {
+				collectedErrors.Collect(err)
+			}
+		}
+
+		if len(*collectedErrors) > 0 {
+			return ctrl.Result{}, collectedErrors
+		}
+
+		_, err := r.Alerts.DeletePolicy(policy.Status.PolicyID)
+		if err != nil {
+			return ctrl.Result{}, err
+		}
+
+		policy.Finalizers = removeStringFromSlice(policy.Finalizers, deleteFinalizer)
+		if err := r.Client.Update(ctx, policy); err != nil {
+			return ctrl.Result{}, err
+		}
+	}
 
 	return ctrl.Result{}, nil
 }
 
-func (r *PolicyReconciler) SetupWithManager(mgr ctrl.Manager) error {
-	return ctrl.NewControllerManagedBy(mgr).
-		For(&nrv1.Policy{}).
-		Complete(r)
-}
+func (r *PolicyReconciler) setExistingPolicyIDs(policy *operatorAPI.PolicySchema) {
+	if policy.Status.PolicyID != 0 {
+		return
+	}
 
-func (r *PolicyReconciler) checkForExistingPolicy(policy *nrv1.Policy) {
-	if policy.Status.PolicyID == 0 {
-		r.Log.Info("Checking for existing policy", "policy", policy.Name, "policyName", policy.Spec.Name)
-		//if no policyId, get list of policies and compare name
-		alertParams := &alerts.ListPoliciesParams{
-			Name: policy.Spec.Name,
-		}
-		existingPolicies, err := r.Alerts.ListPolicies(alertParams)
-		if err != nil {
-			r.Log.Error(err, "failed to get list of policies from New Relic API",
-				"policyId", policy.Status.PolicyID,
-				"region", policy.Spec.Region,
-				"Api Key", interfaces.PartialAPIKey(r.apiKey),
-			)
-		} else {
-			for _, existingPolicy := range existingPolicies {
-				if existingPolicy.Name == policy.Spec.Name {
-					r.Log.Info("Matched on existing policy, updating PolicyId", "policyId", existingPolicy.ID)
-					policy.Status.PolicyID = existingPolicy.ID
-					break
-				}
-			}
+	r.Log.Info("Checking for existing policy", "policy", policy.Name, "policyName", policy.Spec.Name)
+	params := &alerts.ListPoliciesParams{
+		Name: policy.Spec.Name,
+	}
+	policies, _ := r.Alerts.ListPolicies(params)
+	for _, existingPolicy := range policies {
+		if existingPolicy.Name == policy.Spec.Name {
+			policy.Status.PolicyID = existingPolicy.ID
+			break
 		}
 	}
 }
 
-func (r *PolicyReconciler) deleteNewRelicAlertPolicy(policy *nrv1.Policy) error {
-	r.Log.Info("Deleting policy", "policyName", policy.Spec.Name)
-	_, err := r.Alerts.DeletePolicy(policy.Status.PolicyID)
-	if err != nil {
-		r.Log.Error(err, "Error deleting policy via New Relic API",
-			"policyId", policy.Status.PolicyID,
-			"region", policy.Spec.Region,
-			"Api Key", interfaces.PartialAPIKey(r.apiKey),
-		)
-		return err
-	}
-	return nil
-}
-
-func (r *PolicyReconciler) getAPIKeyOrSecret(policy nrv1.Policy) string {
-
+func (r *PolicyReconciler) getAPIKey(policy operatorAPI.PolicySchema) (string, error) {
 	if policy.Spec.APIKey != "" {
-		return policy.Spec.APIKey
+		return policy.Spec.APIKey, nil
 	}
-	if policy.Spec.APIKeySecret != (nrv1.NewRelicAPIKeySecret{}) {
+
+	if policy.Spec.APIKeySecret != (operatorAPI.NewRelicAPIKeySecret{}) {
 		key := types.NamespacedName{Namespace: policy.Spec.APIKeySecret.Namespace, Name: policy.Spec.APIKeySecret.Name}
-		var apiKeySecret v1.Secret
-		getErr := r.Client.Get(context.Background(), key, &apiKeySecret)
-		if getErr != nil {
-			r.Log.Error(getErr, "Failed to retrieve secret", "secret", apiKeySecret)
-			return ""
+
+		var secret v1.Secret
+		err := r.Client.Get(context.Background(), key, &secret)
+		if err != nil {
+			return "", err
 		}
-		return string(apiKeySecret.Data[policy.Spec.APIKeySecret.KeyName])
+
+		return string(secret.Data[policy.Spec.APIKeySecret.KeyName]), nil
 	}
-	return ""
+
+	return "", errors.New("No API key found")
 }

@@ -31,7 +31,7 @@ import (
 var Log = logf.Log.WithName("policy-resource")
 var defaultPolicyIncidentPreference = "PER_POLICY"
 
-func (r *Policy) SetupWebhookWithManager(mgr ctrl.Manager) error {
+func (r *PolicySchema) SetupWebhookWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewWebhookManagedBy(mgr).
 		For(r).
 		Complete()
@@ -41,10 +41,10 @@ func (r *Policy) SetupWebhookWithManager(mgr ctrl.Manager) error {
 
 // +kubebuilder:webhook:path=/mutate-nr-k8s-newrelic-com-v1-policy,mutating=true,failurePolicy=fail,groups=nr.k8s.newrelic.com,resources=policies,verbs=create;update,versions=v1,name=mpolicy.kb.io
 
-var _ webhook.Defaulter = &Policy{}
+var _ webhook.Defaulter = &PolicySchema{}
 
 // Default implements webhook.Defaulter so a webhook will be registered for the type
-func (r *Policy) Default() {
+func (r *PolicySchema) Default() {
 	Log.Info("default", "name", r.Name)
 
 	if r.Status.AppliedSpec == nil {
@@ -58,10 +58,10 @@ func (r *Policy) Default() {
 // TODO(user): change verbs to "verbs=create;update;delete" if you want to enable deletion validation.
 // +kubebuilder:webhook:verbs=create;update,path=/validate-nr-k8s-newrelic-com-v1-policy,mutating=false,failurePolicy=fail,groups=nr.k8s.newrelic.com,resources=policies,versions=v1,name=vpolicy.kb.io
 
-var _ webhook.Validator = &Policy{}
+var _ webhook.Validator = &PolicySchema{}
 
 // ValidateCreate implements webhook.Validator so a webhook will be registered for the type
-func (r *Policy) ValidateCreate() error {
+func (r *PolicySchema) ValidateCreate() error {
 	Log.Info("validate create", "name", r.Name)
 
 	collectedErrors := new(customErrors.ErrorCollector)
@@ -88,7 +88,7 @@ func (r *Policy) ValidateCreate() error {
 }
 
 // ValidateUpdate implements webhook.Validator so a webhook will be registered for the type
-func (r *Policy) ValidateUpdate(old runtime.Object) error {
+func (r *PolicySchema) ValidateUpdate(old runtime.Object) error {
 	Log.Info("validate update", "name", r.Name)
 
 	collectedErrors := new(customErrors.ErrorCollector)
@@ -117,7 +117,7 @@ func (r *Policy) ValidateUpdate(old runtime.Object) error {
 }
 
 // ValidateDelete implements webhook.Validator so a webhook will be registered for the type
-func (r *Policy) ValidateDelete() error {
+func (r *PolicySchema) ValidateDelete() error {
 	Log.Info("validate delete", "name", r.Name)
 
 	err := r.CheckForAPIKeyOrSecret()
@@ -127,7 +127,7 @@ func (r *Policy) ValidateDelete() error {
 	return nil
 }
 
-func (r *Policy) DefaultIncidentPreference() {
+func (r *PolicySchema) DefaultIncidentPreference() {
 	if r.Spec.IncidentPreference == "" {
 		r.Spec.IncidentPreference = defaultPolicyIncidentPreference
 	}
@@ -135,7 +135,7 @@ func (r *Policy) DefaultIncidentPreference() {
 
 }
 
-func (r *Policy) CheckForDuplicateConditions() error {
+func (r *PolicySchema) CheckForDuplicateConditions() error {
 
 	var conditionHashMap = make(map[uint32]bool)
 	for _, condition := range r.Spec.Conditions {
@@ -149,7 +149,7 @@ func (r *Policy) CheckForDuplicateConditions() error {
 	return nil
 }
 
-func (r *Policy) ValidateIncidentPreference() error {
+func (r *PolicySchema) ValidateIncidentPreference() error {
 	switch r.Spec.IncidentPreference {
 	case "PER_POLICY", "PER_CONDITION", "PER_CONDITION_AND_TARGET":
 		return nil
@@ -158,7 +158,7 @@ func (r *Policy) ValidateIncidentPreference() error {
 	return errors.New("incident preference must be PER_POLICY, PER_CONDITION, or PER_CONDITION_AND_TARGET")
 }
 
-func (r *Policy) CheckForAPIKeyOrSecret() error {
+func (r *PolicySchema) CheckForAPIKeyOrSecret() error {
 	if r.Spec.APIKey != "" {
 		return nil
 	}

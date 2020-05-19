@@ -8,9 +8,9 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-// NrqlAlertConditionSpec defines the desired state of NrqlAlertCondition
-type NrqlAlertConditionSpec struct {
-	Terms               []AlertConditionTerm `json:"terms,omitempty"`
+// NrqlConditionSpec defines the desired state of NrqlAlertCondition
+type NrqlConditionSpec struct {
+	Terms               []ConditionTerm      `json:"terms,omitempty"`
 	Nrql                NrqlQuery            `json:"nrql,omitempty"`
 	Type                string               `json:"type,omitempty"`
 	Name                string               `json:"name,omitempty"`
@@ -34,8 +34,8 @@ type NrqlQuery struct {
 	SinceValue string `json:"since_value,omitempty"`
 }
 
-// AlertConditionTerm represents the terms of a New Relic alert condition.
-type AlertConditionTerm struct {
+// ConditionTerm represents the terms of a New Relic alert condition.
+type ConditionTerm struct {
 	Duration     resource.Quantity `json:"duration,omitempty"`
 	Operator     string            `json:"operator,omitempty"`
 	Priority     string            `json:"priority,omitempty"`
@@ -43,31 +43,31 @@ type AlertConditionTerm struct {
 	TimeFunction string            `json:"time_function,omitempty"`
 }
 
-// NrqlAlertConditionStatus defines the observed state of NrqlAlertCondition
-type NrqlAlertConditionStatus struct {
-	AppliedSpec *NrqlAlertConditionSpec `json:"applied_spec"`
-	ConditionID int                     `json:"condition_id"`
+// NrqlConditionStatus defines the observed state of NrqlAlertCondition
+type NrqlConditionStatus struct {
+	AppliedSpec *NrqlConditionSpec `json:"applied_spec"`
+	ConditionID int                `json:"condition_id"`
 }
 
 // +kubebuilder:object:root=true
 // +kubebuilder:printcolumn:name="Created",type="boolean",JSONPath=".status.created"
 
-// NrqlAlertCondition is the Schema for the nrqlalertconditions API
-type NrqlAlertCondition struct {
+// NrqlConditionSchema is the Schema for the nrqlalertconditions API
+type NrqlConditionSchema struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 
-	Spec   NrqlAlertConditionSpec   `json:"spec,omitempty"`
-	Status NrqlAlertConditionStatus `json:"status,omitempty"`
+	Spec   NrqlConditionSpec   `json:"spec,omitempty"`
+	Status NrqlConditionStatus `json:"status,omitempty"`
 }
 
 // +kubebuilder:object:root=true
 
-// NrqlAlertConditionList contains a list of NrqlAlertCondition
-type NrqlAlertConditionList struct {
+// NrqlConditionList contains a list of NrqlAlertCondition
+type NrqlConditionList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`
-	Items           []NrqlAlertCondition `json:"items"`
+	Items           []NrqlConditionSchema `json:"items"`
 }
 
 type NewRelicAPIKeySecret struct {
@@ -77,15 +77,13 @@ type NewRelicAPIKeySecret struct {
 }
 
 func init() {
-	SchemeBuilder.Register(&NrqlAlertCondition{}, &NrqlAlertConditionList{})
+	SchemeBuilder.Register(&NrqlConditionSchema{}, &NrqlConditionList{})
 }
 
-func (in NrqlAlertConditionSpec) APICondition() alerts.NrqlCondition {
-	jsonString, _ := json.Marshal(in)
-	var APICondition alerts.NrqlCondition
-	json.Unmarshal(jsonString, &APICondition) //nolint
+func (spec NrqlConditionSpec) ToCondition() alerts.NrqlCondition {
+	jsonString, _ := json.Marshal(spec)
+	var condition alerts.NrqlCondition
+	json.Unmarshal(jsonString, &condition) //nolint
 
-	//APICondition.PolicyID = spec.ExistingPolicyId
-
-	return APICondition
+	return condition
 }

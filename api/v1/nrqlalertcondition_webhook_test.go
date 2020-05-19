@@ -20,7 +20,7 @@ import (
 
 var _ = Describe("ValidateCreate", func() {
 	var (
-		r            NrqlAlertCondition
+		r            NrqlConditionSchema
 		alertsClient *interfacesfakes.FakeNewRelicAlertsClient
 		secret       *v1.Secret
 	)
@@ -33,9 +33,9 @@ var _ = Describe("ValidateCreate", func() {
 		}
 		alertClientFunc = fakeAlertFunc
 
-		r = NrqlAlertCondition{
-			Spec: NrqlAlertConditionSpec{
-				Terms: []AlertConditionTerm{
+		r = NrqlConditionSchema{
+			Spec: NrqlConditionSpec{
+				Terms: []ConditionTerm{
 					{
 						Duration:     resource.MustParse("30"),
 						Operator:     "above",
