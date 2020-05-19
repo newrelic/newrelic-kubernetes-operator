@@ -19,6 +19,12 @@ type NewRelicAlertsClient interface {
 	UpdatePolicy(alerts.Policy) (*alerts.Policy, error)
 	DeletePolicy(int) (*alerts.Policy, error)
 	ListPolicies(*alerts.ListPoliciesParams) ([]alerts.Policy, error)
+
+	// NerdGraph
+	CreatePolicyMutation(accountID int, policy alerts.AlertsPolicyInput) (*alerts.AlertsPolicy, error)
+	UpdatePolicyMutation(accountID int, policyID int, policy alerts.AlertsPolicyUpdateInput) (*alerts.AlertsPolicy, error)
+	DeletePolicyMutation(accountID, id int) (*alerts.AlertsPolicy, error)
+	QueryPolicySearch(accountID int, params alerts.AlertsPoliciesSearchCriteriaInput) ([]*alerts.AlertsPolicy, error)
 }
 
 func InitializeAlertsClient(apiKey string, regionName string) (NewRelicAlertsClient, error) {
