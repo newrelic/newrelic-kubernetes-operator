@@ -18,10 +18,11 @@ import (
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 
 	"github.com/newrelic/newrelic-client-go/newrelic"
+	"github.com/stretchr/testify/require"
+
 	nralertsv1 "github.com/newrelic/newrelic-kubernetes-operator/api/v1"
 	nrv1 "github.com/newrelic/newrelic-kubernetes-operator/api/v1"
 	"github.com/newrelic/newrelic-kubernetes-operator/interfaces"
-	"github.com/stretchr/testify/require"
 )
 
 func newIntegrationTestClient() newrelic.NewRelic {
