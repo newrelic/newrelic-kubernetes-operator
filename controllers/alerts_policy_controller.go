@@ -18,6 +18,7 @@ package controllers
 import (
 	"context"
 	"errors"
+	"fmt"
 	"reflect"
 	"strings"
 
@@ -64,7 +65,7 @@ func (r *AlertsPolicyReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error
 		return ctrl.Result{}, nil
 	}
 
-	r.Log.Info("Starting reconcile action")
+	r.Log.Info(fmt.Sprintf("starting reconcile %T", r))
 	r.Log.Info("policy", "policy.Spec.Condition", policy.Spec.Conditions, "policy.status.applied.conditions", policy.Status.AppliedSpec.Conditions)
 
 	r.apiKey = r.getAPIKeyOrSecret(policy)
@@ -99,7 +100,7 @@ func (r *AlertsPolicyReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error
 		return ctrl.Result{}, nil
 	}
 
-	r.Log.Info("Reconciling", "policy", policy.Name)
+	r.Log.Info("reconciling", "policy", policy.Name)
 
 	r.checkForExistingPolicy(&policy)
 
@@ -110,10 +111,9 @@ func (r *AlertsPolicyReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error
 			return ctrl.Result{}, err
 		}
 	} else {
-
 		err := r.createPolicy(&policy)
 		if err != nil {
-			r.Log.Error(err, "Error creating policy")
+			r.Log.Error(err, "error creating policy")
 			return ctrl.Result{}, err
 		}
 	}
@@ -160,9 +160,9 @@ func (r *AlertsPolicyReconciler) createPolicy(policy *nrv1.AlertsPolicy) error {
 	// 	return errConditions
 	// }
 	// r.Log.Info("policy after condition creation", "policyCondition", policy.Spec.Conditions, "pointer", &policy)
-	//
-	// policy.Status.AppliedSpec = &policy.Spec
-	//
+
+	policy.Status.AppliedSpec = &policy.Spec
+
 	// err = r.Client.Update(r.ctx, policy)
 	// if err != nil {
 	// 	r.Log.Error(err, "tried updating policy status", "name", policy.Name)
@@ -372,40 +372,54 @@ func (r *AlertsPolicyReconciler) updatePolicy(policy *nrv1.AlertsPolicy) error {
 	//only update policy if policy fields have changed
 	APIPolicy := policy.Spec.APIAlertsPolicy()
 	APIPolicy.ID = policy.Status.PolicyID
-	var updatedPolicy *alerts.Policy
-	var err error
 
-	if string(APIPolicy.IncidentPreference) != policy.Status.AppliedSpec.IncidentPreference || APIPolicy.Name != policy.Status.AppliedSpec.Name {
-		r.Log.Info("need to update alert policy via New Relic API",
-			"Alert Policy Name", APIPolicy.Name,
-			"incident preference ", policy.Status.AppliedSpec.IncidentPreference,
+	updatedPolicy := alerts.AlertsPolicyUpdateInput{}
+
+	updatedPolicy.Name = policy.Spec.Name
+	updatedPolicy.IncidentPreference = alerts.AlertsIncidentPreference(policy.Spec.IncidentPreference)
+
+	updateResult, err := r.Alerts.UpdatePolicyMutation(policy.Spec.AccountID, policy.Status.PolicyID, updatedPolicy)
+	if err != nil {
+		r.Log.Error(err, "failed to update policy via New Relic API",
+			"policyId", policy.Status.PolicyID,
+			"region", policy.Spec.Region,
+			"apiKey", interfaces.PartialAPIKey(r.apiKey),
 		)
-		updatedPolicy, err = r.Alerts.UpdatePolicy(APIPolicy)
-		if err != nil {
-			r.Log.Error(err, "failed to update policy via New Relic API",
-				"policyId", policy.Status.PolicyID,
-				"region", policy.Spec.Region,
-				"Api Key", interfaces.PartialAPIKey(r.apiKey),
-			)
-			return err
-		}
-		policy.Status.PolicyID = updatedPolicy.ID
+		return err
 	}
 
-	errConditions := r.createOrUpdateConditions(policy)
-	if errConditions != nil {
-		r.Log.Error(errConditions, "error creating or updating conditions")
-		return errConditions
-	}
-	r.Log.Info("policySpecx before update", "policy.Spec", policy.Spec)
+	policy.Status.PolicyID = updateResult.ID
+
+	// if string(APIPolicy.IncidentPreference) != policy.Status.AppliedSpec.IncidentPreference || APIPolicy.Name != policy.Status.AppliedSpec.Name {
+	// 	r.Log.Info("need to update alert policy via New Relic API",
+	// 		"Alert Policy Name", APIPolicy.Name,
+	// 		"incident preference ", policy.Status.AppliedSpec.IncidentPreference,
+	// 	)
+	// 	updatedPolicy, err = r.Alerts.UpdatePolicy(APIAlertsPolicy)
+	// 	if err != nil {
+	// 		r.Log.Error(err, "failed to update policy via New Relic API",
+	// 			"policyId", policy.Status.PolicyID,
+	// 			"region", policy.Spec.Region,
+	// 			"Api Key", interfaces.PartialAPIKey(r.apiKey),
+	// 		)
+	// 		return err
+	// 	}
+	// }
+
+	// errConditions := r.createOrUpdateConditions(policy)
+	// if errConditions != nil {
+	// 	r.Log.Error(errConditions, "error creating or updating conditions")
+	// 	return errConditions
+	// }
+	// r.Log.Info("policySpecx before update", "policy.Spec", policy.Spec)
 
 	policy.Status.AppliedSpec = &policy.Spec
 
-	err = r.Client.Update(r.ctx, policy)
-	if err != nil {
-		r.Log.Error(err, "failed to update policy status", "name", policy.Name)
-		return err
-	}
+	// err = r.Client.Update(r.ctx, policy)
+	// if err != nil {
+	// 	r.Log.Error(err, "failed to update policy status", "name", policy.Name)
+	// 	return err
+	// }
 	return nil
 }
 
@@ -437,7 +451,7 @@ func (r *AlertsPolicyReconciler) deletePolicy(ctx context.Context, policy *nrv1.
 				r.Log.Error(err, "Failed to delete Alert Policy via New Relic API",
 					"policyId", policy.Status.PolicyID,
 					"region", policy.Spec.Region,
-					"Api Key", interfaces.PartialAPIKey(r.apiKey),
+					"apiKey", interfaces.PartialAPIKey(r.apiKey),
 				)
 				return ctrl.Result{}, err
 			}
