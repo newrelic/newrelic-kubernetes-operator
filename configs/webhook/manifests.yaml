@@ -11,6 +11,24 @@ webhooks:
     service:
       name: webhook-service
       namespace: system
+      path: /mutate-nr-k8s-newrelic-com-v1-apmalertcondition
+  failurePolicy: Fail
+  name: mapmalertcondition.kb.io
+  rules:
+  - apiGroups:
+    - nr.k8s.newrelic.com
+    apiVersions:
+    - v1
+    operations:
+    - CREATE
+    - UPDATE
+    resources:
+    - apmalertconditions
+- clientConfig:
+    caBundle: Cg==
+    service:
+      name: webhook-service
+      namespace: system
       path: /mutate-nr-k8s-newrelic-com-v1-nrqlalertcondition
   failurePolicy: Fail
   name: mnrqlalertcondition.kb.io
@@ -50,6 +68,24 @@ metadata:
   creationTimestamp: null
   name: validating-webhook-configuration
 webhooks:
+- clientConfig:
+    caBundle: Cg==
+    service:
+      name: webhook-service
+      namespace: system
+      path: /validate-nr-k8s-newrelic-com-v1-apmalertcondition
+  failurePolicy: Fail
+  name: vapmalertcondition.kb.io
+  rules:
+  - apiGroups:
+    - nr.k8s.newrelic.com
+    apiVersions:
+    - v1
+    operations:
+    - CREATE
+    - UPDATE
+    resources:
+    - apmalertconditions
 - clientConfig:
     caBundle: Cg==
     service:

@@ -1,0 +1,24 @@
+# permissions for end users to edit apmalertconditions.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: apmalertcondition-editor-role
+rules:
+- apiGroups:
+  - nr.k8s.newrelic.com
+  resources:
+  - apmalertconditions
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - nr.k8s.newrelic.com
+  resources:
+  - apmalertconditions/status
+  verbs:
+  - get

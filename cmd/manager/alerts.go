@@ -46,6 +46,23 @@ func registerAlerts(mgr *ctrl.Manager) error {
 		os.Exit(1)
 	}
 
+	apmReconciler := &controllers.ApmAlertConditionReconciler{
+		Client: (*mgr).GetClient(),
+		Log:    ctrl.Log.WithName("controllers").WithName("ApmAlertCondition"),
+		Scheme: (*mgr).GetScheme(),
+		//AlertClientFunc: interfaces.InitializeAlertsClient,
+	}
+
+	if err := apmReconciler.SetupWithManager(*mgr); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "ApmAlertCondition")
+		os.Exit(1)
+	}
+	apmAlertCondition := &nrv1.ApmAlertCondition{}
+	if err := apmAlertCondition.SetupWebhookWithManager(*mgr); err != nil {
+		setupLog.Error(err, "unable to create webhook", "webhook", "ApmAlertCondition")
+		os.Exit(1)
+	}
+
 	policyReconciler := &controllers.PolicyReconciler{
 		Client:          (*mgr).GetClient(),
 		Log:             ctrl.Log.WithName("controllers").WithName("Policy"),
