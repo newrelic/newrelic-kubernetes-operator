@@ -489,12 +489,12 @@ func (r *AlertsPolicyReconciler) checkForExistingPolicy(policy *nrv1.AlertsPolic
 			r.Log.Error(err, "failed to get list of policies from New Relic API",
 				"policyId", policy.Status.PolicyID,
 				"region", policy.Spec.Region,
-				"Api Key", interfaces.PartialAPIKey(r.apiKey),
+				"apiKey", interfaces.PartialAPIKey(r.apiKey),
 			)
 		} else {
 			for _, existingPolicy := range existingPolicies {
 				if existingPolicy.Name == policy.Spec.Name {
-					r.Log.Info("Matched on existing policy, updating PolicyId", "policyId", existingPolicy.ID)
+					r.Log.Info("matched on existing policy, updating PolicyId", "policyId", existingPolicy.ID)
 					policy.Status.PolicyID = existingPolicy.ID
 					break
 				}
@@ -504,13 +504,13 @@ func (r *AlertsPolicyReconciler) checkForExistingPolicy(policy *nrv1.AlertsPolic
 }
 
 func (r *AlertsPolicyReconciler) deleteNewRelicAlertPolicy(policy *nrv1.AlertsPolicy) error {
-	r.Log.Info("Deleting policy", "policyName", policy.Spec.Name)
-	_, err := r.Alerts.DeletePolicy(policy.Status.PolicyID)
+	r.Log.Info("deleting policy", "policyName", policy.Spec.Name)
+	_, err := r.Alerts.DeletePolicyMutation(policy.Spec.AccountID, policy.Status.PolicyID)
 	if err != nil {
-		r.Log.Error(err, "Error deleting policy via New Relic API",
+		r.Log.Error(err, "error deleting policy via New Relic API",
 			"policyId", policy.Status.PolicyID,
 			"region", policy.Spec.Region,
-			"Api Key", interfaces.PartialAPIKey(r.apiKey),
+			"apiKey", interfaces.PartialAPIKey(r.apiKey),
 		)
 		return err
 	}
