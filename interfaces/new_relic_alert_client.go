@@ -28,6 +28,11 @@ type NewRelicAlertsClient interface {
 	UpdatePolicyMutation(accountID int, policyID int, policy alerts.AlertsPolicyUpdateInput) (*alerts.AlertsPolicy, error)
 	DeletePolicyMutation(accountID, id int) (*alerts.AlertsPolicy, error)
 	QueryPolicySearch(accountID int, params alerts.AlertsPoliciesSearchCriteriaInput) ([]*alerts.AlertsPolicy, error)
+
+	CreateNrqlConditionStaticMutation(accountID int, policyID int, nrqlCondition alerts.NrqlConditionInput) (*alerts.NrqlAlertCondition, error)
+	UpdateNrqlConditionStaticMutation(accountID int, conditionID int, nrqlCondition alerts.NrqlConditionInput) (*alerts.NrqlAlertCondition, error)
+	DeleteConditionMutation(accountID int, conditionID int) (string, error)
+	SearchNrqlConditionsQuery(accountID int, searchCriteria alerts.NrqlConditionsSearchCriteria) ([]*alerts.NrqlAlertCondition, error)
 }
 
 func NewClient(apiKey string, regionValue string) (*newrelic.NewRelic, error) {

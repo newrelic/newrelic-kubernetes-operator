@@ -24,6 +24,21 @@ type FakeNewRelicAlertsClient struct {
 		result1 *alerts.NrqlCondition
 		result2 error
 	}
+	CreateNrqlConditionStaticMutationStub        func(int, int, alerts.NrqlConditionInput) (*alerts.NrqlAlertCondition, error)
+	createNrqlConditionStaticMutationMutex       sync.RWMutex
+	createNrqlConditionStaticMutationArgsForCall []struct {
+		arg1 int
+		arg2 int
+		arg3 alerts.NrqlConditionInput
+	}
+	createNrqlConditionStaticMutationReturns struct {
+		result1 *alerts.NrqlAlertCondition
+		result2 error
+	}
+	createNrqlConditionStaticMutationReturnsOnCall map[int]struct {
+		result1 *alerts.NrqlAlertCondition
+		result2 error
+	}
 	CreatePolicyStub        func(alerts.Policy) (*alerts.Policy, error)
 	createPolicyMutex       sync.RWMutex
 	createPolicyArgsForCall []struct {
@@ -49,6 +64,20 @@ type FakeNewRelicAlertsClient struct {
 	}
 	createPolicyMutationReturnsOnCall map[int]struct {
 		result1 *alerts.AlertsPolicy
+		result2 error
+	}
+	DeleteConditionMutationStub        func(int, int) (string, error)
+	deleteConditionMutationMutex       sync.RWMutex
+	deleteConditionMutationArgsForCall []struct {
+		arg1 int
+		arg2 int
+	}
+	deleteConditionMutationReturns struct {
+		result1 string
+		result2 error
+	}
+	deleteConditionMutationReturnsOnCall map[int]struct {
+		result1 string
 		result2 error
 	}
 	DeleteNrqlConditionStub        func(int) (*alerts.NrqlCondition, error)
@@ -144,6 +173,20 @@ type FakeNewRelicAlertsClient struct {
 		result1 []*alerts.AlertsPolicy
 		result2 error
 	}
+	SearchNrqlConditionsQueryStub        func(int, alerts.NrqlConditionsSearchCriteria) ([]*alerts.NrqlAlertCondition, error)
+	searchNrqlConditionsQueryMutex       sync.RWMutex
+	searchNrqlConditionsQueryArgsForCall []struct {
+		arg1 int
+		arg2 alerts.NrqlConditionsSearchCriteria
+	}
+	searchNrqlConditionsQueryReturns struct {
+		result1 []*alerts.NrqlAlertCondition
+		result2 error
+	}
+	searchNrqlConditionsQueryReturnsOnCall map[int]struct {
+		result1 []*alerts.NrqlAlertCondition
+		result2 error
+	}
 	UpdateNrqlConditionStub        func(alerts.NrqlCondition) (*alerts.NrqlCondition, error)
 	updateNrqlConditionMutex       sync.RWMutex
 	updateNrqlConditionArgsForCall []struct {
@@ -155,6 +198,21 @@ type FakeNewRelicAlertsClient struct {
 	}
 	updateNrqlConditionReturnsOnCall map[int]struct {
 		result1 *alerts.NrqlCondition
+		result2 error
+	}
+	UpdateNrqlConditionStaticMutationStub        func(int, int, alerts.NrqlConditionInput) (*alerts.NrqlAlertCondition, error)
+	updateNrqlConditionStaticMutationMutex       sync.RWMutex
+	updateNrqlConditionStaticMutationArgsForCall []struct {
+		arg1 int
+		arg2 int
+		arg3 alerts.NrqlConditionInput
+	}
+	updateNrqlConditionStaticMutationReturns struct {
+		result1 *alerts.NrqlAlertCondition
+		result2 error
+	}
+	updateNrqlConditionStaticMutationReturnsOnCall map[int]struct {
+		result1 *alerts.NrqlAlertCondition
 		result2 error
 	}
 	UpdatePolicyStub        func(alerts.Policy) (*alerts.Policy, error)
@@ -249,6 +307,71 @@ func (fake *FakeNewRelicAlertsClient) CreateNrqlConditionReturnsOnCall(i int, re
 	}
 	fake.createNrqlConditionReturnsOnCall[i] = struct {
 		result1 *alerts.NrqlCondition
+		result2 error
+	}{result1, result2}
+}
+
+func (fake *FakeNewRelicAlertsClient) CreateNrqlConditionStaticMutation(arg1 int, arg2 int, arg3 alerts.NrqlConditionInput) (*alerts.NrqlAlertCondition, error) {
+	fake.createNrqlConditionStaticMutationMutex.Lock()
+	ret, specificReturn := fake.createNrqlConditionStaticMutationReturnsOnCall[len(fake.createNrqlConditionStaticMutationArgsForCall)]
+	fake.createNrqlConditionStaticMutationArgsForCall = append(fake.createNrqlConditionStaticMutationArgsForCall, struct {
+		arg1 int
+		arg2 int
+		arg3 alerts.NrqlConditionInput
+	}{arg1, arg2, arg3})
+	fake.recordInvocation("CreateNrqlConditionStaticMutation", []interface{}{arg1, arg2, arg3})
+	fake.createNrqlConditionStaticMutationMutex.Unlock()
+	if fake.CreateNrqlConditionStaticMutationStub != nil {
+		return fake.CreateNrqlConditionStaticMutationStub(arg1, arg2, arg3)
+	}
+	if specificReturn {
+		return ret.result1, ret.result2
+	}
+	fakeReturns := fake.createNrqlConditionStaticMutationReturns
+	return fakeReturns.result1, fakeReturns.result2
+}
+
+func (fake *FakeNewRelicAlertsClient) CreateNrqlConditionStaticMutationCallCount() int {
+	fake.createNrqlConditionStaticMutationMutex.RLock()
+	defer fake.createNrqlConditionStaticMutationMutex.RUnlock()
+	return len(fake.createNrqlConditionStaticMutationArgsForCall)
+}
+
+func (fake *FakeNewRelicAlertsClient) CreateNrqlConditionStaticMutationCalls(stub func(int, int, alerts.NrqlConditionInput) (*alerts.NrqlAlertCondition, error)) {
+	fake.createNrqlConditionStaticMutationMutex.Lock()
+	defer fake.createNrqlConditionStaticMutationMutex.Unlock()
+	fake.CreateNrqlConditionStaticMutationStub = stub
+}
+
+func (fake *FakeNewRelicAlertsClient) CreateNrqlConditionStaticMutationArgsForCall(i int) (int, int, alerts.NrqlConditionInput) {
+	fake.createNrqlConditionStaticMutationMutex.RLock()
+	defer fake.createNrqlConditionStaticMutationMutex.RUnlock()
+	argsForCall := fake.createNrqlConditionStaticMutationArgsForCall[i]
+	return argsForCall.arg1, argsForCall.arg2, argsForCall.arg3
+}
+
+func (fake *FakeNewRelicAlertsClient) CreateNrqlConditionStaticMutationReturns(result1 *alerts.NrqlAlertCondition, result2 error) {
+	fake.createNrqlConditionStaticMutationMutex.Lock()
+	defer fake.createNrqlConditionStaticMutationMutex.Unlock()
+	fake.CreateNrqlConditionStaticMutationStub = nil
+	fake.createNrqlConditionStaticMutationReturns = struct {
+		result1 *alerts.NrqlAlertCondition
+		result2 error
+	}{result1, result2}
+}
+
+func (fake *FakeNewRelicAlertsClient) CreateNrqlConditionStaticMutationReturnsOnCall(i int, result1 *alerts.NrqlAlertCondition, result2 error) {
+	fake.createNrqlConditionStaticMutationMutex.Lock()
+	defer fake.createNrqlConditionStaticMutationMutex.Unlock()
+	fake.CreateNrqlConditionStaticMutationStub = nil
+	if fake.createNrqlConditionStaticMutationReturnsOnCall == nil {
+		fake.createNrqlConditionStaticMutationReturnsOnCall = make(map[int]struct {
+			result1 *alerts.NrqlAlertCondition
+			result2 error
+		})
+	}
+	fake.createNrqlConditionStaticMutationReturnsOnCall[i] = struct {
+		result1 *alerts.NrqlAlertCondition
 		result2 error
 	}{result1, result2}
 }
@@ -376,6 +499,70 @@ func (fake *FakeNewRelicAlertsClient) CreatePolicyMutationReturnsOnCall(i int, r
 	}
 	fake.createPolicyMutationReturnsOnCall[i] = struct {
 		result1 *alerts.AlertsPolicy
+		result2 error
+	}{result1, result2}
+}
+
+func (fake *FakeNewRelicAlertsClient) DeleteConditionMutation(arg1 int, arg2 int) (string, error) {
+	fake.deleteConditionMutationMutex.Lock()
+	ret, specificReturn := fake.deleteConditionMutationReturnsOnCall[len(fake.deleteConditionMutationArgsForCall)]
+	fake.deleteConditionMutationArgsForCall = append(fake.deleteConditionMutationArgsForCall, struct {
+		arg1 int
+		arg2 int
+	}{arg1, arg2})
+	fake.recordInvocation("DeleteConditionMutation", []interface{}{arg1, arg2})
+	fake.deleteConditionMutationMutex.Unlock()
+	if fake.DeleteConditionMutationStub != nil {
+		return fake.DeleteConditionMutationStub(arg1, arg2)
+	}
+	if specificReturn {
+		return ret.result1, ret.result2
+	}
+	fakeReturns := fake.deleteConditionMutationReturns
+	return fakeReturns.result1, fakeReturns.result2
+}
+
+func (fake *FakeNewRelicAlertsClient) DeleteConditionMutationCallCount() int {
+	fake.deleteConditionMutationMutex.RLock()
+	defer fake.deleteConditionMutationMutex.RUnlock()
+	return len(fake.deleteConditionMutationArgsForCall)
+}
+
+func (fake *FakeNewRelicAlertsClient) DeleteConditionMutationCalls(stub func(int, int) (string, error)) {
+	fake.deleteConditionMutationMutex.Lock()
+	defer fake.deleteConditionMutationMutex.Unlock()
+	fake.DeleteConditionMutationStub = stub
+}
+
+func (fake *FakeNewRelicAlertsClient) DeleteConditionMutationArgsForCall(i int) (int, int) {
+	fake.deleteConditionMutationMutex.RLock()
+	defer fake.deleteConditionMutationMutex.RUnlock()
+	argsForCall := fake.deleteConditionMutationArgsForCall[i]
+	return argsForCall.arg1, argsForCall.arg2
+}
+
+func (fake *FakeNewRelicAlertsClient) DeleteConditionMutationReturns(result1 string, result2 error) {
+	fake.deleteConditionMutationMutex.Lock()
+	defer fake.deleteConditionMutationMutex.Unlock()
+	fake.DeleteConditionMutationStub = nil
+	fake.deleteConditionMutationReturns = struct {
+		result1 string
+		result2 error
+	}{result1, result2}
+}
+
+func (fake *FakeNewRelicAlertsClient) DeleteConditionMutationReturnsOnCall(i int, result1 string, result2 error) {
+	fake.deleteConditionMutationMutex.Lock()
+	defer fake.deleteConditionMutationMutex.Unlock()
+	fake.DeleteConditionMutationStub = nil
+	if fake.deleteConditionMutationReturnsOnCall == nil {
+		fake.deleteConditionMutationReturnsOnCall = make(map[int]struct {
+			result1 string
+			result2 error
+		})
+	}
+	fake.deleteConditionMutationReturnsOnCall[i] = struct {
+		result1 string
 		result2 error
 	}{result1, result2}
 }
@@ -823,6 +1010,70 @@ func (fake *FakeNewRelicAlertsClient) QueryPolicySearchReturnsOnCall(i int, resu
 	}{result1, result2}
 }
 
+func (fake *FakeNewRelicAlertsClient) SearchNrqlConditionsQuery(arg1 int, arg2 alerts.NrqlConditionsSearchCriteria) ([]*alerts.NrqlAlertCondition, error) {
+	fake.searchNrqlConditionsQueryMutex.Lock()
+	ret, specificReturn := fake.searchNrqlConditionsQueryReturnsOnCall[len(fake.searchNrqlConditionsQueryArgsForCall)]
+	fake.searchNrqlConditionsQueryArgsForCall = append(fake.searchNrqlConditionsQueryArgsForCall, struct {
+		arg1 int
+		arg2 alerts.NrqlConditionsSearchCriteria
+	}{arg1, arg2})
+	fake.recordInvocation("SearchNrqlConditionsQuery", []interface{}{arg1, arg2})
+	fake.searchNrqlConditionsQueryMutex.Unlock()
+	if fake.SearchNrqlConditionsQueryStub != nil {
+		return fake.SearchNrqlConditionsQueryStub(arg1, arg2)
+	}
+	if specificReturn {
+		return ret.result1, ret.result2
+	}
+	fakeReturns := fake.searchNrqlConditionsQueryReturns
+	return fakeReturns.result1, fakeReturns.result2
+}
+
+func (fake *FakeNewRelicAlertsClient) SearchNrqlConditionsQueryCallCount() int {
+	fake.searchNrqlConditionsQueryMutex.RLock()
+	defer fake.searchNrqlConditionsQueryMutex.RUnlock()
+	return len(fake.searchNrqlConditionsQueryArgsForCall)
+}
+
+func (fake *FakeNewRelicAlertsClient) SearchNrqlConditionsQueryCalls(stub func(int, alerts.NrqlConditionsSearchCriteria) ([]*alerts.NrqlAlertCondition, error)) {
+	fake.searchNrqlConditionsQueryMutex.Lock()
+	defer fake.searchNrqlConditionsQueryMutex.Unlock()
+	fake.SearchNrqlConditionsQueryStub = stub
+}
+
+func (fake *FakeNewRelicAlertsClient) SearchNrqlConditionsQueryArgsForCall(i int) (int, alerts.NrqlConditionsSearchCriteria) {
+	fake.searchNrqlConditionsQueryMutex.RLock()
+	defer fake.searchNrqlConditionsQueryMutex.RUnlock()
+	argsForCall := fake.searchNrqlConditionsQueryArgsForCall[i]
+	return argsForCall.arg1, argsForCall.arg2
+}
+
+func (fake *FakeNewRelicAlertsClient) SearchNrqlConditionsQueryReturns(result1 []*alerts.NrqlAlertCondition, result2 error) {
+	fake.searchNrqlConditionsQueryMutex.Lock()
+	defer fake.searchNrqlConditionsQueryMutex.Unlock()
+	fake.SearchNrqlConditionsQueryStub = nil
+	fake.searchNrqlConditionsQueryReturns = struct {
+		result1 []*alerts.NrqlAlertCondition
+		result2 error
+	}{result1, result2}
+}
+
+func (fake *FakeNewRelicAlertsClient) SearchNrqlConditionsQueryReturnsOnCall(i int, result1 []*alerts.NrqlAlertCondition, result2 error) {
+	fake.searchNrqlConditionsQueryMutex.Lock()
+	defer fake.searchNrqlConditionsQueryMutex.Unlock()
+	fake.SearchNrqlConditionsQueryStub = nil
+	if fake.searchNrqlConditionsQueryReturnsOnCall == nil {
+		fake.searchNrqlConditionsQueryReturnsOnCall = make(map[int]struct {
+			result1 []*alerts.NrqlAlertCondition
+			result2 error
+		})
+	}
+	fake.searchNrqlConditionsQueryReturnsOnCall[i] = struct {
+		result1 []*alerts.NrqlAlertCondition
+		result2 error
+	}{result1, result2}
+}
+
 func (fake *FakeNewRelicAlertsClient) UpdateNrqlCondition(arg1 alerts.NrqlCondition) (*alerts.NrqlCondition, error) {
 	fake.updateNrqlConditionMutex.Lock()
 	ret, specificReturn := fake.updateNrqlConditionReturnsOnCall[len(fake.updateNrqlConditionArgsForCall)]
@@ -882,6 +1133,71 @@ func (fake *FakeNewRelicAlertsClient) UpdateNrqlConditionReturnsOnCall(i int, re
 	}
 	fake.updateNrqlConditionReturnsOnCall[i] = struct {
 		result1 *alerts.NrqlCondition
+		result2 error
+	}{result1, result2}
+}
+
+func (fake *FakeNewRelicAlertsClient) UpdateNrqlConditionStaticMutation(arg1 int, arg2 int, arg3 alerts.NrqlConditionInput) (*alerts.NrqlAlertCondition, error) {
+	fake.updateNrqlConditionStaticMutationMutex.Lock()
+	ret, specificReturn := fake.updateNrqlConditionStaticMutationReturnsOnCall[len(fake.updateNrqlConditionStaticMutationArgsForCall)]
+	fake.updateNrqlConditionStaticMutationArgsForCall = append(fake.updateNrqlConditionStaticMutationArgsForCall, struct {
+		arg1 int
+		arg2 int
+		arg3 alerts.NrqlConditionInput
+	}{arg1, arg2, arg3})
+	fake.recordInvocation("UpdateNrqlConditionStaticMutation", []interface{}{arg1, arg2, arg3})
+	fake.updateNrqlConditionStaticMutationMutex.Unlock()
+	if fake.UpdateNrqlConditionStaticMutationStub != nil {
+		return fake.UpdateNrqlConditionStaticMutationStub(arg1, arg2, arg3)
+	}
+	if specificReturn {
+		return ret.result1, ret.result2
+	}
+	fakeReturns := fake.updateNrqlConditionStaticMutationReturns
+	return fakeReturns.result1, fakeReturns.result2
+}
+
+func (fake *FakeNewRelicAlertsClient) UpdateNrqlConditionStaticMutationCallCount() int {
+	fake.updateNrqlConditionStaticMutationMutex.RLock()
+	defer fake.updateNrqlConditionStaticMutationMutex.RUnlock()
+	return len(fake.updateNrqlConditionStaticMutationArgsForCall)
+}
+
+func (fake *FakeNewRelicAlertsClient) UpdateNrqlConditionStaticMutationCalls(stub func(int, int, alerts.NrqlConditionInput) (*alerts.NrqlAlertCondition, error)) {
+	fake.updateNrqlConditionStaticMutationMutex.Lock()
+	defer fake.updateNrqlConditionStaticMutationMutex.Unlock()
+	fake.UpdateNrqlConditionStaticMutationStub = stub
+}
+
+func (fake *FakeNewRelicAlertsClient) UpdateNrqlConditionStaticMutationArgsForCall(i int) (int, int, alerts.NrqlConditionInput) {
+	fake.updateNrqlConditionStaticMutationMutex.RLock()
+	defer fake.updateNrqlConditionStaticMutationMutex.RUnlock()
+	argsForCall := fake.updateNrqlConditionStaticMutationArgsForCall[i]
+	return argsForCall.arg1, argsForCall.arg2, argsForCall.arg3
+}
+
+func (fake *FakeNewRelicAlertsClient) UpdateNrqlConditionStaticMutationReturns(result1 *alerts.NrqlAlertCondition, result2 error) {
+	fake.updateNrqlConditionStaticMutationMutex.Lock()
+	defer fake.updateNrqlConditionStaticMutationMutex.Unlock()
+	fake.UpdateNrqlConditionStaticMutationStub = nil
+	fake.updateNrqlConditionStaticMutationReturns = struct {
+		result1 *alerts.NrqlAlertCondition
+		result2 error
+	}{result1, result2}
+}
+
+func (fake *FakeNewRelicAlertsClient) UpdateNrqlConditionStaticMutationReturnsOnCall(i int, result1 *alerts.NrqlAlertCondition, result2 error) {
+	fake.updateNrqlConditionStaticMutationMutex.Lock()
+	defer fake.updateNrqlConditionStaticMutationMutex.Unlock()
+	fake.UpdateNrqlConditionStaticMutationStub = nil
+	if fake.updateNrqlConditionStaticMutationReturnsOnCall == nil {
+		fake.updateNrqlConditionStaticMutationReturnsOnCall = make(map[int]struct {
+			result1 *alerts.NrqlAlertCondition
+			result2 error
+		})
+	}
+	fake.updateNrqlConditionStaticMutationReturnsOnCall[i] = struct {
+		result1 *alerts.NrqlAlertCondition
 		result2 error
 	}{result1, result2}
 }
@@ -1019,10 +1335,14 @@ func (fake *FakeNewRelicAlertsClient) Invocations() map[string][][]interface{} {
 	defer fake.invocationsMutex.RUnlock()
 	fake.createNrqlConditionMutex.RLock()
 	defer fake.createNrqlConditionMutex.RUnlock()
+	fake.createNrqlConditionStaticMutationMutex.RLock()
+	defer fake.createNrqlConditionStaticMutationMutex.RUnlock()
 	fake.createPolicyMutex.RLock()
 	defer fake.createPolicyMutex.RUnlock()
 	fake.createPolicyMutationMutex.RLock()
 	defer fake.createPolicyMutationMutex.RUnlock()
+	fake.deleteConditionMutationMutex.RLock()
+	defer fake.deleteConditionMutationMutex.RUnlock()
 	fake.deleteNrqlConditionMutex.RLock()
 	defer fake.deleteNrqlConditionMutex.RUnlock()
 	fake.deletePolicyMutex.RLock()
@@ -1037,8 +1357,12 @@ func (fake *FakeNewRelicAlertsClient) Invocations() map[string][][]interface{} {
 	defer fake.listPoliciesMutex.RUnlock()
 	fake.queryPolicySearchMutex.RLock()
 	defer fake.queryPolicySearchMutex.RUnlock()
+	fake.searchNrqlConditionsQueryMutex.RLock()
+	defer fake.searchNrqlConditionsQueryMutex.RUnlock()
 	fake.updateNrqlConditionMutex.RLock()
 	defer fake.updateNrqlConditionMutex.RUnlock()
+	fake.updateNrqlConditionStaticMutationMutex.RLock()
+	defer fake.updateNrqlConditionStaticMutationMutex.RUnlock()
 	fake.updatePolicyMutex.RLock()
 	defer fake.updatePolicyMutex.RUnlock()
 	fake.updatePolicyMutationMutex.RLock()

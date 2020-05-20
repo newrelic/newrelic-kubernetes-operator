@@ -9,7 +9,6 @@ import (
 	"strconv"
 	"testing"
 
-	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/kubernetes/scheme"
@@ -20,6 +19,8 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
+	"github.com/newrelic/newrelic-client-go/pkg/alerts"
 
 	nralertsv1 "github.com/newrelic/newrelic-kubernetes-operator/api/v1"
 	nrv1 "github.com/newrelic/newrelic-kubernetes-operator/api/v1"
@@ -58,28 +59,32 @@ func TestIntegrationAlertsPolicyController(t *testing.T) {
 	accountID, err := strconv.Atoi(os.Getenv("NEW_RELIC_ACCOUNT_ID"))
 	assert.NoError(t, err)
 
-	conditionSpec := &nrv1.NrqlAlertConditionSpec{
-		Terms: []nrv1.AlertConditionTerm{
+	conditionSpec := &nrv1.AlertsNrqlConditionSpec{
+		Terms: []nrv1.AlertsConditionTerm{
 			{
-				Duration:     resource.MustParse("30"),
-				Operator:     "above",
-				Priority:     "critical",
-				Threshold:    resource.MustParse("5"),
-				TimeFunction: "all",
+				Operator:          "above",
+				Priority:          "critical",
+				Threshold:         "5",
+				ThresholdDuration: 30,
+				TimeFunction:      "all",
 			},
 		},
-		Nrql: nrv1.NrqlQuery{
-			Query:      "SELECT 1 FROM MyEvents",
-			SinceValue: "5",
+		Nrql: alerts.NrqlConditionQuery{
+			Query:            "SELECT 1 FROM MyEvents",
+			EvaluationOffset: 5,
 		},
-		Type:                "NRQL",
-		Name:                "NRQL Condition",
-		RunbookURL:          "http://test.com/runbook",
-		ValueFunction:       "max",
-		ViolationCloseTimer: 60,
-		ExpectedGroups:      2,
-		IgnoreOverlap:       true,
-		Enabled:             true,
+		Type:               "NRQL",
+		Name:               "NRQL Condition",
+		RunbookURL:         "http://test.com/runbook",
+		ValueFunction:      &alerts.NrqlConditionValueFunctions.SingleValue,
+		ViolationTimeLimit: alerts.NrqlConditionViolationTimeLimits.OneHour,
+		ExpectedGroups:     2,
+		IgnoreOverlap:      true,
+		Enabled:            true,
+		// ExistingPolicyID:   integrationPolicy.ID,
+		// APIKey:             integrationAlertsConfig.PersonalAPIKey,
+		// AccountID:          accountID,
+
 	}
 
 	policy := &nrv1.AlertsPolicy{
