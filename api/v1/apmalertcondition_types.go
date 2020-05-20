@@ -9,24 +9,23 @@ import (
 
 // ApmAlertConditionSpec defines the desired state of NrqlAlertCondition
 type ApmAlertConditionSpec struct {
-	Terms               []AlertConditionTerm `json:"terms,omitempty"`
-	Type                string               `json:"type,omitempty"` //TODO: add conditionType or pull from alerts package or make string
-	Name                string               `json:"name,omitempty"`
-	RunbookURL          string               `json:"runbook_url,omitempty"`
-	Metric              string               `json:"metric,omitempty"`       //TODO: check type
-	UserDefined         string               `json:"user_defined,omitempty"` //TODO: check type
-	Scope               string               `json:"scope,omitempty"`
-	GCMetric            string               `json:"gc_metric,omitempty"`
-	ValueFunction       string               `json:"value_function,omitempty"`
-	PolicyID            int                  `json:"-"`
-	ID                  int                  `json:"id,omitempty"`
-	ViolationCloseTimer int                  `json:"violation_time_limit_seconds,omitempty"`
-	ExpectedGroups      int                  `json:"expected_groups,omitempty"` //TODO: maybe remove
-	Enabled             bool                 `json:"enabled"`
-	ExistingPolicyID    int                  `json:"existing_policy_id,omitempty"`
-	APIKey              string               `json:"api_key,omitempty"`
-	APIKeySecret        NewRelicAPIKeySecret `json:"api_key_secret,omitempty"`
-	Region              string               `json:"region,omitempty"`
+	Terms               []AlertConditionTerm        `json:"terms,omitempty"`
+	Type                string                      `json:"type,omitempty"` //TODO: add conditionType or pull from alerts package or make string
+	Name                string                      `json:"name,omitempty"`
+	RunbookURL          string                      `json:"runbook_url,omitempty"`
+	Metric              string                      `json:"metric,omitempty"` //TODO: check type
+	UserDefined         alerts.ConditionUserDefined `json:"user_defined,omitempty"`
+	Scope               string                      `json:"condition_scope,omitempty"`
+	Entities            []string                    `json:"entities,omitempty"`
+	GCMetric            string                      `json:"gc_metric,omitempty"`
+	PolicyID            int                         `json:"-"`
+	ID                  int                         `json:"id,omitempty"`
+	ViolationCloseTimer int                         `json:"violation_close_timer,omitempty"`
+	Enabled             bool                        `json:"enabled"`
+	ExistingPolicyID    int                         `json:"existing_policy_id,omitempty"`
+	APIKey              string                      `json:"api_key,omitempty"`
+	APIKeySecret        NewRelicAPIKeySecret        `json:"api_key_secret,omitempty"`
+	Region              string                      `json:"region,omitempty"`
 }
 
 /* going to need to address these metrictypes with conditions
@@ -100,7 +99,6 @@ func (in ApmAlertConditionSpec) APICondition() alerts.Condition {
 	jsonString, _ := json.Marshal(in)
 	var APICondition alerts.Condition
 	json.Unmarshal(jsonString, &APICondition) //nolint
-
 	//APICondition.PolicyID = spec.ExistingPolicyId
 
 	return APICondition
