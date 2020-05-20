@@ -74,7 +74,7 @@ func (in *ApmAlertConditionList) DeepCopyInto(out *ApmAlertConditionList) {
 	in.ListMeta.DeepCopyInto(&out.ListMeta)
 	if in.Items != nil {
 		in, out := &in.Items, &out.Items
-		*out = make([]NrqlAlertCondition, len(*in))
+		*out = make([]ApmAlertCondition, len(*in))
 		for i := range *in {
 			(*in)[i].DeepCopyInto(&(*out)[i])
 		}
@@ -108,6 +108,12 @@ func (in *ApmAlertConditionSpec) DeepCopyInto(out *ApmAlertConditionSpec) {
 		for i := range *in {
 			(*in)[i].DeepCopyInto(&(*out)[i])
 		}
+	}
+	out.UserDefined = in.UserDefined
+	if in.Entities != nil {
+		in, out := &in.Entities, &out.Entities
+		*out = make([]string, len(*in))
+		copy(*out, *in)
 	}
 	out.APIKeySecret = in.APIKeySecret
 }

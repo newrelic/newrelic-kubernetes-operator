@@ -78,8 +78,8 @@ type ApmAlertCondition struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 
-	Spec   ApmAlertConditionSpec    `json:"spec,omitempty"`
-	Status NrqlAlertConditionStatus `json:"status,omitempty"`
+	Spec   ApmAlertConditionSpec   `json:"spec,omitempty"`
+	Status ApmAlertConditionStatus `json:"status,omitempty"`
 }
 
 // +kubebuilder:object:root=true
@@ -88,11 +88,11 @@ type ApmAlertCondition struct {
 type ApmAlertConditionList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`
-	Items           []NrqlAlertCondition `json:"items"`
+	Items           []ApmAlertCondition `json:"items"`
 }
 
 func init() {
-	SchemeBuilder.Register(&NrqlAlertCondition{}, &NrqlAlertConditionList{})
+	SchemeBuilder.Register(&ApmAlertCondition{}, &ApmAlertConditionList{})
 }
 
 func (in ApmAlertConditionSpec) APICondition() alerts.Condition {

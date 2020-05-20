@@ -50,11 +50,15 @@ spec:
                 namespace:
                   type: string
               type: object
+            condition_scope:
+              type: string
             enabled:
               type: boolean
+            entities:
+              items:
+                type: string
+              type: array
             existing_policy_id:
-              type: integer
-            expected_groups:
               type: integer
             gc_metric:
               type: string
@@ -67,8 +71,6 @@ spec:
             region:
               type: string
             runbook_url:
-              type: string
-            scope:
               type: string
             terms:
               items:
@@ -100,10 +102,17 @@ spec:
             type:
               type: string
             user_defined:
-              type: string
-            value_function:
-              type: string
-            violation_time_limit_seconds:
+              description: ConditionUserDefined represents user defined metrics for
+                the New Relic alert condition.
+              properties:
+                metric:
+                  type: string
+                value_function:
+                  description: ValueFunctionType specifies the value function to be
+                    used for returning custom metric data.
+                  type: string
+              type: object
+            violation_close_timer:
               type: integer
           required:
           - enabled
