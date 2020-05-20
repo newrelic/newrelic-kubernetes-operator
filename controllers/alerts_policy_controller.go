@@ -31,6 +31,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	nrv1 "github.com/newrelic/newrelic-kubernetes-operator/api/v1"
+	customErrors "github.com/newrelic/newrelic-kubernetes-operator/errors"
 	"github.com/newrelic/newrelic-kubernetes-operator/interfaces"
 )
 
@@ -125,8 +126,6 @@ func (r *AlertsPolicyReconciler) createPolicy(policy *nrv1.AlertsPolicy) error {
 	p.IncidentPreference = alerts.AlertsIncidentPreference(policy.Spec.IncidentPreference)
 	p.Name = policy.Spec.Name
 
-	// p := policy.Spec.APIAlertsPolicy()
-
 	r.Log.Info("Creating policy", "PolicyName", p.Name)
 	createResult, err := r.Alerts.CreatePolicyMutation(policy.Spec.AccountID, p)
 	if err != nil {
@@ -139,33 +138,17 @@ func (r *AlertsPolicyReconciler) createPolicy(policy *nrv1.AlertsPolicy) error {
 	}
 	policy.Status.PolicyID = createResult.ID
 
-	// err = ensureConditions(policy.Spec.Conditions)
-
-	// createdPolicy, err := r.Alerts.CreatePolicy(APIPolicy)
-	// if err != nil {
-	// 	r.Log.Error(err, "failed to create policy via New Relic API",
-	// 		"policyId", policy.Status.PolicyID,
-	// 		"region", policy.Spec.Region,
-	// 		"Api Key", interfaces.PartialAPIKey(r.apiKey),
-	// 	)
-	// 	return err
-	// }
-	// policy.Status.PolicyID = createdPolicy.ID
-	//
-	// errConditions := r.createConditions(policy)
-	// if errConditions != nil {
-	// 	r.Log.Error(errConditions, "error creating or updating conditions")
-	// 	return errConditions
-	// }
-	// r.Log.Info("policy after condition creation", "policyCondition", policy.Spec.Conditions, "pointer", &policy)
+	for _, specCondition := range policy.Spec.Conditions {
+		c := specCondition.Spec.APIConditionInput()
+		_, err := r.Alerts.CreateNrqlConditionStaticMutation(policy.Spec.AccountID, policy.Status.PolicyID, c)
+		if err != nil {
+			r.Log.Error(err, "error creating condition")
+			return err
+		}
+	}
 
 	policy.Status.AppliedSpec = &policy.Spec
 
-	// err = r.Client.Update(r.ctx, policy)
-	// if err != nil {
-	// 	r.Log.Error(err, "tried updating policy status", "name", policy.Name)
-	// 	return err
-	// }
 	return nil
 }
 
@@ -209,6 +192,7 @@ func (r *AlertsPolicyReconciler) updatePolicy(policy *nrv1.AlertsPolicy) error {
 	// 	}
 	// }
 
+	// TODO reimplement condition handling
 	// errConditions := r.createOrUpdateConditions(policy)
 	// if errConditions != nil {
 	// 	r.Log.Error(errConditions, "error creating or updating conditions")
@@ -231,35 +215,38 @@ func (r *AlertsPolicyReconciler) deletePolicy(ctx context.Context, policy *nrv1.
 	if containsString(policy.Finalizers, deleteFinalizer) {
 		// catch invalid state
 		if policy.Status.PolicyID == 0 {
-			r.Log.Info("No Condition ID set, just removing finalizer")
+			r.Log.Info("no PolicyID set, removing finalizer")
 			policy.Finalizers = removeString(policy.Finalizers, deleteFinalizer)
 		} else {
-			// our finalizer is present, so lets handle any external dependency
-			// collectedErrors := new(customErrors.ErrorCollector)
-			// for _, condition := range policy.Status.AppliedSpec.Conditions {
-			// 	err := r.deleteCondition(&condition)
-			// 	if err != nil {
-			// 		r.Log.Error(err, "error deleting condition resources")
-			// 		collectedErrors.Collect(err)
-			// 	}
-			// }
-			// if len(*collectedErrors) > 0 {
-			// 	r.Log.Info("errors deleting condition resources", "collectedErrors", collectedErrors)
-			// 	return ctrl.Result{}, collectedErrors
-			// }
 
-			if err := r.deleteNewRelicAlertPolicy(policy); err != nil {
-				// if fail to delete the external dependency here, return with error
-				// so that it can be retried
-				r.Log.Error(err, "Failed to delete Alert Policy via New Relic API",
+			// our finalizer is present, so lets handle any external dependency
+			collectedErrors := new(customErrors.ErrorCollector)
+			for _, condition := range policy.Status.AppliedSpec.Conditions {
+				_, err := r.Alerts.DeletePolicyMutation(policy.Spec.AccountID, condition.Spec.ID)
+				if err != nil {
+					r.Log.Error(err, "error deleting condition resources")
+					collectedErrors.Collect(err)
+				}
+			}
+
+			if len(*collectedErrors) > 0 {
+				r.Log.Info("errors deleting condition resources", "collectedErrors", collectedErrors)
+				return ctrl.Result{}, collectedErrors
+			}
+
+			r.Log.Info("deleting policy", "policyName", policy.Spec.Name, "policyID", policy.Status.PolicyID)
+			_, err := r.Alerts.DeletePolicyMutation(policy.Spec.AccountID, policy.Status.PolicyID)
+			if err != nil {
+				r.Log.Error(err, "error deleting policy via New Relic API",
 					"policyId", policy.Status.PolicyID,
 					"region", policy.Spec.Region,
 					"apiKey", interfaces.PartialAPIKey(r.apiKey),
 				)
 				return ctrl.Result{}, err
 			}
+
 			// remove our finalizer from the list and update it.
-			r.Log.Info("New Relic Alert policy deleted, Removing finalizer")
+			r.Log.Info("removing finalizer")
 			policy.Finalizers = removeString(policy.Finalizers, deleteFinalizer)
 			if err := r.Client.Update(ctx, policy); err != nil {
 				r.Log.Error(err, "Failed to update k8s records for this policy after successfully deleting the policy via New Relic Alert API")
@@ -269,7 +256,7 @@ func (r *AlertsPolicyReconciler) deletePolicy(ctx context.Context, policy *nrv1.
 	}
 
 	// Stop reconciliation as the item is being deleted
-	r.Log.Info("All done with policy deletion", "policyName", policy.Spec.Name)
+	r.Log.Info("policy deletion complete", "policyName", policy.Spec.Name)
 
 	return ctrl.Result{}, nil
 }
@@ -282,7 +269,7 @@ func (r *AlertsPolicyReconciler) SetupWithManager(mgr ctrl.Manager) error {
 
 func (r *AlertsPolicyReconciler) checkForExistingPolicy(policy *nrv1.AlertsPolicy) {
 	if policy.Status.PolicyID == 0 {
-		r.Log.Info("Checking for existing policy", "policy", policy.Name, "policyName", policy.Spec.Name)
+		r.Log.Info("checking for existing policy", "policy", policy.Name, "policyName", policy.Spec.Name)
 		//if no policyId, get list of policies and compare name
 		alertParams := &alerts.ListPoliciesParams{
 			Name: policy.Spec.Name,
@@ -304,20 +291,6 @@ func (r *AlertsPolicyReconciler) checkForExistingPolicy(policy *nrv1.AlertsPolic
 			}
 		}
 	}
-}
-
-func (r *AlertsPolicyReconciler) deleteNewRelicAlertPolicy(policy *nrv1.AlertsPolicy) error {
-	r.Log.Info("deleting policy", "policyName", policy.Spec.Name)
-	_, err := r.Alerts.DeletePolicyMutation(policy.Spec.AccountID, policy.Status.PolicyID)
-	if err != nil {
-		r.Log.Error(err, "error deleting policy via New Relic API",
-			"policyId", policy.Status.PolicyID,
-			"region", policy.Spec.Region,
-			"apiKey", interfaces.PartialAPIKey(r.apiKey),
-		)
-		return err
-	}
-	return nil
 }
 
 func (r *AlertsPolicyReconciler) getAPIKeyOrSecret(policy nrv1.AlertsPolicy) string {
