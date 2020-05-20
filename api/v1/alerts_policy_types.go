@@ -39,9 +39,9 @@ type AlertsPolicySpec struct {
 
 //AlertsPolicyCondition defined the conditions contained within a AlertsPolicy
 type AlertsPolicyCondition struct {
-	Name      string                 `json:"name"`
-	Namespace string                 `json:"namespace"`
-	Spec      NrqlAlertConditionSpec `json:"spec,omitempty"`
+	Name      string                  `json:"name"`
+	Namespace string                  `json:"namespace"`
+	Spec      AlertsNrqlConditionSpec `json:"spec,omitempty"`
 	//SpecHash uint32					`json:"specHash,omitempty"`
 }
 
