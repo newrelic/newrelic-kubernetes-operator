@@ -55,8 +55,20 @@ func alertsPolicyTestSetup(t *testing.T, policy *nrv1.AlertsPolicy) client.Clien
 func TestIntegrationAlertsPolicyController(t *testing.T) {
 	t.Parallel()
 
-	accountID, err := strconv.Atoi(os.Getenv("NEW_RELIC_ACCOUNT_ID"))
+	envAPIKey := os.Getenv("NEW_RELIC_API_KEY")
+	envRegion := os.Getenv("NEW_RELIC_REGION")
+	envAccountID := os.Getenv("NEW_RELIC_ACCOUNT_ID")
+
+	if envAPIKey == "" || envAccountID == "" {
+		t.Skipf("acceptance testing requires NEW_RELIC_API_KEY and NEW_RELIC_ACCOUNT_ID")
+	}
+
+	accountID, err := strconv.Atoi(envAccountID)
 	assert.NoError(t, err)
+
+	if envRegion == "" {
+		envRegion = "us"
+	}
 
 	conditionSpec := &nrv1.NrqlAlertConditionSpec{
 		Terms: []nrv1.AlertConditionTerm{
@@ -89,9 +101,9 @@ func TestIntegrationAlertsPolicyController(t *testing.T) {
 		},
 		Spec: nrv1.AlertsPolicySpec{
 			Name:               "test policy",
-			APIKey:             os.Getenv("NEW_RELIC_API_KEY"),
+			APIKey:             envAPIKey,
 			IncidentPreference: "PER_POLICY",
-			Region:             "us",
+			Region:             envRegion,
 			Conditions: []nrv1.AlertsPolicyCondition{
 				{
 					Spec: *conditionSpec,

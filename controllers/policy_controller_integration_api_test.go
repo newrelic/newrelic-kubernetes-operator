@@ -25,8 +25,19 @@ import (
 	"github.com/newrelic/newrelic-kubernetes-operator/interfaces"
 )
 
-func newIntegrationTestClient() newrelic.NewRelic {
-	client, _ := interfaces.NewClient(os.Getenv("NEW_RELIC_API_KEY"), "US")
+func newIntegrationTestClient(t *testing.T) newrelic.NewRelic {
+	envAPIKey := os.Getenv("NEW_RELIC_API_KEY")
+	envRegion := os.Getenv("NEW_RELIC_REGION")
+
+	if envAPIKey == "" {
+		t.Skipf("acceptance testing requires NEW_RELIC_API_KEY")
+	}
+
+	if envRegion == "" {
+		envRegion = "us"
+	}
+
+	client, _ := interfaces.NewClient(envAPIKey, envRegion)
 	return *client
 }
 
@@ -59,6 +70,17 @@ func testSetup(t *testing.T, policy *nrv1.Policy) client.Client {
 func TestIntegrationPolicyController(t *testing.T) {
 	t.Parallel()
 
+	envAPIKey := os.Getenv("NEW_RELIC_API_KEY")
+	envRegion := os.Getenv("NEW_RELIC_REGION")
+
+	if envAPIKey == "" {
+		t.Skipf("acceptance testing requires NEW_RELIC_API_KEY")
+	}
+
+	if envRegion == "" {
+		envRegion = "us"
+	}
+
 	conditionSpec := &nrv1.NrqlAlertConditionSpec{
 		Terms: []nrv1.AlertConditionTerm{
 			{
@@ -90,9 +112,9 @@ func TestIntegrationPolicyController(t *testing.T) {
 		},
 		Spec: nrv1.PolicySpec{
 			Name:               "test policy",
-			APIKey:             os.Getenv("NEW_RELIC_API_KEY"),
+			APIKey:             envAPIKey,
 			IncidentPreference: "PER_POLICY",
-			Region:             "us",
+			Region:             envRegion,
 			Conditions: []nrv1.PolicyCondition{
 				{
 					Spec: *conditionSpec,
