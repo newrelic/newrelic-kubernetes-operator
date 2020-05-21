@@ -9,7 +9,7 @@ import (
 
 // ApmAlertConditionSpec defines the desired state of NrqlAlertCondition
 type ApmAlertConditionSpec struct {
-	Terms               []AlertConditionTerm        `json:"terms,omitempty"`
+	Terms               []NRAlertConditionTerm      `json:"terms,omitempty"`
 	Type                string                      `json:"type,omitempty"` //TODO: add conditionType or pull from alerts package or make string
 	Name                string                      `json:"name,omitempty"`
 	RunbookURL          string                      `json:"runbook_url,omitempty"`
@@ -26,6 +26,15 @@ type ApmAlertConditionSpec struct {
 	APIKey              string                      `json:"api_key,omitempty"`
 	APIKeySecret        NewRelicAPIKeySecret        `json:"api_key_secret,omitempty"`
 	Region              string                      `json:"region,omitempty"`
+}
+
+// AlertConditionTerm represents the terms of a New Relic alert condition.
+type NRAlertConditionTerm struct {
+	Duration     string `json:"duration,omitempty"`
+	Operator     string `json:"operator,omitempty"`
+	Priority     string `json:"priority,omitempty"`
+	Threshold    string `json:"threshold"`
+	TimeFunction string `json:"time_function,omitempty"`
 }
 
 /* going to need to address these metrictypes with conditions
@@ -100,6 +109,5 @@ func (in ApmAlertConditionSpec) APICondition() alerts.Condition {
 	var APICondition alerts.Condition
 	json.Unmarshal(jsonString, &APICondition) //nolint
 	//APICondition.PolicyID = spec.ExistingPolicyId
-
 	return APICondition
 }

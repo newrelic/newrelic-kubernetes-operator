@@ -10,7 +10,6 @@ import (
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	"k8s.io/apimachinery/pkg/api/resource"
 )
 
 var _ = Describe("ApmAlertConditionSpec", func() {
@@ -18,12 +17,12 @@ var _ = Describe("ApmAlertConditionSpec", func() {
 
 	BeforeEach(func() {
 		condition = ApmAlertConditionSpec{
-			Terms: []AlertConditionTerm{
+			Terms: []NRAlertConditionTerm{
 				{
-					Duration:     resource.MustParse("30"),
+					Duration:     "30",
 					Operator:     "above",
 					Priority:     "critical",
-					Threshold:    resource.MustParse("5"),
+					Threshold:    "1.5",
 					TimeFunction: "all",
 				},
 			},
@@ -71,7 +70,7 @@ var _ = Describe("ApmAlertConditionSpec", func() {
 			Expect(apiTerm.Duration).To(Equal(30))
 			Expect(apiTerm.Operator).To(Equal(alerts.OperatorTypes.Above))
 			Expect(apiTerm.Priority).To(Equal(alerts.PriorityTypes.Critical))
-			Expect(apiTerm.Threshold).To(Equal(float64(5)))
+			Expect(apiTerm.Threshold).To(Equal(float64(1.5)))
 			Expect(apiTerm.TimeFunction).To(Equal(alerts.TimeFunctionTypes.All))
 
 			userDefinedCondition := apiCondition.UserDefined

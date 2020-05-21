@@ -6,11 +6,11 @@ import (
 	"context"
 	"errors"
 
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	v1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/api/resource"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	ctrl "sigs.k8s.io/controller-runtime"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
@@ -74,12 +74,12 @@ var _ = Describe("ApmCondition reconciliation", func() {
 				Namespace: "default",
 			},
 			Spec: nralertsv1.ApmAlertConditionSpec{
-				Terms: []nralertsv1.AlertConditionTerm{
+				Terms: []nralertsv1.NRAlertConditionTerm{
 					{
-						Duration:     resource.MustParse("30"),
+						Duration:     "30",
 						Operator:     "above",
 						Priority:     "critical",
-						Threshold:    resource.MustParse("5"),
+						Threshold:    "0.9",
 						TimeFunction: "all",
 					},
 				},
@@ -236,12 +236,12 @@ var _ = Describe("ApmCondition reconciliation", func() {
 						Namespace: "default",
 					},
 					Spec: nralertsv1.ApmAlertConditionSpec{
-						Terms: []nralertsv1.AlertConditionTerm{
+						Terms: []nralertsv1.NRAlertConditionTerm{
 							{
-								Duration:     resource.MustParse("30"),
+								Duration:     "30",
 								Operator:     "above",
 								Priority:     "critical",
-								Threshold:    resource.MustParse("5"),
+								Threshold:    "0.9",
 								TimeFunction: "all",
 							},
 						},
