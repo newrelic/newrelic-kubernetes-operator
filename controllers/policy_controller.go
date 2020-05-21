@@ -176,6 +176,57 @@ type processedConditions struct {
 	condition nrv1.PolicyCondition
 }
 
+func (r *PolicyReconciler) createOrUpdateCondition(policy *nrv1.Policy, condition *nrv1.PolicyCondition) (*nrv1.PolicyCondition, error) {
+	//loop through the policies, creating/updating as needed
+	r.Log.Info("Checking on condition", "resourceName", condition.Name, "conditionName", condition.Spec.Name)
+	//first we check to see if the name is set
+	if condition.Name == "" {
+		//If resource name is not set, let's see if a appliedSpec matches the NR condition name
+		r.Log.Info("Condition name not set, checking name values")
+		for _, appliedCondition := range policy.Status.AppliedSpec.Conditions {
+
+			if appliedCondition.Spec.Name == condition.Spec.Name {
+				r.Log.Info("Found matching name")
+				condition.Namespace = appliedCondition.Namespace
+				condition.Name = appliedCondition.Name
+				break
+			}
+		}
+
+		if condition.Name == "" {
+			r.Log.Info("made it through all existing appliedConditions, creating a new one")
+			err := r.createCondition(policy, condition)
+			return condition, err
+		}
+	}
+
+	nrqlCondition := r.getNrqlConditionFromPolicyCondition(condition)
+
+	r.Log.Info("Found condition to update", "retrievedCondition", nrqlCondition)
+
+	//Now check to confirm the NrqlCondition matches our PolicyCondition
+	retrievedPolicyCondition := nrv1.PolicyCondition{Spec: nrqlCondition.Spec}
+	r.Log.Info("spec hash", "retrieved", retrievedPolicyCondition.SpecHash(), "condition", condition.SpecHash())
+	r.Log.Info("conditions", "retrieved", retrievedPolicyCondition, "condition", condition)
+
+	if retrievedPolicyCondition.SpecHash() == condition.SpecHash() {
+		r.Log.Info("existing NrqlCondition matches going to next")
+		return condition, nil
+	}
+
+	r.Log.Info("updating existing condition", "policyRegion", policy.Spec.Region, "policyId", policy.Status.PolicyID)
+
+	nrqlCondition.Spec = condition.Spec
+	//Set inherited values
+	nrqlCondition.Spec.Region = policy.Spec.Region
+	nrqlCondition.Spec.ExistingPolicyID = policy.Status.PolicyID
+	nrqlCondition.Spec.APIKey = policy.Spec.APIKey
+	nrqlCondition.Spec.APIKeySecret = policy.Spec.APIKeySecret
+
+	err := r.Client.Update(r.ctx, &nrqlCondition)
+	return condition, err
+}
+
 func (r *PolicyReconciler) createOrUpdateConditions(policy *nrv1.Policy) error {
 	if reflect.DeepEqual(policy.Spec.Conditions, policy.Status.AppliedSpec.Conditions) {
 		return nil
@@ -193,81 +244,21 @@ func (r *PolicyReconciler) createOrUpdateConditions(policy *nrv1.Policy) error {
 	collectedErrors := new(customErrors.ErrorCollector)
 
 	for i, condition := range policy.Spec.Conditions {
-		//loop through the policies, creating/updating as needed
-		r.Log.Info("Checking on condition", "resourceName", condition.Name, "conditionName", condition.Spec.Name)
-		//first we check to see if the name is set
-		if condition.Name == "" {
-			//If resource name is not set, let's see if a appliedSpec matches the NR condition name
-			r.Log.Info("Condition name not set, checking name values")
-			for _, appliedCondition := range policy.Status.AppliedSpec.Conditions {
-
-				if appliedCondition.Spec.Name == condition.Spec.Name {
-					r.Log.Info("Found matching name")
-					condition.Namespace = appliedCondition.Namespace
-					condition.Name = appliedCondition.Name
-					break
-				}
-			}
-
-			if condition.Name == "" {
-				r.Log.Info("made it through all existing appliedConditions, creating a new one")
-				err := r.createCondition(policy, &condition)
-				if err != nil {
-					r.Log.Error(err, "error creating condition")
-					collectedErrors.Collect(err)
-				}
-
-				//add to the list of processed conditions
-				existingConditions[condition.Name] = processedConditions{
-					processed: true,
-					condition: condition,
-				}
-				//Now update the spec
-				policy.Spec.Conditions[i] = condition
-				r.Log.Info("policy spec updated", "policy.Spec.Condition[i]", policy.Spec.Conditions[i])
-				//move to the next
-				continue
-			}
-		}
-
-		r.Log.Info("Now we have a condition name", "conditionName", condition.Name)
-		existingConditions[condition.Name] = processedConditions{
-			processed: true,
-			condition: condition,
-		}
-
-		retrievedCondition := r.getNrqlConditionFromPolicyCondition(&condition) // := nrv1.NrqlAlertCondition{}
-
-		r.Log.Info("Found condition to update", "retrievedCondition", retrievedCondition)
-
-		//Now check to confirm the NrqlCondition matches out PolicyCondition
-		retrievedPolicyCondition := nrv1.PolicyCondition{Spec: retrievedCondition.Spec}
-		r.Log.Info("spec hash", "retrieved", retrievedPolicyCondition.SpecHash(), "condition", condition.SpecHash())
-		r.Log.Info("conditions", "retrieved", retrievedPolicyCondition, "condition", condition)
-
-		if retrievedPolicyCondition.SpecHash() == condition.SpecHash() {
-			r.Log.Info("existing NrqlCondition matches going to next")
-			policy.Spec.Conditions[i] = condition
-			continue
-		}
-		r.Log.Info("updating existing condition", "policyRegion", policy.Spec.Region, "policyId", policy.Status.PolicyID)
-
-		retrievedCondition.Spec = condition.Spec
-		//Set inherited values
-		retrievedCondition.Spec.Region = policy.Spec.Region
-		retrievedCondition.Spec.ExistingPolicyID = policy.Status.PolicyID
-		retrievedCondition.Spec.APIKey = policy.Spec.APIKey
-		retrievedCondition.Spec.APIKeySecret = policy.Spec.APIKeySecret
-
-		err := r.Client.Update(r.ctx, &retrievedCondition)
+		condition, err := r.createOrUpdateCondition(policy, &condition)
 		if err != nil {
-			r.Log.Error(err, "error updating condition")
+			r.Log.Error(err, "error creating condition")
 			collectedErrors.Collect(err)
 		}
-		//Now update the spec
-		policy.Spec.Conditions[i] = condition
-		r.Log.Info("policy spec updated", "policy.Spec.Condotion[i]", policy.Spec.Conditions[i])
 
+		//add to the list of processed conditions
+		existingConditions[condition.Name] = processedConditions{
+			processed: true,
+			condition: *condition,
+		}
+
+		//Now update the spec
+		policy.Spec.Conditions[i] = *condition
+		r.Log.Info("policy spec updated", "policy.Spec.Condition[i]", policy.Spec.Conditions[i])
 	}
 
 	r.Log.Info("now one last check for stragglers")
