@@ -9,7 +9,7 @@ GOTOOLS += sigs.k8s.io/controller-tools/cmd/controller-gen
 
 
 # Generate code
-generate: tools
+generate: tools manifests
 	@echo "=== $(PROJECT_NAME) === [ generate         ]: Running $(CONTROLLER_GEN)..."
 	@$(CONTROLLER_GEN) object:headerFile=$(HEADER_FILE) paths="./..."
 	@cd interfaces/ && $(GO) generate

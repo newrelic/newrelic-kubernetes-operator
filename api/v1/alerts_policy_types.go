@@ -27,57 +27,57 @@ import (
 // EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
 // NOTE: json tags are required.  Any new fields you add must have json tags for the fields to be serialized.
 
-// PolicySpec defines the desired state of Policy
-type PolicySpec struct {
-	IncidentPreference string               `json:"incident_preference,omitempty"`
-	Name               string               `json:"name"`
-	APIKey             string               `json:"api_key,omitempty"`
-	APIKeySecret       NewRelicAPIKeySecret `json:"api_key_secret,omitempty"`
-	Region             string               `json:"region"`
-	Conditions         []PolicyCondition    `json:"conditions,omitempty"`
+type AlertsPolicySpec struct {
+	IncidentPreference string                  `json:"incident_preference,omitempty"`
+	Name               string                  `json:"name"`
+	Region             string                  `json:"region"`
+	Conditions         []AlertsPolicyCondition `json:"conditions,omitempty"`
+	APIKey             string                  `json:"api_key,omitempty"`
+	APIKeySecret       NewRelicAPIKeySecret    `json:"api_key_secret,omitempty"`
+	AccountID          int                     `json:"account_id,omitempty"`
 }
 
-//PolicyCondition defined the conditions contained within a a policy
-type PolicyCondition struct {
+//AlertsPolicyCondition defined the conditions contained within a AlertsPolicy
+type AlertsPolicyCondition struct {
 	Name      string                 `json:"name"`
 	Namespace string                 `json:"namespace"`
 	Spec      NrqlAlertConditionSpec `json:"spec,omitempty"`
 	//SpecHash uint32					`json:"specHash,omitempty"`
 }
 
-// PolicyStatus defines the observed state of Policy
-type PolicyStatus struct {
-	AppliedSpec *PolicySpec `json:"applied_spec"`
-	PolicyID    int         `json:"policy_id"`
+// AlertsPolicyStatus defines the observed state of AlertsPolicy
+type AlertsPolicyStatus struct {
+	AppliedSpec *AlertsPolicySpec `json:"applied_spec"`
+	PolicyID    int               `json:"policy_id"`
 }
 
 // +kubebuilder:object:root=true
 
-// Policy is the Schema for the policies API
-type Policy struct {
+// AlertsPolicy is the Schema for the policies API
+type AlertsPolicy struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 
-	Spec   PolicySpec   `json:"spec,omitempty"`
-	Status PolicyStatus `json:"status,omitempty"`
+	Spec   AlertsPolicySpec   `json:"spec,omitempty"`
+	Status AlertsPolicyStatus `json:"status,omitempty"`
 }
 
 // +kubebuilder:object:root=true
 
-// PolicyList contains a list of Policy
-type PolicyList struct {
+// AlertsPolicyList contains a list of AlertsPolicy
+type AlertsPolicyList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`
-	Items           []Policy `json:"items"`
+	Items           []AlertsPolicy `json:"items"`
 }
 
 func init() {
-	SchemeBuilder.Register(&Policy{}, &PolicyList{})
+	SchemeBuilder.Register(&AlertsPolicy{}, &AlertsPolicyList{})
 }
 
-func (in PolicySpec) APIPolicy() alerts.Policy {
+func (in AlertsPolicySpec) APIAlertsPolicy() alerts.AlertsPolicy {
 	jsonString, _ := json.Marshal(in)
-	var APIPolicy alerts.Policy
+	var APIPolicy alerts.AlertsPolicy
 	json.Unmarshal(jsonString, &APIPolicy) //nolint
 
 	//APICondition.PolicyID = spec.ExistingPolicyId
@@ -85,9 +85,9 @@ func (in PolicySpec) APIPolicy() alerts.Policy {
 	return APIPolicy
 }
 
-func (p *PolicyCondition) SpecHash() uint32 {
+func (p *AlertsPolicyCondition) SpecHash() uint32 {
 	//remove api keys and condition from object to enable comparison minus inherited fields
-	strippedPolicy := PolicyCondition{
+	strippedPolicy := AlertsPolicyCondition{
 		Spec: p.Spec,
 	}
 	strippedPolicy.Spec.APIKeySecret = NewRelicAPIKeySecret{}
@@ -99,7 +99,7 @@ func (p *PolicyCondition) SpecHash() uint32 {
 	return conditionTemplateSpecHasher.Sum32()
 }
 
-func (p *PolicyCondition) GetNamespace() types.NamespacedName {
+func (p *AlertsPolicyCondition) GetNamespace() types.NamespacedName {
 	return types.NamespacedName{
 		Namespace: p.Namespace,
 		Name:      p.Name,
@@ -107,7 +107,7 @@ func (p *PolicyCondition) GetNamespace() types.NamespacedName {
 }
 
 //Equals - comparator function to check for equality
-func (in PolicySpec) Equals(policyToCompare PolicySpec) bool {
+func (in AlertsPolicySpec) Equals(policyToCompare AlertsPolicySpec) bool {
 	if in.IncidentPreference != policyToCompare.IncidentPreference {
 		return false
 	}

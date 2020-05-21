@@ -10,6 +10,11 @@
 [![CLA assistant](https://cla-assistant.io/readme/badge/newrelic/newrelic-kubernetes-operator)](https://cla-assistant.io/newrelic/newrelic-kubernetes-operator)
 [![Release](https://img.shields.io/github/release/newrelic/newrelic-kubernetes-operator/all.svg)](https://github.com/newrelic/newrelic-kubernetes-operator/releases/latest)
 
+[![Docker Stars](https://img.shields.io/docker/stars/newrelic/k8s-operator.svg)](https://hub.docker.com/r/newrelic/k8s-operator)
+[![Docker Pulls](https://img.shields.io/docker/pulls/newrelic/k8s-operator.svg)](https://hub.docker.com/r/newrelic/k8s-operator)
+[![Docker Size](https://img.shields.io/docker/image-size/newrelic/k8s-operator.svg?sort=semver)](https://hub.docker.com/r/newrelic/k8s-operator)
+[![Docker Version](https://img.shields.io/docker/v/newrelic/k8s-operator.svg?sort=semver)](https://hub.docker.com/r/newrelic/k8s-operator)
+
 - [Overview](#overview)
 - [Quick Start](#quick-start)
 - [Using the Operator to Provision Resources](#provision-new-relic-resources-with-the-operator)
