@@ -176,37 +176,17 @@ func (r *AlertsPolicyReconciler) updatePolicy(policy *nrv1.AlertsPolicy) error {
 
 	policy.Status.PolicyID = updateResult.ID
 
-	// if string(APIPolicy.IncidentPreference) != policy.Status.AppliedSpec.IncidentPreference || APIPolicy.Name != policy.Status.AppliedSpec.Name {
-	// 	r.Log.Info("need to update alert policy via New Relic API",
-	// 		"Alert Policy Name", APIPolicy.Name,
-	// 		"incident preference ", policy.Status.AppliedSpec.IncidentPreference,
-	// 	)
-	// 	updatedPolicy, err = r.Alerts.UpdatePolicy(APIAlertsPolicy)
-	// 	if err != nil {
-	// 		r.Log.Error(err, "failed to update policy via New Relic API",
-	// 			"policyId", policy.Status.PolicyID,
-	// 			"region", policy.Spec.Region,
-	// 			"Api Key", interfaces.PartialAPIKey(r.apiKey),
-	// 		)
-	// 		return err
-	// 	}
-	// }
-
-	// TODO reimplement condition handling
-	// errConditions := r.createOrUpdateConditions(policy)
-	// if errConditions != nil {
-	// 	r.Log.Error(errConditions, "error creating or updating conditions")
-	// 	return errConditions
-	// }
-	// r.Log.Info("policySpecx before update", "policy.Spec", policy.Spec)
+	for _, specCondition := range policy.Spec.Conditions {
+		c := specCondition.Spec.APIConditionInput()
+		_, err := r.Alerts.UpdateNrqlConditionStaticMutation(policy.Spec.AccountID, policy.Status.PolicyID, c)
+		if err != nil {
+			r.Log.Error(err, "error updating condition")
+			return err
+		}
+	}
 
 	policy.Status.AppliedSpec = &policy.Spec
 
-	// err = r.Client.Update(r.ctx, policy)
-	// if err != nil {
-	// 	r.Log.Error(err, "failed to update policy status", "name", policy.Name)
-	// 	return err
-	// }
 	return nil
 }
 
@@ -222,9 +202,9 @@ func (r *AlertsPolicyReconciler) deletePolicy(ctx context.Context, policy *nrv1.
 			// our finalizer is present, so lets handle any external dependency
 			collectedErrors := new(customErrors.ErrorCollector)
 			for _, condition := range policy.Status.AppliedSpec.Conditions {
-				_, err := r.Alerts.DeletePolicyMutation(policy.Spec.AccountID, condition.Spec.ID)
+				_, err := r.Alerts.DeleteConditionMutation(policy.Spec.AccountID, condition.Spec.ID)
 				if err != nil {
-					r.Log.Error(err, "error deleting condition resources")
+					r.Log.Error(err, "error deleting condition", "conditionID", condition.Spec.ID)
 					collectedErrors.Collect(err)
 				}
 			}
