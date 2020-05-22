@@ -13,7 +13,7 @@ type ApmAlertConditionSpec struct {
 	Type                string                      `json:"type,omitempty"` //TODO: add conditionType or pull from alerts package or make string
 	Name                string                      `json:"name,omitempty"`
 	RunbookURL          string                      `json:"runbook_url,omitempty"`
-	Metric              string                      `json:"metric,omitempty"` //TODO: check type
+	Metric              string                      `json:"metric,omitempty"`
 	UserDefined         alerts.ConditionUserDefined `json:"user_defined,omitempty"`
 	Scope               string                      `json:"condition_scope,omitempty"`
 	Entities            []string                    `json:"entities,omitempty"`
