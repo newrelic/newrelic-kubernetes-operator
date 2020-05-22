@@ -65,5 +65,17 @@ func registerAlerts(mgr *ctrl.Manager) error {
 		os.Exit(1)
 	}
 
+	alertsPolicyReconciler := &controllers.AlertsPolicyReconciler{
+		Client:          (*mgr).GetClient(),
+		Log:             ctrl.Log.WithName("controllers").WithName("AlertsPolicy"),
+		Scheme:          (*mgr).GetScheme(),
+		AlertClientFunc: interfaces.InitializeAlertsClient,
+	}
+
+	if err := alertsPolicyReconciler.SetupWithManager(*mgr); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "AlertsPolicy")
+		os.Exit(1)
+	}
+
 	return nil
 }
