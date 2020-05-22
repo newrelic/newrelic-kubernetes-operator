@@ -19,7 +19,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"time"
 
 	"github.com/newrelic/newrelic-client-go/pkg/alerts"
 	v1 "k8s.io/api/core/v1"
@@ -46,8 +45,8 @@ type AlertsPolicyReconciler struct {
 	ctx             context.Context
 }
 
-// +kubebuilder:rbac:groups=nr.k8s.newrelic.com,resources=policies,verbs=get;list;watch;create;update;patch;delete
-// +kubebuilder:rbac:groups=nr.k8s.newrelic.com,resources=policies/status,verbs=get;update;patch
+// +kubebuilder:rbac:groups=nr.k8s.newrelic.com,resources=alertspolicies,verbs=get;list;watch;create;update;patch;delete
+// +kubebuilder:rbac:groups=nr.k8s.newrelic.com,resources=alertspolicies/status,verbs=get;update;patch
 
 func (r *AlertsPolicyReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 	r.ctx = context.Background()
@@ -63,12 +62,16 @@ func (r *AlertsPolicyReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error
 		//
 		// 	return ctrl.Result{}, nil
 		// }
+
+		fmt.Printf("failed to get policy: %+v\n\n", err)
 		r.Log.Error(err, "failed to GET policy", "name", req.NamespacedName.String())
 		return ctrl.Result{}, nil
 	}
 
+	fmt.Printf("reconcile: %+v\n\n", req)
+
 	r.Log.Info(fmt.Sprintf("starting reconcile %T", r))
-	r.Log.Info("policy", "policy.Spec.Condition", policy.Spec.Conditions, "policy.status.applied.conditions", policy.Status.AppliedSpec.Conditions)
+	r.Log.Info("alertspolicy", "alertspolicy.Spec.Condition", policy.Spec.Conditions, "alertspolicy.status.applied.conditions", policy.Status.AppliedSpec.Conditions)
 
 	r.apiKey = r.getAPIKeyOrSecret(policy)
 
@@ -100,11 +103,11 @@ func (r *AlertsPolicyReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error
 			// }
 		}
 	} else {
-
-		fmt.Printf("deleting policy : %+v\n\n\n\n\n", policy)
+		fmt.Printf("\n\ndeleting policy : %+v\n\n\n\n\n", policy)
 		return r.deletePolicy(r.ctx, &policy, deleteFinalizer)
 	}
 
+	fmt.Printf("\n\nfinalizers: %+v\n\n\n\n\n", policy.Finalizers)
 	//if reflect.DeepEqual(&policy.Spec, policy.Status.AppliedSpec) {
 	//	return ctrl.Result{}, nil
 	//}
@@ -153,8 +156,6 @@ func (r *AlertsPolicyReconciler) createPolicy(policy *nrv1.AlertsPolicy) error {
 	}
 	policy.Status.PolicyID = createResult.ID
 
-	time.Sleep(10 * time.Second)
-
 	for _, specCondition := range policy.Spec.Conditions {
 		c := specCondition.Spec.APIConditionInput()
 		_, err := r.Alerts.CreateNrqlConditionStaticMutation(policy.Spec.AccountID, policy.Status.PolicyID, c)
@@ -165,6 +166,12 @@ func (r *AlertsPolicyReconciler) createPolicy(policy *nrv1.AlertsPolicy) error {
 	}
 
 	policy.Status.AppliedSpec = &policy.Spec
+
+	err = r.Client.Update(r.ctx, policy)
+	if err != nil {
+		r.Log.Error(err, "tried updating policy status", "name", policy.Name)
+		return err
+	}
 
 	return nil
 }
@@ -203,6 +210,12 @@ func (r *AlertsPolicyReconciler) updatePolicy(policy *nrv1.AlertsPolicy) error {
 	}
 
 	policy.Status.AppliedSpec = &policy.Spec
+
+	err = r.Client.Update(r.ctx, policy)
+	if err != nil {
+		r.Log.Error(err, "tried updating policy status", "name", policy.Name)
+		return err
+	}
 
 	return nil
 }

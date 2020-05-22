@@ -112,6 +112,9 @@ func TestIntegrationAlertsPolicyController_Basic(t *testing.T) {
 
 	err = k8sClient.Delete(context.Background(), policy)
 	assert.NoError(t, err)
+
+	_, err = reconciler.Reconcile(request)
+	assert.NoError(t, err)
 }
 
 func TestIntegrationAlertsPolicyController_WithCondition(t *testing.T) {
