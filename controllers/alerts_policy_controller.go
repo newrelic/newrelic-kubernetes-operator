@@ -19,7 +19,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"strings"
+	"time"
 
 	"github.com/newrelic/newrelic-client-go/pkg/alerts"
 	v1 "k8s.io/api/core/v1"
@@ -53,14 +53,17 @@ func (r *AlertsPolicyReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error
 	r.ctx = context.Background()
 	_ = r.Log.WithValues("policy", req.NamespacedName)
 
+	fmt.Printf("request: %+v\n", req)
+
 	var policy nrv1.AlertsPolicy
 	err := r.Client.Get(r.ctx, req.NamespacedName, &policy)
 	if err != nil {
-		if strings.Contains(err.Error(), " not found") {
-			r.Log.Info("Policy 'not found' after being deleted. This is expected and no cause for alarm", "error", err)
-			return ctrl.Result{}, nil
-		}
-		r.Log.Error(err, "Failed to GET policy", "name", req.NamespacedName.String())
+		// if strings.Contains(err.Error(), " not found") {
+		// 	r.Log.Info("policy 'not found' after being deleted. This is expected and no cause for alarm", "error", err)
+		//
+		// 	return ctrl.Result{}, nil
+		// }
+		r.Log.Error(err, "failed to GET policy", "name", req.NamespacedName.String())
 		return ctrl.Result{}, nil
 	}
 
@@ -72,12 +75,17 @@ func (r *AlertsPolicyReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error
 	if r.apiKey == "" {
 		return ctrl.Result{}, errors.New("api key is blank")
 	}
-	//initial alertsClient
+
+	if policy.Spec.AccountID == 0 {
+		return ctrl.Result{}, errors.New("spec AccountID is blank for policy")
+	}
+
 	alertsClient, errAlertsClient := r.AlertClientFunc(r.apiKey, policy.Spec.Region)
 	if errAlertsClient != nil {
-		r.Log.Error(errAlertsClient, "Failed to create AlertsClient")
+		r.Log.Error(errAlertsClient, "failed to create AlertsClient")
 		return ctrl.Result{}, errAlertsClient
 	}
+
 	r.Alerts = alertsClient
 
 	deleteFinalizer := "alertspolicies.finalizers.nr.k8s.newrelic.com"
@@ -86,8 +94,14 @@ func (r *AlertsPolicyReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error
 	if policy.DeletionTimestamp.IsZero() {
 		if !containsString(policy.Finalizers, deleteFinalizer) {
 			policy.Finalizers = append(policy.Finalizers, deleteFinalizer)
+
+			// if err := r.Client.Update(ctx, policy); err != nil {
+			// 	return ctrl.Result{}, err
+			// }
 		}
 	} else {
+
+		fmt.Printf("deleting policy : %+v\n\n\n\n\n", policy)
 		return r.deletePolicy(r.ctx, &policy, deleteFinalizer)
 	}
 
@@ -104,12 +118,14 @@ func (r *AlertsPolicyReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error
 	r.checkForExistingPolicy(&policy)
 
 	if policy.Status.PolicyID != 0 {
+		fmt.Printf("udpating: %+v\n\n", policy)
 		err := r.updatePolicy(&policy)
 		if err != nil {
 			r.Log.Error(err, "error updating policy")
 			return ctrl.Result{}, err
 		}
 	} else {
+		fmt.Printf("creating: %+v\n\n", policy)
 		err := r.createPolicy(&policy)
 		if err != nil {
 			r.Log.Error(err, "error creating policy")
@@ -121,7 +137,6 @@ func (r *AlertsPolicyReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error
 }
 
 func (r *AlertsPolicyReconciler) createPolicy(policy *nrv1.AlertsPolicy) error {
-
 	p := alerts.AlertsPolicyInput{}
 	p.IncidentPreference = alerts.AlertsIncidentPreference(policy.Spec.IncidentPreference)
 	p.Name = policy.Spec.Name
@@ -137,6 +152,8 @@ func (r *AlertsPolicyReconciler) createPolicy(policy *nrv1.AlertsPolicy) error {
 		return err
 	}
 	policy.Status.PolicyID = createResult.ID
+
+	time.Sleep(10 * time.Second)
 
 	for _, specCondition := range policy.Spec.Conditions {
 		c := specCondition.Spec.APIConditionInput()
@@ -274,10 +291,10 @@ func (r *AlertsPolicyReconciler) checkForExistingPolicy(policy *nrv1.AlertsPolic
 }
 
 func (r *AlertsPolicyReconciler) getAPIKeyOrSecret(policy nrv1.AlertsPolicy) string {
-
 	if policy.Spec.APIKey != "" {
 		return policy.Spec.APIKey
 	}
+
 	if policy.Spec.APIKeySecret != (nrv1.NewRelicAPIKeySecret{}) {
 		key := types.NamespacedName{Namespace: policy.Spec.APIKeySecret.Namespace, Name: policy.Spec.APIKeySecret.Name}
 		var apiKeySecret v1.Secret

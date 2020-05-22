@@ -9,9 +9,9 @@ require (
 	github.com/Azure/go-autorest/autorest/validation v0.2.0 // indirect
 	github.com/davecgh/go-spew v1.1.1
 	github.com/go-logr/logr v0.1.0
-	github.com/goreleaser/goreleaser v0.135.0
+	github.com/goreleaser/goreleaser v0.136.0
 	github.com/maxbrunsfeld/counterfeiter/v6 v6.2.3
-	github.com/newrelic/newrelic-client-go v0.25.1
+	github.com/newrelic/newrelic-client-go v0.27.0
 	github.com/onsi/ginkgo v1.12.0
 	github.com/onsi/gomega v1.10.0
 	github.com/stretchr/testify v1.5.1

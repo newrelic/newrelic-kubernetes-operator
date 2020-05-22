@@ -4,6 +4,7 @@ package controllers
 
 import (
 	"context"
+	"fmt"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -21,6 +22,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/newrelic/newrelic-client-go/pkg/alerts"
+	"github.com/newrelic/newrelic-client-go/pkg/testhelpers"
 
 	nralertsv1 "github.com/newrelic/newrelic-kubernetes-operator/api/v1"
 	nrv1 "github.com/newrelic/newrelic-kubernetes-operator/api/v1"
@@ -53,7 +55,7 @@ func alertsPolicyTestSetup(t *testing.T, policy *nrv1.AlertsPolicy) client.Clien
 	return k8sClient
 }
 
-func TestIntegrationAlertsPolicyController(t *testing.T) {
+func TestIntegrationAlertsPolicyController_Basic(t *testing.T) {
 	t.Parallel()
 
 	envAPIKey := os.Getenv("NEW_RELIC_API_KEY")
@@ -67,18 +69,72 @@ func TestIntegrationAlertsPolicyController(t *testing.T) {
 	accountID, err := strconv.Atoi(envAccountID)
 	assert.NoError(t, err)
 
+	policyName := fmt.Sprintf("test-policy-%s", testhelpers.RandSeq(5))
+
+	policy := &nrv1.AlertsPolicy{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      policyName,
+			Namespace: "default",
+		},
+		Spec: nrv1.AlertsPolicySpec{
+			Name:               policyName,
+			APIKey:             os.Getenv("NEW_RELIC_API_KEY"),
+			IncidentPreference: "PER_POLICY",
+			Region:             "us",
+			AccountID:          accountID,
+		},
+		Status: nrv1.AlertsPolicyStatus{
+			AppliedSpec: &nrv1.AlertsPolicySpec{},
+			PolicyID:    0,
+		},
+	}
+
+	// Must come before calling reconciler.Reconcile()
+	k8sClient := alertsPolicyTestSetup(t, policy)
+
+	namespacedName := types.NamespacedName{
+		Namespace: "default",
+		Name:      policyName,
+	}
+
+	request := ctrl.Request{
+		NamespacedName: namespacedName,
+	}
+
+	reconciler := &AlertsPolicyReconciler{
+		Client:          k8sClient,
+		Log:             logf.Log,
+		AlertClientFunc: interfaces.InitializeAlertsClient,
+	}
+
+	_, err = reconciler.Reconcile(request)
+	assert.NoError(t, err)
+
+	err = k8sClient.Delete(context.Background(), policy)
+	assert.NoError(t, err)
+}
+
+func TestIntegrationAlertsPolicyController_WithCondition(t *testing.T) {
+	t.Parallel()
+
+	policyName := fmt.Sprintf("test-policy-%s", testhelpers.RandSeq(5))
+
+	accountID, err := strconv.Atoi(os.Getenv("NEW_RELIC_ACCOUNT_ID"))
+	assert.NoError(t, err)
+
 	if envRegion == "" {
 		envRegion = "us"
 	}
 
-	conditionSpec := &nrv1.NrqlAlertConditionSpec{
-		Terms: []nrv1.AlertConditionTerm{
+	conditionSpec := &nrv1.AlertsNrqlConditionSpec{
+		Terms: []nrv1.AlertsConditionTerm{
 			{
-				Operator:          "above",
-				Priority:          "critical",
-				Threshold:         "5",
-				ThresholdDuration: 30,
-				TimeFunction:      "all",
+				Operator:             alerts.NrqlConditionOperators.Above,
+				Priority:             alerts.NrqlConditionPriorities.Critical,
+				Threshold:            "5",
+				ThresholdDuration:    60,
+				ThresholdOccurrences: alerts.ThresholdOccurrences.AtLeastOnce,
+				TimeFunction:         "all",
 			},
 		},
 		Nrql: alerts.NrqlConditionQuery{
@@ -96,17 +152,16 @@ func TestIntegrationAlertsPolicyController(t *testing.T) {
 		// ExistingPolicyID:   integrationPolicy.ID,
 		// APIKey:             integrationAlertsConfig.PersonalAPIKey,
 		// AccountID:          accountID,
-
 	}
 
 	policy := &nrv1.AlertsPolicy{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      "test-policy",
+			Name:      policyName,
 			Namespace: "default",
 		},
 		Spec: nrv1.AlertsPolicySpec{
-			Name:               "test policy",
-			APIKey:             envAPIKey,
+			Name:               policyName,
+			APIKey:             os.Getenv("NEW_RELIC_API_KEY"),
 			IncidentPreference: "PER_POLICY",
 			Region:             envRegion,
 			Conditions: []nrv1.AlertsPolicyCondition{
@@ -127,7 +182,7 @@ func TestIntegrationAlertsPolicyController(t *testing.T) {
 
 	namespacedName := types.NamespacedName{
 		Namespace: "default",
-		Name:      "test-policy",
+		Name:      policyName,
 	}
 
 	request := ctrl.Request{
@@ -141,16 +196,12 @@ func TestIntegrationAlertsPolicyController(t *testing.T) {
 	}
 
 	// call reconcile
-	result, err := reconciler.Reconcile(request)
+	_, err = reconciler.Reconcile(request)
 	assert.NoError(t, err)
-	t.Logf("\n\n RESULT: %+v \n\n", result)
 
-	// Deferred teardown
-	// defer func() {
-	// 	_, err := client.DeletePolicy(policy.ID)
+	err = k8sClient.Delete(context.Background(), policy)
+	assert.NoError(t, err)
 
-	// 	if err != nil {
-	// 		t.Logf("error cleaning up alert policy %d (%s): %s", policy.ID, policy.Name, err)
-	// 	}
-	// }()
+	_, err = reconciler.Reconcile(request)
+	assert.NoError(t, err)
 }
