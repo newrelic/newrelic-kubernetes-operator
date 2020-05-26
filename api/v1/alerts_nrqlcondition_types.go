@@ -42,7 +42,6 @@ type AlertsNrqlConditionTerm struct {
 	Threshold            string                       `json:"threshold,omitempty"`
 	ThresholdDuration    int                          `json:"threshold_duration,omitempty"`
 	ThresholdOccurrences alerts.ThresholdOccurrence   `json:"threshold_occurrences,omitempty"`
-	TimeFunction         string                       `json:"time_function,omitempty"`
 }
 
 // AlertsNrqlConditionStatus defines the observed state of AlertsNrqlCondition
