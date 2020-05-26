@@ -13,7 +13,6 @@ import (
 	"github.com/newrelic/newrelic-client-go/pkg/alerts"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	"k8s.io/apimachinery/pkg/api/resource"
 
 	"github.com/newrelic/newrelic-kubernetes-operator/interfaces/interfacesfakes"
 )
@@ -37,29 +36,29 @@ var _ = Describe("ValidateCreate", func() {
 			Spec: AlertsNrqlConditionSpec{
 				Terms: []AlertsNrqlConditionTerm{
 					{
-						Duration:     resource.MustParse("30"),
-						Operator:     "above",
-						Priority:     "critical",
-						Threshold:    resource.MustParse("5"),
-						TimeFunction: "all",
+						Operator:             alerts.NrqlConditionOperators.Above,
+						Priority:             alerts.NrqlConditionPriorities.Critical,
+						Threshold:            "5",
+						ThresholdDuration:    60,
+						ThresholdOccurrences: alerts.ThresholdOccurrences.AtLeastOnce,
 					},
 				},
-				Nrql: AlertsNrqlConditionQuery{
-					Query:      "SELECT 1 FROM MyEvents",
-					SinceValue: "5",
+				Nrql: alerts.NrqlConditionQuery{
+					Query:            "SELECT 1 FROM MyEvents",
+					EvaluationOffset: 5,
 				},
-				Type:                "NRQL",
-				Name:                "NRQL Condition",
-				RunbookURL:          "http://test.com/runbook",
-				ValueFunction:       "max",
-				ID:                  777,
-				ViolationCloseTimer: 60,
-				ExpectedGroups:      2,
-				IgnoreOverlap:       true,
-				Enabled:             true,
-				ExistingPolicyID:    42,
-				APIKey:              "api-key",
-				Region:              "us",
+				Type:               "NRQL",
+				Name:               "NRQL Condition",
+				RunbookURL:         "http://test.com/runbook",
+				ValueFunction:      &alerts.NrqlConditionValueFunctions.SingleValue,
+				ViolationTimeLimit: alerts.NrqlConditionViolationTimeLimits.OneHour,
+				ID:                 777,
+				ExpectedGroups:     2,
+				IgnoreOverlap:      true,
+				Enabled:            true,
+				ExistingPolicyID:   42,
+				APIKey:             "api-key",
+				Region:             "us",
 			},
 		}
 

@@ -104,9 +104,9 @@ var _ = Describe("Equals", func() {
 								ThresholdOccurrences: alerts.ThresholdOccurrences.AtLeastOnce,
 							},
 						},
-						Nrql: AlertsNrqlConditionQuery{
-							Query:      "SELECT 1 FROM MyEvents",
-							SinceValue: "5",
+						Nrql: alerts.NrqlConditionQuery{
+							Query:            "SELECT 1 FROM MyEvents",
+							EvaluationOffset: 5,
 						},
 						Type:               "NRQL",
 						Name:               "NRQL Condition",
