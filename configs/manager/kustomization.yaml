@@ -5,4 +5,3 @@ kind: Kustomization
 images:
 - name: controller
   newName: newrelic/k8s-operator
-  newTag: snapshot

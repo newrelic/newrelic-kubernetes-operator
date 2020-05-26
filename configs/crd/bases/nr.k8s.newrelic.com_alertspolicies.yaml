@@ -33,6 +33,8 @@ spec:
           type: object
         spec:
           properties:
+            account_id:
+              type: integer
             api_key:
               type: string
             api_key_secret:
@@ -149,6 +151,8 @@ spec:
           properties:
             applied_spec:
               properties:
+                account_id:
+                  type: integer
                 api_key:
                   type: string
                 api_key_secret:

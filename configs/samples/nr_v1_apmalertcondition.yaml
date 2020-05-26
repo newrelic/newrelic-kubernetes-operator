@@ -1,0 +1,7 @@
+apiVersion: nr.k8s.newrelic.com/v1
+kind: ApmAlertCondition
+metadata:
+  name: apmalertcondition-sample
+spec:
+  # Add fields here
+  foo: bar

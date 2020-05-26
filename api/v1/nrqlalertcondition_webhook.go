@@ -21,10 +21,8 @@ import (
 	"strings"
 
 	v1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/types"
-	"sigs.k8s.io/controller-runtime/pkg/client"
-
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/types"
 	ctrl "sigs.k8s.io/controller-runtime"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/webhook"
@@ -34,10 +32,7 @@ import (
 
 // log is for logging in this package.
 var (
-	log             = logf.Log.WithName("nrqlalertcondition-resource")
-	alertClientFunc func(string, string) (interfaces.NewRelicAlertsClient, error)
-	k8Client        client.Client
-	ctx             context.Context
+	log = logf.Log.WithName("nrqlalertcondition-resource")
 )
 
 func (r *NrqlAlertCondition) SetupWebhookWithManager(mgr ctrl.Manager) error {
