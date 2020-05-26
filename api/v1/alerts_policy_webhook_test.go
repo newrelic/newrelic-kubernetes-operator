@@ -4,7 +4,6 @@ package v1
 
 import (
 	v1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/newrelic/newrelic-kubernetes-operator/interfaces"
@@ -106,50 +105,50 @@ var _ = Describe("AlertsPolicy_webhooks", func() {
 						Spec: AlertsNrqlConditionSpec{
 							Terms: []AlertsNrqlConditionTerm{
 								{
-									Duration:     resource.MustParse("30"),
-									Operator:     "above",
-									Priority:     "critical",
-									Threshold:    resource.MustParse("5"),
-									TimeFunction: "all",
+									Operator:             alerts.NrqlConditionOperators.Above,
+									Priority:             alerts.NrqlConditionPriorities.Critical,
+									Threshold:            "5",
+									ThresholdDuration:    60,
+									ThresholdOccurrences: alerts.ThresholdOccurrences.AtLeastOnce,
 								},
 							},
-							Nrql: AlertsNrqlConditionQuery{
-								Query:      "SELECT 1 FROM MyEvents",
-								SinceValue: "5",
+							Nrql: alerts.NrqlConditionQuery{
+								Query:            "SELECT 1 FROM MyEvents",
+								EvaluationOffset: 5,
 							},
-							Type:                "NRQL",
-							Name:                "NRQL Condition",
-							RunbookURL:          "http://test.com/runbook",
-							ValueFunction:       "max",
-							ViolationCloseTimer: 60,
-							ExpectedGroups:      2,
-							IgnoreOverlap:       true,
-							Enabled:             true,
+							Type:               "NRQL",
+							Name:               "NRQL Condition",
+							RunbookURL:         "http://test.com/runbook",
+							ValueFunction:      &alerts.NrqlConditionValueFunctions.SingleValue,
+							ViolationTimeLimit: alerts.NrqlConditionViolationTimeLimits.OneHour,
+							ExpectedGroups:     2,
+							IgnoreOverlap:      true,
+							Enabled:            true,
 						},
 					},
 					{
 						Spec: AlertsNrqlConditionSpec{
 							Terms: []AlertsNrqlConditionTerm{
 								{
-									Duration:     resource.MustParse("30"),
-									Operator:     "above",
-									Priority:     "critical",
-									Threshold:    resource.MustParse("5"),
-									TimeFunction: "all",
+									Operator:             alerts.NrqlConditionOperators.Above,
+									Priority:             alerts.NrqlConditionPriorities.Critical,
+									Threshold:            "5",
+									ThresholdDuration:    60,
+									ThresholdOccurrences: alerts.ThresholdOccurrences.AtLeastOnce,
 								},
 							},
-							Nrql: AlertsNrqlConditionQuery{
-								Query:      "SELECT 1 FROM MyEvents",
-								SinceValue: "5",
+							Nrql: alerts.NrqlConditionQuery{
+								Query:            "SELECT 1 FROM MyEvents",
+								EvaluationOffset: 5,
 							},
-							Type:                "NRQL",
-							Name:                "NRQL Condition",
-							RunbookURL:          "http://test.com/runbook",
-							ValueFunction:       "max",
-							ViolationCloseTimer: 60,
-							ExpectedGroups:      2,
-							IgnoreOverlap:       true,
-							Enabled:             true,
+							Type:               "NRQL",
+							Name:               "NRQL Condition",
+							RunbookURL:         "http://test.com/runbook",
+							ValueFunction:      &alerts.NrqlConditionValueFunctions.SingleValue,
+							ViolationTimeLimit: alerts.NrqlConditionViolationTimeLimits.OneHour,
+							ExpectedGroups:     2,
+							IgnoreOverlap:      true,
+							Enabled:            true,
 						},
 					},
 				}
@@ -189,25 +188,25 @@ var _ = Describe("AlertsPolicy_webhooks", func() {
 						Spec: AlertsNrqlConditionSpec{
 							Terms: []AlertsNrqlConditionTerm{
 								{
-									Duration:     resource.MustParse("30"),
-									Operator:     "above",
-									Priority:     "critical",
-									Threshold:    resource.MustParse("5"),
-									TimeFunction: "all",
+									Operator:             alerts.NrqlConditionOperators.Above,
+									Priority:             alerts.NrqlConditionPriorities.Critical,
+									Threshold:            "5",
+									ThresholdDuration:    60,
+									ThresholdOccurrences: alerts.ThresholdOccurrences.AtLeastOnce,
 								},
 							},
-							Nrql: AlertsNrqlConditionQuery{
-								Query:      "SELECT 1 FROM MyEvents",
-								SinceValue: "5",
+							Nrql: alerts.NrqlConditionQuery{
+								Query:            "SELECT 1 FROM MyEvents",
+								EvaluationOffset: 5,
 							},
-							Type:                "NRQL",
-							Name:                "NRQL Condition",
-							RunbookURL:          "http://test.com/runbook",
-							ValueFunction:       "max",
-							ViolationCloseTimer: 60,
-							ExpectedGroups:      2,
-							IgnoreOverlap:       true,
-							Enabled:             true,
+							Type:               "NRQL",
+							Name:               "NRQL Condition",
+							RunbookURL:         "http://test.com/runbook",
+							ValueFunction:      &alerts.NrqlConditionValueFunctions.SingleValue,
+							ViolationTimeLimit: alerts.NrqlConditionViolationTimeLimits.OneHour,
+							ExpectedGroups:     2,
+							IgnoreOverlap:      true,
+							Enabled:            true,
 						},
 					},
 				},
@@ -218,7 +217,7 @@ var _ = Describe("AlertsPolicy_webhooks", func() {
 			It("should set default value of PER_POLICY", func() {
 				r.Spec.IncidentPreference = ""
 				r.Default()
-				Expect(r.Spec.IncidentPreference).To(Equal(defaultAlertsPolicyIncidentPreference))
+				Expect(r.Spec.IncidentPreference).To(Equal(string(alerts.AlertsIncidentPreferenceTypes.PER_POLICY)))
 			})
 		})
 
