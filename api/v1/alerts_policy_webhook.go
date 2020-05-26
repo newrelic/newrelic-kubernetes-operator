@@ -131,7 +131,7 @@ func (r *AlertsPolicy) ValidateDelete() error {
 
 func (r *AlertsPolicy) DefaultIncidentPreference() {
 	if r.Spec.IncidentPreference == "" {
-		r.Spec.IncidentPreference = defaultPolicyIncidentPreference
+		r.Spec.IncidentPreference = string(defaultAlertsPolicyIncidentPreference)
 	}
 	r.Spec.IncidentPreference = strings.ToUpper(r.Spec.IncidentPreference)
 

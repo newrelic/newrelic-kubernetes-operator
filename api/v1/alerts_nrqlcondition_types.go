@@ -7,7 +7,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-// AlertsNrqlConditionSpec defines the desired state of NrqlAlertCondition
+// AlertsNrqlConditionSpec defines the desired state of AlertsNrqlCondition
 type AlertsNrqlConditionSpec struct {
 	Enabled            bool                                   `json:"enabled"`
 	IgnoreOverlap      bool                                   `json:"ignore_overlap,omitempty"`
@@ -23,20 +23,20 @@ type AlertsNrqlConditionSpec struct {
 	PolicyID           int                                    `json:"-"`
 	Region             string                                 `json:"region,omitempty"`
 	RunbookURL         string                                 `json:"runbookUrl,omitempty"`
-	Terms              []AlertsConditionTerm                  `json:"terms,omitempty"`
+	Terms              []AlertsNrqlConditionTerm              `json:"terms,omitempty"`
 	Type               alerts.NrqlConditionType               `json:"type,omitempty"`
 	ValueFunction      *alerts.NrqlConditionValueFunction     `json:"valueFunction,omitempty"`
 	ViolationTimeLimit alerts.NrqlConditionViolationTimeLimit `json:"violationTimeLimit,omitempty"`
 }
 
-// AlertsNrqlQuery represents a NRQL query to use with a NRQL alert condition
-type AlertsNrqlQuery struct {
+// AlertsNrqlConditionQuery represents a NRQL query to use with a NRQL alert condition
+type AlertsNrqlConditionQuery struct {
 	Query      string `json:"query,omitempty"`
 	SinceValue string `json:"since_value,omitempty"`
 }
 
-// AlertsConditionTerm represents the terms of a New Relic alert condition.
-type AlertsConditionTerm struct {
+// AlertsNrqlConditionTerm represents the terms of a New Relic alert condition.
+type AlertsNrqlConditionTerm struct {
 	Operator             alerts.NrqlConditionOperator `json:"operator,omitempty"`
 	Priority             alerts.NrqlConditionPriority `json:"priority,omitempty"`
 	Threshold            string                       `json:"threshold,omitempty"`
@@ -45,31 +45,31 @@ type AlertsConditionTerm struct {
 	TimeFunction         string                       `json:"time_function,omitempty"`
 }
 
-// NrqlAlertConditionStatus defines the observed state of NrqlAlertCondition
+// AlertsNrqlConditionStatus defines the observed state of AlertsNrqlCondition
 type AlertsNrqlConditionStatus struct {
-	AppliedSpec *NrqlAlertConditionSpec `json:"applied_spec"`
-	ConditionID int                     `json:"condition_id"`
+	AppliedSpec *AlertsNrqlConditionSpec `json:"applied_spec"`
+	ConditionID int                      `json:"condition_id"`
 }
 
 // +kubebuilder:object:root=true
 // +kubebuilder:printcolumn:name="Created",type="boolean",JSONPath=".status.created"
 
-// NrqlAlertCondition is the Schema for the nrqlalertconditions API
+// AlertsNrqlCondition is the Schema for the alertsnrqlconditions API
 type AlertsNrqlCondition struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 
-	Spec   NrqlAlertConditionSpec   `json:"spec,omitempty"`
-	Status NrqlAlertConditionStatus `json:"status,omitempty"`
+	Spec   AlertsNrqlConditionSpec   `json:"spec,omitempty"`
+	Status AlertsNrqlConditionStatus `json:"status,omitempty"`
 }
 
 // +kubebuilder:object:root=true
 
-// NrqlAlertConditionList contains a list of NrqlAlertCondition
+// AlertsNrqlConditionList contains a list of AlertsNrqlCondition
 type AlertsNrqlConditionList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`
-	Items           []NrqlAlertCondition `json:"items"`
+	Items           []AlertsNrqlCondition `json:"items"`
 }
 
 func init() {
@@ -91,7 +91,7 @@ func (in AlertsNrqlConditionSpec) APIConditionInput() alerts.NrqlConditionInput 
 	}
 
 	// if in.BaselineDirection != nil {
-	// 	conditionInput.BaselineDirection = alerts.NrqlBaselineDirection(in.BaselineDirection)
+	//      conditionInput.BaselineDirection = alerts.NrqlBaselineDirection(in.BaselineDirection)
 	// }
 
 	for _, term := range in.Terms {
