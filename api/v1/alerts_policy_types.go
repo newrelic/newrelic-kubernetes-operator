@@ -27,6 +27,7 @@ import (
 // EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
 // NOTE: json tags are required.  Any new fields you add must have json tags for the fields to be serialized.
 
+// AlertsPolicySpec defines the desired state of AlertsPolicy
 type AlertsPolicySpec struct {
 	IncidentPreference string                  `json:"incident_preference,omitempty"`
 	Name               string                  `json:"name"`
@@ -37,7 +38,7 @@ type AlertsPolicySpec struct {
 	AccountID          int                     `json:"account_id,omitempty"`
 }
 
-//AlertsPolicyCondition defined the conditions contained within a AlertsPolicy
+//AlertsPolicyCondition defined the conditions contained within an AlertsPolicy
 type AlertsPolicyCondition struct {
 	Name      string                  `json:"name"`
 	Namespace string                  `json:"namespace"`
@@ -75,27 +76,27 @@ func init() {
 	SchemeBuilder.Register(&AlertsPolicy{}, &AlertsPolicyList{})
 }
 
-func (in AlertsPolicySpec) APIAlertsPolicy() alerts.AlertsPolicy {
+func (in AlertsPolicySpec) APIAlertsPolicy() alerts.Policy {
 	jsonString, _ := json.Marshal(in)
-	var APIPolicy alerts.AlertsPolicy
-	json.Unmarshal(jsonString, &APIPolicy) //nolint
+	var APIAlertsPolicy alerts.Policy
+	json.Unmarshal(jsonString, &APIAlertsPolicy) //nolint
 
-	//APICondition.PolicyID = spec.ExistingPolicyId
+	//APICondition.AlertsPolicyID = spec.ExistingAlertsPolicyId
 
-	return APIPolicy
+	return APIAlertsPolicy
 }
 
 func (p *AlertsPolicyCondition) SpecHash() uint32 {
 	//remove api keys and condition from object to enable comparison minus inherited fields
-	strippedPolicy := AlertsPolicyCondition{
+	strippedAlertsPolicy := AlertsPolicyCondition{
 		Spec: p.Spec,
 	}
-	strippedPolicy.Spec.APIKeySecret = NewRelicAPIKeySecret{}
-	strippedPolicy.Spec.APIKey = ""
-	strippedPolicy.Spec.Region = ""
-	strippedPolicy.Spec.ExistingPolicyID = 0
+	strippedAlertsPolicy.Spec.APIKeySecret = NewRelicAPIKeySecret{}
+	strippedAlertsPolicy.Spec.APIKey = ""
+	strippedAlertsPolicy.Spec.Region = ""
+	strippedAlertsPolicy.Spec.ExistingPolicyID = 0
 	conditionTemplateSpecHasher := fnv.New32a()
-	DeepHashObject(conditionTemplateSpecHasher, strippedPolicy)
+	DeepHashObject(conditionTemplateSpecHasher, strippedAlertsPolicy)
 	return conditionTemplateSpecHasher.Sum32()
 }
 

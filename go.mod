@@ -15,6 +15,7 @@ require (
 	github.com/onsi/ginkgo v1.12.0
 	github.com/onsi/gomega v1.10.0
 	github.com/stretchr/testify v1.5.1
+	github.com/tj/assert v0.0.0-20171129193455-018094318fb0
 	k8s.io/api v0.17.5
 	k8s.io/apimachinery v0.17.5
 	k8s.io/client-go v0.17.5
