@@ -115,7 +115,6 @@ jobs:
       run: make test-integration
       env:
         NEW_RELIC_ACCOUNT_ID: ${{ secrets.NEW_RELIC_ACCOUNT_ID }}
-        NEW_RELIC_ADMIN_API_KEY: ${{ secrets.NEW_RELIC_ADMIN_API_KEY }}
         NEW_RELIC_API_KEY: ${{ secrets.NEW_RELIC_API_KEY }}
         NEW_RELIC_LICENSE_KEY: ${{ secrets.NEW_RELIC_LICENSE_KEY }}
         NEW_RELIC_REGION: ${{ secrets.NEW_RELIC_REGION }}
