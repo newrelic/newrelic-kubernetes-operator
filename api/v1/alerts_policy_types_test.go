@@ -3,9 +3,9 @@
 package v1
 
 import (
+	"github.com/newrelic/newrelic-client-go/pkg/alerts"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	"k8s.io/apimachinery/pkg/api/resource"
 )
 
 var _ = Describe("Equals", func() {
@@ -23,27 +23,27 @@ var _ = Describe("Equals", func() {
 			Spec: AlertsNrqlConditionSpec{
 				Terms: []AlertsNrqlConditionTerm{
 					{
-						Duration:     resource.MustParse("30"),
-						Operator:     "above",
-						Priority:     "critical",
-						Threshold:    resource.MustParse("5"),
-						TimeFunction: "all",
+						Operator:             alerts.NrqlConditionOperators.Above,
+						Priority:             alerts.NrqlConditionPriorities.Critical,
+						Threshold:            "5",
+						ThresholdDuration:    60,
+						ThresholdOccurrences: alerts.ThresholdOccurrences.AtLeastOnce,
 					},
 				},
-				Nrql: AlertsNrqlConditionQuery{
-					Query:      "SELECT 1 FROM MyEvents",
-					SinceValue: "5",
+				Nrql: alerts.NrqlConditionQuery{
+					Query:            "SELECT 1 FROM MyEvents",
+					EvaluationOffset: 5,
 				},
-				Type:                "NRQL",
-				Name:                "NRQL Condition",
-				RunbookURL:          "http://test.com/runbook",
-				ValueFunction:       "max",
-				ID:                  777,
-				ViolationCloseTimer: 60,
-				ExpectedGroups:      2,
-				IgnoreOverlap:       true,
-				Enabled:             true,
-				ExistingPolicyID:    42,
+				Type:               "NRQL",
+				Name:               "NRQL Condition",
+				RunbookURL:         "http://test.com/runbook",
+				ValueFunction:      &alerts.NrqlConditionValueFunctions.SingleValue,
+				ID:                 777,
+				ViolationTimeLimit: alerts.NrqlConditionViolationTimeLimits.OneHour,
+				ExpectedGroups:     2,
+				IgnoreOverlap:      true,
+				Enabled:            true,
+				ExistingPolicyID:   42,
 			},
 		}
 
@@ -97,27 +97,27 @@ var _ = Describe("Equals", func() {
 					Spec: AlertsNrqlConditionSpec{
 						Terms: []AlertsNrqlConditionTerm{
 							{
-								Duration:     resource.MustParse("30"),
-								Operator:     "above",
-								Priority:     "critical",
-								Threshold:    resource.MustParse("5"),
-								TimeFunction: "all",
+								Operator:             alerts.NrqlConditionOperators.Above,
+								Priority:             alerts.NrqlConditionPriorities.Critical,
+								Threshold:            "5",
+								ThresholdDuration:    60,
+								ThresholdOccurrences: alerts.ThresholdOccurrences.AtLeastOnce,
 							},
 						},
 						Nrql: AlertsNrqlConditionQuery{
 							Query:      "SELECT 1 FROM MyEvents",
 							SinceValue: "5",
 						},
-						Type:                "NRQL",
-						Name:                "NRQL Condition",
-						RunbookURL:          "http://test.com/runbook",
-						ValueFunction:       "max",
-						ID:                  777,
-						ViolationCloseTimer: 60,
-						ExpectedGroups:      2,
-						IgnoreOverlap:       true,
-						Enabled:             true,
-						ExistingPolicyID:    42,
+						Type:               "NRQL",
+						Name:               "NRQL Condition",
+						RunbookURL:         "http://test.com/runbook",
+						ValueFunction:      &alerts.NrqlConditionValueFunctions.SingleValue,
+						ID:                 777,
+						ViolationTimeLimit: alerts.NrqlConditionViolationTimeLimits.OneHour,
+						ExpectedGroups:     2,
+						IgnoreOverlap:      true,
+						Enabled:            true,
+						ExistingPolicyID:   42,
 					},
 				},
 			}
