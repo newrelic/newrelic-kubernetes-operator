@@ -16,6 +16,7 @@ var _ = Describe("AlertsNrqlConditionSpec", func() {
 	var condition AlertsNrqlConditionSpec
 
 	BeforeEach(func() {
+
 		condition = AlertsNrqlConditionSpec{
 			Terms: []AlertsNrqlConditionTerm{
 				{
@@ -47,12 +48,12 @@ var _ = Describe("AlertsNrqlConditionSpec", func() {
 		It("converts AlertsNrqlConditionSpec object to AlertsNrqlCondition object from go client, retaining field values", func() {
 			apiCondition := condition.APIConditionInput()
 
-			Expect(fmt.Sprint(reflect.TypeOf(apiCondition))).To(Equal("alerts.NrqlCondition"))
+			Expect(fmt.Sprint(reflect.TypeOf(apiCondition))).To(Equal("alerts.NrqlConditionInput"))
 
-			Expect(apiCondition.Type).To(Equal("NRQL"))
+			// Expect(apiCondition.Type).To(Equal("NRQL"))
 			Expect(apiCondition.Name).To(Equal("NRQL Condition"))
 			Expect(apiCondition.RunbookURL).To(Equal("http://test.com/runbook"))
-			Expect(apiCondition.ValueFunction).To(Equal(alerts.ValueFunctionTypes.Max))
+			Expect(string(*apiCondition.ValueFunction)).To(Equal(string(alerts.NrqlConditionValueFunctions.SingleValue)))
 			//Expect(apiCondition.PolicyID).To(Equal(42))
 			//Expect(apiCondition.ID).To(Equal(777))
 			//Expect(apiCondition.ViolationCloseTimer).To(Equal(60))
@@ -63,18 +64,18 @@ var _ = Describe("AlertsNrqlConditionSpec", func() {
 
 			apiTerm := apiCondition.Terms[0]
 
-			Expect(fmt.Sprint(reflect.TypeOf(apiTerm))).To(Equal("alerts.ConditionTerm"))
+			Expect(fmt.Sprint(reflect.TypeOf(apiTerm))).To(Equal("alerts.NrqlConditionTerms"))
 
 			//Expect(apiTerm.Duration).To(Equal(30))
-			Expect(apiTerm.Operator).To(Equal(alerts.OperatorTypes.Above))
-			Expect(apiTerm.Priority).To(Equal(alerts.PriorityTypes.Critical))
+			Expect(apiTerm.Operator).To(Equal(alerts.NrqlConditionOperators.Above))
+			Expect(apiTerm.Priority).To(Equal(alerts.NrqlConditionPriorities.Critical))
 			Expect(apiTerm.Threshold).To(Equal(float64(5)))
 			Expect(apiTerm.ThresholdDuration).To(Equal(60))
 			Expect(apiTerm.ThresholdOccurrences).To(Equal(alerts.ThresholdOccurrences.AtLeastOnce))
 
 			apiQuery := apiCondition.Nrql
 
-			Expect(fmt.Sprint(reflect.TypeOf(apiQuery))).To(Equal("alerts.NrqlQuery"))
+			Expect(fmt.Sprint(reflect.TypeOf(apiQuery))).To(Equal("alerts.NrqlConditionQuery"))
 
 			Expect(apiQuery.Query).To(Equal("SELECT 1 FROM MyEvents"))
 			//Expect(apiQuery.SinceValue).To(Equal("5"))
