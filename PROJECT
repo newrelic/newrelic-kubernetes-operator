@@ -7,4 +7,10 @@ resources:
 - group: nr
   kind: Policy
   version: v1
+- group: nr
+  kind: AlertsNrqlCondition
+  version: v1
+- group: nr
+  kind: AlertsPolicy
+  version: v1
 version: "2"

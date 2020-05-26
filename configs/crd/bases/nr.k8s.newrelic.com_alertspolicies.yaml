@@ -28,6 +28,7 @@ spec:
         metadata:
           type: object
         spec:
+          description: AlertsPolicySpec defines the desired state of AlertsPolicy
           properties:
             account_id:
               type: integer
@@ -44,14 +45,14 @@ spec:
               type: object
             conditions:
               items:
-                description: AlertsPolicyCondition defined the conditions contained within a AlertsPolicy
+                description: AlertsPolicyCondition defined the conditions contained within an AlertsPolicy
                 properties:
                   name:
                     type: string
                   namespace:
                     type: string
                   spec:
-                    description: AlertsNrqlConditionSpec defines the desired state of NrqlAlertCondition
+                    description: AlertsNrqlConditionSpec defines the desired state of AlertsNrqlCondition
                     properties:
                       account_id:
                         type: integer
@@ -94,7 +95,7 @@ spec:
                         type: string
                       terms:
                         items:
-                          description: AlertsConditionTerm represents the terms of a New Relic alert condition.
+                          description: AlertsNrqlConditionTerm represents the terms of a New Relic alert condition.
                           properties:
                             operator:
                               description: NrqlConditionOperator specifies the operator for alert condition terms.
@@ -144,6 +145,7 @@ spec:
           description: AlertsPolicyStatus defines the observed state of AlertsPolicy
           properties:
             applied_spec:
+              description: AlertsPolicySpec defines the desired state of AlertsPolicy
               properties:
                 account_id:
                   type: integer
@@ -160,14 +162,14 @@ spec:
                   type: object
                 conditions:
                   items:
-                    description: AlertsPolicyCondition defined the conditions contained within a AlertsPolicy
+                    description: AlertsPolicyCondition defined the conditions contained within an AlertsPolicy
                     properties:
                       name:
                         type: string
                       namespace:
                         type: string
                       spec:
-                        description: AlertsNrqlConditionSpec defines the desired state of NrqlAlertCondition
+                        description: AlertsNrqlConditionSpec defines the desired state of AlertsNrqlCondition
                         properties:
                           account_id:
                             type: integer
@@ -210,7 +212,7 @@ spec:
                             type: string
                           terms:
                             items:
-                              description: AlertsConditionTerm represents the terms of a New Relic alert condition.
+                              description: AlertsNrqlConditionTerm represents the terms of a New Relic alert condition.
                               properties:
                                 operator:
                                   description: NrqlConditionOperator specifies the operator for alert condition terms.

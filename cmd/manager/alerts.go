@@ -28,14 +28,14 @@ import (
 )
 
 func registerAlerts(mgr *ctrl.Manager) error {
-	nrqlReconciler := &controllers.NrqlAlertConditionReconciler{
+	nrqlAlertConditionReconciler := &controllers.NrqlAlertConditionReconciler{
 		Client:          (*mgr).GetClient(),
 		Log:             ctrl.Log.WithName("controllers").WithName("NrqlAlertCondition"),
 		Scheme:          (*mgr).GetScheme(),
 		AlertClientFunc: interfaces.InitializeAlertsClient,
 	}
 
-	if err := nrqlReconciler.SetupWithManager(*mgr); err != nil {
+	if err := nrqlAlertConditionReconciler.SetupWithManager(*mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "NrqlAlertCondition")
 		os.Exit(1)
 	}

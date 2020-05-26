@@ -106,7 +106,7 @@ Once you've completed the [Quick Start](#quick-start) section, you can start pro
 
     ```yaml
     apiVersion: nr.k8s.newrelic.com/v1
-    kind: Policy
+    kind: AlertsPolicy
     metadata:
       name: my-policy
     spec:
@@ -164,7 +164,7 @@ The operator will create and update alert policies and NRQL alert conditions as 
 
     ```yaml
     apiVersion: nr.k8s.newrelic.com/v1
-    kind: NrqlAlertCondition
+    kind: NrqlAlerttsNrqlCondition
     metadata:
       name: my-alert-condition
     spec:
@@ -257,10 +257,10 @@ This section should get you set up properly for doing development on the operato
 
 ```bash
 # Describe the currently configured policies.
-kubectl describe policies.nr.k8s.newrelic.com
+kubectl describe alertspolicies.nr.k8s.newrelic.com
 
 # Describe the currently configured alert conditions.
-kubectl describe nrqlalertconditions.nr.k8s.newrelic.com
+kubectl describe alertsnrqlconditions.nr.k8s.newrelic.com
 
 # Get the node being used for the newrelic operator.
 kubectl get nodes -n newrelic-kubernetes-operator-system
