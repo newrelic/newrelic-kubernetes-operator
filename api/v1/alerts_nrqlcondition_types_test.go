@@ -19,16 +19,14 @@ var _ = Describe("AlertsNrqlConditionSpec", func() {
 		condition = AlertsNrqlConditionSpec{
 			Terms: []AlertsNrqlConditionTerm{
 				{
-					//Duration:     resource.MustParse("30"),
-					Operator:             "above",
-					Priority:             "critical",
+					Operator:             alerts.NrqlConditionOperators.Above,
+					Priority:             alerts.NrqlConditionPriorities.Critical,
 					Threshold:            "5",
 					ThresholdDuration:    60,
 					ThresholdOccurrences: alerts.ThresholdOccurrences.AtLeastOnce,
-					TimeFunction:         "all",
 				},
 			},
-			Nrql: AlertsNrqlConditionQuery{
+			Nrql: alerts.NrqlConditionQuery{
 				Query:            "SELECT 1 FROM MyEvents",
 				EvaluationOffset: 5,
 			},
@@ -37,10 +35,11 @@ var _ = Describe("AlertsNrqlConditionSpec", func() {
 			RunbookURL:         "http://test.com/runbook",
 			ValueFunction:      &alerts.NrqlConditionValueFunctions.SingleValue,
 			ViolationTimeLimit: alerts.NrqlConditionViolationTimeLimits.OneHour,
+			ID:                 777,
 			ExpectedGroups:     2,
 			IgnoreOverlap:      true,
 			Enabled:            true,
-			//ExistingPolicyID:   42,
+			ExistingPolicyID:   42,
 		}
 	})
 
@@ -58,26 +57,27 @@ var _ = Describe("AlertsNrqlConditionSpec", func() {
 			//Expect(apiCondition.ID).To(Equal(777))
 			//Expect(apiCondition.ViolationCloseTimer).To(Equal(60))
 			Expect(apiCondition.ViolationTimeLimit).To(Equal(alerts.NrqlConditionViolationTimeLimits.OneHour))
-			Expect(apiCondition.ExpectedGroups).To(Equal(2))
-			Expect(apiCondition.IgnoreOverlap).To(Equal(true))
+			//Expect(apiCondition.ExpectedGroups).To(Equal(2))
+			//Expect(apiCondition.IgnoreOverlap).To(Equal(true))
 			Expect(apiCondition.Enabled).To(Equal(true))
 
 			apiTerm := apiCondition.Terms[0]
 
 			Expect(fmt.Sprint(reflect.TypeOf(apiTerm))).To(Equal("alerts.ConditionTerm"))
 
-			Expect(apiTerm.Duration).To(Equal(30))
+			//Expect(apiTerm.Duration).To(Equal(30))
 			Expect(apiTerm.Operator).To(Equal(alerts.OperatorTypes.Above))
 			Expect(apiTerm.Priority).To(Equal(alerts.PriorityTypes.Critical))
 			Expect(apiTerm.Threshold).To(Equal(float64(5)))
-			Expect(apiTerm.TimeFunction).To(Equal(alerts.TimeFunctionTypes.All))
+			Expect(apiTerm.ThresholdDuration).To(Equal(60))
+			Expect(apiTerm.ThresholdOccurrences).To(Equal(alerts.ThresholdOccurrences.AtLeastOnce))
 
 			apiQuery := apiCondition.Nrql
 
 			Expect(fmt.Sprint(reflect.TypeOf(apiQuery))).To(Equal("alerts.NrqlQuery"))
 
 			Expect(apiQuery.Query).To(Equal("SELECT 1 FROM MyEvents"))
-			Expect(apiQuery.SinceValue).To(Equal("5"))
+			//Expect(apiQuery.SinceValue).To(Equal("5"))
 		})
 	})
 })
