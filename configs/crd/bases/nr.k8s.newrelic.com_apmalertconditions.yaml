@@ -87,6 +87,8 @@ spec:
                     type: string
                   time_function:
                     type: string
+                  violation_close_timer:
+                    type: integer
                 required:
                 - threshold
                 type: object
@@ -163,6 +165,8 @@ spec:
                         type: string
                       time_function:
                         type: string
+                      violation_close_timer:
+                        type: integer
                     required:
                     - threshold
                     type: object

@@ -9,32 +9,27 @@ import (
 
 // ApmAlertConditionSpec defines the desired state of ApmAlertCondition
 type ApmAlertConditionSpec struct {
-	Terms               []AlertConditionTerm        `json:"terms,omitempty"`
-	Type                string                      `json:"type,omitempty"` //TODO: add conditionType or pull from alerts package or make string
-	Name                string                      `json:"name,omitempty"`
-	RunbookURL          string                      `json:"runbook_url,omitempty"`
+	GenericConditionSpec `json:",inline"`
+	APMSpecificSpec      `json:",inline"`
+}
+
+type APMSpecificSpec struct {
 	Metric              string                      `json:"metric,omitempty"`
 	UserDefined         alerts.ConditionUserDefined `json:"user_defined,omitempty"`
 	Scope               string                      `json:"condition_scope,omitempty"`
 	Entities            []string                    `json:"entities,omitempty"`
 	GCMetric            string                      `json:"gc_metric,omitempty"`
-	PolicyID            int                         `json:"-"`
-	ID                  int                         `json:"id,omitempty"`
 	ViolationCloseTimer int                         `json:"violation_close_timer,omitempty"`
-	Enabled             bool                        `json:"enabled"`
-	ExistingPolicyID    int                         `json:"existing_policy_id,omitempty"`
-	APIKey              string                      `json:"api_key,omitempty"`
-	APIKeySecret        NewRelicAPIKeySecret        `json:"api_key_secret,omitempty"`
-	Region              string                      `json:"region,omitempty"`
 }
 
 // AlertConditionTerm represents the terms of a New Relic alert condition.
 type AlertConditionTerm struct {
-	Duration     string `json:"duration,omitempty"`
-	Operator     string `json:"operator,omitempty"`
-	Priority     string `json:"priority,omitempty"`
-	Threshold    string `json:"threshold"`
-	TimeFunction string `json:"time_function,omitempty"`
+	Duration            string `json:"duration,omitempty"`
+	Operator            string `json:"operator,omitempty"`
+	Priority            string `json:"priority,omitempty"`
+	Threshold           string `json:"threshold"`
+	TimeFunction        string `json:"time_function,omitempty"`
+	ViolationCloseTimer int    `json:"violation_close_timer,omitempty"`
 }
 
 // ApmAlertConditionStatus defines the observed state of ApmAlertCondition

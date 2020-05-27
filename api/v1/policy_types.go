@@ -54,27 +54,9 @@ type ApmAliasSpec ConditionSpec
 
 //ConditionSpec - Merged superset of Condition types
 type ConditionSpec struct {
-	APIKeySecret        NewRelicAPIKeySecret        `json:"api_key_secret,omitempty"`
-	Nrql                NrqlQuery                   `json:"nrql,omitempty"`
-	UserDefined         alerts.ConditionUserDefined `json:"user_defined,omitempty"`
-	Terms               []AlertConditionTerm        `json:"terms,omitempty"`
-	Entities            []string                    `json:"entities,omitempty"`
-	Type                string                      `json:"type,omitempty"`
-	Name                string                      `json:"name,omitempty"`
-	RunbookURL          string                      `json:"runbook_url,omitempty"`
-	APIKey              string                      `json:"api_key,omitempty"`
-	Region              string                      `json:"region,omitempty"`
-	ValueFunction       string                      `json:"value_function,omitempty"`
-	Metric              string                      `json:"metric,omitempty"`
-	Scope               string                      `json:"condition_scope,omitempty"`
-	GCMetric            string                      `json:"gc_metric,omitempty"`
-	PolicyID            int                         `json:"-"`
-	ID                  int                         `json:"id,omitempty"`
-	ViolationCloseTimer int                         `json:"violation_close_timer,omitempty"`
-	ExistingPolicyID    int                         `json:"existing_policy_id,omitempty"`
-	ExpectedGroups      int                         `json:"expected_groups,omitempty"`
-	Enabled             bool                        `json:"enabled"`
-	IgnoreOverlap       bool                        `json:"ignore_overlap,omitempty"`
+	GenericConditionSpec `json:",inline"`
+	NrqlSpecificSpec     `json:",inline"`
+	APMSpecificSpec      `json:",inline"`
 }
 
 // PolicyStatus defines the observed state of Policy
@@ -182,64 +164,19 @@ func GetConditionType(condition PolicyCondition) string {
 
 }
 
-func (p *PolicyCondition) GenerateSpecFromNrqlConditionSpec(conditionSpec NrqlAlertConditionSpec) {
-	p.Spec.Terms = conditionSpec.Terms
-	p.Spec.Nrql = conditionSpec.Nrql
-	p.Spec.ValueFunction = conditionSpec.ValueFunction
-	p.Spec.ExpectedGroups = conditionSpec.ExpectedGroups
-	p.Spec.IgnoreOverlap = conditionSpec.IgnoreOverlap
-	p.Spec.Enabled = conditionSpec.Enabled
-	p.Spec.ExistingPolicyID = conditionSpec.ExistingPolicyID
-	p.Spec.APIKey = conditionSpec.APIKey
-	p.Spec.APIKeySecret = conditionSpec.APIKeySecret
-	p.Spec.Region = conditionSpec.Region
-	p.Spec.Name = conditionSpec.Name
-	p.Spec.RunbookURL = conditionSpec.RunbookURL
-	p.Spec.PolicyID = conditionSpec.PolicyID
-	p.Spec.ID = conditionSpec.ID
-	p.Spec.ViolationCloseTimer = conditionSpec.ViolationCloseTimer
+func (p *PolicyCondition) GenerateSpecFromNrqlConditionSpec(nrqlConditionSpec NrqlAlertConditionSpec) {
+	jsonString, _ := json.Marshal(nrqlConditionSpec)
+	json.Unmarshal(jsonString, &p.Spec) //nolint
 }
 
-func (p *PolicyCondition) ReturnNrqlConditionSpec() NrqlAlertConditionSpec {
-	return NrqlAlertConditionSpec{
-		Terms:               p.Spec.Terms,
-		Nrql:                p.Spec.Nrql,
-		ValueFunction:       p.Spec.ValueFunction,
-		ExpectedGroups:      p.Spec.ExpectedGroups,
-		IgnoreOverlap:       p.Spec.IgnoreOverlap,
-		Enabled:             p.Spec.Enabled,
-		ExistingPolicyID:    p.Spec.ExistingPolicyID,
-		APIKey:              p.Spec.APIKey,
-		APIKeySecret:        p.Spec.APIKeySecret,
-		Region:              p.Spec.Region,
-		Type:                p.Spec.Type,
-		Name:                p.Spec.Name,
-		RunbookURL:          p.Spec.RunbookURL,
-		PolicyID:            p.Spec.PolicyID,
-		ID:                  p.Spec.ID,
-		ViolationCloseTimer: p.Spec.ViolationCloseTimer,
-	}
+func (p *PolicyCondition) ReturnNrqlConditionSpec() (nrqlAlertConditionSpec NrqlAlertConditionSpec) {
+	jsonString, _ := json.Marshal(p.Spec)
+	json.Unmarshal(jsonString, &nrqlAlertConditionSpec) //nolint
+	return
 }
 
-func (p *PolicyCondition) ReturnApmConditionSpec() ApmAlertConditionSpec {
-	return ApmAlertConditionSpec{
-		Terms:               p.Spec.Terms,
-		Type:                p.Spec.Type,
-		Name:                p.Spec.Name,
-		RunbookURL:          p.Spec.RunbookURL,
-		Metric:              p.Spec.Metric,
-		UserDefined:         p.Spec.UserDefined,
-		Scope:               p.Spec.Scope,
-		Entities:            p.Spec.Entities,
-		GCMetric:            p.Spec.GCMetric,
-		PolicyID:            p.Spec.PolicyID,
-		ID:                  p.Spec.ID,
-		ViolationCloseTimer: p.Spec.ViolationCloseTimer,
-		Enabled:             p.Spec.Enabled,
-		ExistingPolicyID:    p.Spec.ExistingPolicyID,
-		APIKey:              p.Spec.APIKey,
-		APIKeySecret:        p.Spec.APIKeySecret,
-		Region:              p.Spec.Region,
-	}
-
+func (p *PolicyCondition) ReturnApmConditionSpec() (apmAlertConditionSpec ApmAlertConditionSpec) {
+	jsonString, _ := json.Marshal(p.Spec)
+	json.Unmarshal(jsonString, &apmAlertConditionSpec) //nolint
+	return
 }

@@ -34,31 +34,35 @@ var _ = Describe("ValidateCreate", func() {
 
 		r = NrqlAlertCondition{
 			Spec: NrqlAlertConditionSpec{
-				Terms: []AlertConditionTerm{
-					{
-						Duration:     "30",
-						Operator:     "above",
-						Priority:     "critical",
-						Threshold:    "5",
-						TimeFunction: "all",
+				GenericConditionSpec{
+					Terms: []AlertConditionTerm{
+						{
+							Duration:     "30",
+							Operator:     "above",
+							Priority:     "critical",
+							Threshold:    "5",
+							TimeFunction: "all",
+						},
+					},
+					Type:             "NRQL",
+					Name:             "NRQL Condition",
+					RunbookURL:       "http://test.com/runbook",
+					ID:               777,
+					Enabled:          true,
+					ExistingPolicyID: 42,
+					APIKey:           "api-key",
+					Region:           "us",
+				},
+				NrqlSpecificSpec{
+					ViolationCloseTimer: 60,
+					ExpectedGroups:      2,
+					IgnoreOverlap:       true,
+					ValueFunction:       "max",
+					Nrql: NrqlQuery{
+						Query:      "SELECT 1 FROM MyEvents",
+						SinceValue: "5",
 					},
 				},
-				Nrql: NrqlQuery{
-					Query:      "SELECT 1 FROM MyEvents",
-					SinceValue: "5",
-				},
-				Type:                "NRQL",
-				Name:                "NRQL Condition",
-				RunbookURL:          "http://test.com/runbook",
-				ValueFunction:       "max",
-				ID:                  777,
-				ViolationCloseTimer: 60,
-				ExpectedGroups:      2,
-				IgnoreOverlap:       true,
-				Enabled:             true,
-				ExistingPolicyID:    42,
-				APIKey:              "api-key",
-				Region:              "us",
 			},
 		}
 

@@ -55,7 +55,7 @@ spec:
                   namespace:
                     type: string
                   spec:
-                    description: Merged superset of Condition types
+                    description: ConditionSpec - Merged superset of Condition types
                     properties:
                       api_key:
                         type: string
@@ -79,7 +79,6 @@ spec:
                       existing_policy_id:
                         type: integer
                       expected_groups:
-                        description: NRQL condition fields
                         type: integer
                       gc_metric:
                         type: string
@@ -88,7 +87,6 @@ spec:
                       ignore_overlap:
                         type: boolean
                       metric:
-                        description: APM condition fields
                         type: string
                       name:
                         type: string
@@ -120,6 +118,8 @@ spec:
                               type: string
                             time_function:
                               type: string
+                            violation_close_timer:
+                              type: integer
                           required:
                           - threshold
                           type: object
@@ -140,6 +140,8 @@ spec:
                       value_function:
                         type: string
                       violation_close_timer:
+                        type: integer
+                      violation_time_limit_seconds:
                         type: integer
                     required:
                     - enabled
@@ -186,7 +188,8 @@ spec:
                       namespace:
                         type: string
                       spec:
-                        description: Merged superset of Condition types
+                        description: ConditionSpec - Merged superset of Condition
+                          types
                         properties:
                           api_key:
                             type: string
@@ -210,7 +213,6 @@ spec:
                           existing_policy_id:
                             type: integer
                           expected_groups:
-                            description: NRQL condition fields
                             type: integer
                           gc_metric:
                             type: string
@@ -219,7 +221,6 @@ spec:
                           ignore_overlap:
                             type: boolean
                           metric:
-                            description: APM condition fields
                             type: string
                           name:
                             type: string
@@ -251,6 +252,8 @@ spec:
                                   type: string
                                 time_function:
                                   type: string
+                                violation_close_timer:
+                                  type: integer
                               required:
                               - threshold
                               type: object
@@ -272,6 +275,8 @@ spec:
                           value_function:
                             type: string
                           violation_close_timer:
+                            type: integer
+                          violation_time_limit_seconds:
                             type: integer
                         required:
                         - enabled

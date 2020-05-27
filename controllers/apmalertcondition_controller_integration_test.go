@@ -17,7 +17,7 @@ import (
 
 	"github.com/newrelic/newrelic-client-go/pkg/alerts"
 
-	nralertsv1 "github.com/newrelic/newrelic-kubernetes-operator/api/v1"
+	nrv1 "github.com/newrelic/newrelic-kubernetes-operator/api/v1"
 	"github.com/newrelic/newrelic-kubernetes-operator/interfaces"
 	"github.com/newrelic/newrelic-kubernetes-operator/interfaces/interfacesfakes"
 )
@@ -26,7 +26,7 @@ var _ = Describe("ApmCondition reconciliation", func() {
 	var (
 		ctx            context.Context
 		r              *ApmAlertConditionReconciler
-		condition      *nralertsv1.ApmAlertCondition
+		condition      *nrv1.ApmAlertCondition
 		request        ctrl.Request
 		namespacedName types.NamespacedName
 		secret         *v1.Secret
@@ -68,41 +68,45 @@ var _ = Describe("ApmCondition reconciliation", func() {
 			AlertClientFunc: fakeAlertFunc,
 		}
 
-		condition = &nralertsv1.ApmAlertCondition{
+		condition = &nrv1.ApmAlertCondition{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      "test-condition",
 				Namespace: "default",
 			},
-			Spec: nralertsv1.ApmAlertConditionSpec{
-				Terms: []nralertsv1.AlertConditionTerm{
-					{
-						Duration:     "30",
-						Operator:     "above",
-						Priority:     "critical",
-						Threshold:    "0.9",
-						TimeFunction: "all",
+			Spec: nrv1.ApmAlertConditionSpec{
+				nrv1.GenericConditionSpec{
+					Terms: []nrv1.AlertConditionTerm{
+						{
+							Duration:     "30",
+							Operator:     "above",
+							Priority:     "critical",
+							Threshold:    "0.9",
+							TimeFunction: "all",
+						},
 					},
+					Type:       "apm_app_metric",
+					Name:       "APM Condition",
+					RunbookURL: "http://test.com/runbook",
+					PolicyID:            0,
+					ID:                  888,
+					Enabled:             true,
+					ExistingPolicyID:    42,
+					APIKey:              "apikey",
 				},
-				Type:       "apm_app_metric",
-				Name:       "APM Condition",
-				RunbookURL: "http://test.com/runbook",
-				Metric:     "apdex",
-				Entities:   []string{"333"},
-				UserDefined: alerts.ConditionUserDefined{
-					Metric:        "Custom/foo",
-					ValueFunction: "average",
+				nrv1.APMSpecificSpec{
+					Metric:     "apdex",
+					Entities:   []string{"333"},
+					UserDefined: alerts.ConditionUserDefined{
+						Metric:        "Custom/foo",
+						ValueFunction: "average",
+					},
+					Scope:               "application",
+					GCMetric:            "",
+					ViolationCloseTimer: 60,
 				},
-				Scope:               "application",
-				GCMetric:            "",
-				PolicyID:            0,
-				ID:                  888,
-				ViolationCloseTimer: 60,
-				Enabled:             true,
-				ExistingPolicyID:    42,
-				APIKey:              "apikey",
 			},
-			Status: nralertsv1.ApmAlertConditionStatus{
-				AppliedSpec: &nralertsv1.ApmAlertConditionSpec{},
+			Status: nrv1.ApmAlertConditionStatus{
+				AppliedSpec: &nrv1.ApmAlertConditionSpec{},
 				ConditionID: 0,
 			},
 		}
@@ -138,7 +142,7 @@ var _ = Describe("ApmCondition reconciliation", func() {
 					_, err = r.Reconcile(request)
 					Expect(err).ToNot(HaveOccurred())
 
-					var endStateCondition nralertsv1.ApmAlertCondition
+					var endStateCondition nrv1.ApmAlertCondition
 					err = k8sClient.Get(ctx, namespacedName, &endStateCondition)
 					Expect(err).To(BeNil())
 					Expect(endStateCondition.Status.ConditionID).To(Equal(111))
@@ -152,7 +156,7 @@ var _ = Describe("ApmCondition reconciliation", func() {
 					_, err = r.Reconcile(request)
 					Expect(err).ToNot(HaveOccurred())
 
-					var endStateCondition nralertsv1.ApmAlertCondition
+					var endStateCondition nrv1.ApmAlertCondition
 					err = k8sClient.Get(ctx, namespacedName, &endStateCondition)
 					Expect(err).To(BeNil())
 					Expect(endStateCondition.Status.AppliedSpec).To(Equal(&condition.Spec))
@@ -164,7 +168,7 @@ var _ = Describe("ApmCondition reconciliation", func() {
 			Context("with a valid condition and a kubernetes secret", func() {
 				BeforeEach(func() {
 					condition.Spec.APIKey = ""
-					condition.Spec.APIKeySecret = nralertsv1.NewRelicAPIKeySecret{
+					condition.Spec.APIKeySecret = nrv1.NewRelicAPIKeySecret{
 						Name:      "my-api-key-secret",
 						Namespace: "my-namespace",
 						KeyName:   "my-api-key",
@@ -206,7 +210,7 @@ var _ = Describe("ApmCondition reconciliation", func() {
 					_, err = r.Reconcile(request)
 					Expect(err).ToNot(HaveOccurred())
 
-					var endStateCondition nralertsv1.ApmAlertCondition
+					var endStateCondition nrv1.ApmAlertCondition
 					err = k8sClient.Get(ctx, namespacedName, &endStateCondition)
 					Expect(err).To(BeNil())
 					Expect(endStateCondition.Status.ConditionID).To(Equal(111))
@@ -220,7 +224,7 @@ var _ = Describe("ApmCondition reconciliation", func() {
 					_, err = r.Reconcile(request)
 					Expect(err).ToNot(HaveOccurred())
 
-					var endStateCondition nralertsv1.ApmAlertCondition
+					var endStateCondition nrv1.ApmAlertCondition
 					err = k8sClient.Get(ctx, namespacedName, &endStateCondition)
 					Expect(err).To(BeNil())
 					Expect(endStateCondition.Status.AppliedSpec).To(Equal(&condition.Spec))
@@ -230,41 +234,45 @@ var _ = Describe("ApmCondition reconciliation", func() {
 
 		Context("and given a ApmAlertCondition that exists in New Relic", func() {
 			JustBeforeEach(func() {
-				condition = &nralertsv1.ApmAlertCondition{
+				condition = &nrv1.ApmAlertCondition{
 					ObjectMeta: metav1.ObjectMeta{
 						Name:      "test-condition",
 						Namespace: "default",
 					},
-					Spec: nralertsv1.ApmAlertConditionSpec{
-						Terms: []nralertsv1.AlertConditionTerm{
-							{
-								Duration:     "30",
-								Operator:     "above",
-								Priority:     "critical",
-								Threshold:    "0.9",
-								TimeFunction: "all",
+					Spec: nrv1.ApmAlertConditionSpec{
+						nrv1.GenericConditionSpec{
+							Terms: []nrv1.AlertConditionTerm{
+								{
+									Duration:     "30",
+									Operator:     "above",
+									Priority:     "critical",
+									Threshold:    "0.9",
+									TimeFunction: "all",
+								},
 							},
+							Type:       "apm_app_metric",
+							Name:       "Matching APM Condition",
+							RunbookURL: "http://test.com/runbook",
+							PolicyID:            0,
+							ID:                  888,
+							Enabled:             true,
+							ExistingPolicyID:    42,
+							APIKey:              "apikey",
 						},
-						Type:       "apm_app_metric",
-						Name:       "Matching APM Condition",
-						RunbookURL: "http://test.com/runbook",
-						Metric:     "apdex",
-						Entities:   []string{"333"},
-						UserDefined: alerts.ConditionUserDefined{
-							Metric:        "Custom/foo",
-							ValueFunction: "average",
+						nrv1.APMSpecificSpec{
+							Metric:     "apdex",
+							Entities:   []string{"333"},
+							UserDefined: alerts.ConditionUserDefined{
+								Metric:        "Custom/foo",
+								ValueFunction: "average",
+							},
+							Scope:               "application",
+							GCMetric:            "",
+							ViolationCloseTimer: 60,
 						},
-						Scope:               "application",
-						GCMetric:            "",
-						PolicyID:            0,
-						ID:                  888,
-						ViolationCloseTimer: 60,
-						Enabled:             true,
-						ExistingPolicyID:    42,
-						APIKey:              "apikey",
 					},
-					Status: nralertsv1.ApmAlertConditionStatus{
-						AppliedSpec: &nralertsv1.ApmAlertConditionSpec{},
+					Status: nrv1.ApmAlertConditionStatus{
+						AppliedSpec: &nrv1.ApmAlertConditionSpec{},
 						ConditionID: 0,
 					},
 				}
@@ -291,7 +299,7 @@ var _ = Describe("ApmCondition reconciliation", func() {
 					_, err = r.Reconcile(request)
 					Expect(err).ToNot(HaveOccurred())
 
-					var endStateCondition nralertsv1.ApmAlertCondition
+					var endStateCondition nrv1.ApmAlertCondition
 					err = k8sClient.Get(ctx, namespacedName, &endStateCondition)
 					Expect(err).To(BeNil())
 					Expect(endStateCondition.Status.ConditionID).To(Equal(112))
@@ -305,7 +313,7 @@ var _ = Describe("ApmCondition reconciliation", func() {
 					_, err = r.Reconcile(request)
 					Expect(err).ToNot(HaveOccurred())
 
-					var endStateCondition nralertsv1.ApmAlertCondition
+					var endStateCondition nrv1.ApmAlertCondition
 					err = k8sClient.Get(ctx, namespacedName, &endStateCondition)
 					Expect(err).To(BeNil())
 					Expect(endStateCondition.Status.AppliedSpec).To(Equal(&condition.Spec))
@@ -358,7 +366,7 @@ var _ = Describe("ApmCondition reconciliation", func() {
 					_, err = r.Reconcile(request)
 					Expect(err).ToNot(HaveOccurred())
 
-					var endStateCondition nralertsv1.ApmAlertCondition
+					var endStateCondition nrv1.ApmAlertCondition
 					err = k8sClient.Get(ctx, namespacedName, &endStateCondition)
 					Expect(err).To(BeNil())
 					Expect(endStateCondition.Status.ConditionID).To(Equal(112))
@@ -372,7 +380,7 @@ var _ = Describe("ApmCondition reconciliation", func() {
 					_, err = r.Reconcile(request)
 					Expect(err).ToNot(HaveOccurred())
 
-					var endStateCondition nralertsv1.ApmAlertCondition
+					var endStateCondition nrv1.ApmAlertCondition
 					err = k8sClient.Get(ctx, namespacedName, &endStateCondition)
 					Expect(err).To(BeNil())
 					Expect(endStateCondition.Status.AppliedSpec).To(Equal(&condition.Spec))
@@ -444,7 +452,7 @@ var _ = Describe("ApmCondition reconciliation", func() {
 					_, err = r.Reconcile(request)
 					Expect(err).ToNot(HaveOccurred())
 
-					var endStateCondition nralertsv1.ApmAlertCondition
+					var endStateCondition nrv1.ApmAlertCondition
 					err = k8sClient.Get(ctx, namespacedName, &endStateCondition)
 					Expect(err).To(HaveOccurred())
 				})
@@ -470,7 +478,7 @@ var _ = Describe("ApmCondition reconciliation", func() {
 					Expect(alertsClient.UpdateConditionCallCount()).To(Equal(0))
 					Expect(alertsClient.DeleteConditionCallCount()).To(Equal(0))
 
-					var endStateCondition nralertsv1.ApmAlertCondition
+					var endStateCondition nrv1.ApmAlertCondition
 					err = k8sClient.Get(ctx, namespacedName, &endStateCondition)
 					Expect(err).To(HaveOccurred())
 					Expect(endStateCondition.Name).To(Equal(""))
@@ -498,7 +506,7 @@ var _ = Describe("ApmCondition reconciliation", func() {
 					Expect(alertsClient.UpdateConditionCallCount()).To(Equal(0))
 					Expect(alertsClient.DeleteConditionCallCount()).To(Equal(1))
 
-					var endStateCondition nralertsv1.ApmAlertCondition
+					var endStateCondition nrv1.ApmAlertCondition
 					err = k8sClient.Get(ctx, namespacedName, &endStateCondition)
 					Expect(err).To(HaveOccurred())
 					Expect(endStateCondition.Name).To(Equal(""))

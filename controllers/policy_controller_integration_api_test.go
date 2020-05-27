@@ -81,27 +81,34 @@ func TestIntegrationPolicyController(t *testing.T) {
 	}
 
 	conditionSpec := &nrv1.ConditionSpec{
-		Terms: []nrv1.AlertConditionTerm{
-			{
-				Duration:     "30",
-				Operator:     "above",
-				Priority:     "critical",
-				Threshold:    "5",
-				TimeFunction: "all",
+		GenericConditionSpec: nrv1.GenericConditionSpec{
+			Terms: []nrv1.AlertConditionTerm{
+				{
+					Duration:     "30",
+					Operator:     "above",
+					Priority:     "critical",
+					Threshold:    "5",
+					TimeFunction: "all",
+				},
 			},
+			Type:                "NRQL",
+			Name:                "NRQL Condition",
+			RunbookURL:          "http://test.com/runbook",
+			Enabled:             true,
+
 		},
-		Nrql: nrv1.NrqlQuery{
-			Query:      "SELECT 1 FROM MyEvents",
-			SinceValue: "5",
+		NrqlSpecificSpec: nrv1.NrqlSpecificSpec{
+			Nrql: nrv1.NrqlQuery{
+				Query:      "SELECT 1 FROM MyEvents",
+				SinceValue: "5",
+			},
+			ValueFunction:       "max",
+			ViolationCloseTimer: 60,
+			ExpectedGroups:      2,
+			IgnoreOverlap:       true,
+
 		},
-		Type:                "NRQL",
-		Name:                "NRQL Condition",
-		RunbookURL:          "http://test.com/runbook",
-		ValueFunction:       "max",
-		ViolationCloseTimer: 60,
-		ExpectedGroups:      2,
-		IgnoreOverlap:       true,
-		Enabled:             true,
+		APMSpecificSpec: nrv1.APMSpecificSpec{},
 	}
 
 	policy := &nrv1.Policy{

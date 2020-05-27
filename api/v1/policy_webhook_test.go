@@ -103,52 +103,68 @@ var _ = Describe("Policy_webhooks", func() {
 				r.Spec.Conditions = []PolicyCondition{
 					{
 						Spec: ConditionSpec{
-							Terms: []AlertConditionTerm{
-								{
-									Duration:     "30",
-									Operator:     "above",
-									Priority:     "critical",
-									Threshold:    "5",
-									TimeFunction: "all",
+							GenericConditionSpec{
+								Terms: []AlertConditionTerm{
+									{
+										Duration:     "30",
+										Operator:     "above",
+										Priority:     "critical",
+										Threshold:    "5",
+										TimeFunction: "all",
+									},
+								},
+								Type:       "NRQL",
+								Name:       "NRQL Condition",
+								RunbookURL: "http://test.com/runbook",
+								ID:         777,
+
+								Enabled:          true,
+								ExistingPolicyID: 42,
+							},
+							NrqlSpecificSpec{
+								ViolationCloseTimer: 60,
+								ExpectedGroups:      2,
+								IgnoreOverlap:       true,
+								ValueFunction:       "max",
+								Nrql: NrqlQuery{
+									Query:      "SELECT 1 FROM MyEvents",
+									SinceValue: "5",
 								},
 							},
-							Nrql: NrqlQuery{
-								Query:      "SELECT 1 FROM MyEvents",
-								SinceValue: "5",
-							},
-							Type:                "NRQL",
-							Name:                "NRQL Condition",
-							RunbookURL:          "http://test.com/runbook",
-							ValueFunction:       "max",
-							ViolationCloseTimer: 60,
-							ExpectedGroups:      2,
-							IgnoreOverlap:       true,
-							Enabled:             true,
+							APMSpecificSpec{},
 						},
 					},
 					{
 						Spec: ConditionSpec{
-							Terms: []AlertConditionTerm{
-								{
-									Duration:     "30",
-									Operator:     "above",
-									Priority:     "critical",
-									Threshold:    "5",
-									TimeFunction: "all",
+							GenericConditionSpec{
+								Terms: []AlertConditionTerm{
+									{
+										Duration:     "30",
+										Operator:     "above",
+										Priority:     "critical",
+										Threshold:    "5",
+										TimeFunction: "all",
+									},
+								},
+								Type:       "NRQL",
+								Name:       "NRQL Condition",
+								RunbookURL: "http://test.com/runbook",
+								ID:         777,
+
+								Enabled:          true,
+								ExistingPolicyID: 42,
+							},
+							NrqlSpecificSpec{
+								ViolationCloseTimer: 60,
+								ExpectedGroups:      2,
+								IgnoreOverlap:       true,
+								ValueFunction:       "max",
+								Nrql: NrqlQuery{
+									Query:      "SELECT 1 FROM MyEvents",
+									SinceValue: "5",
 								},
 							},
-							Nrql: NrqlQuery{
-								Query:      "SELECT 1 FROM MyEvents",
-								SinceValue: "5",
-							},
-							Type:                "NRQL",
-							Name:                "NRQL Condition",
-							RunbookURL:          "http://test.com/runbook",
-							ValueFunction:       "max",
-							ViolationCloseTimer: 60,
-							ExpectedGroups:      2,
-							IgnoreOverlap:       true,
-							Enabled:             true,
+							APMSpecificSpec{},
 						},
 					},
 				}
@@ -186,27 +202,32 @@ var _ = Describe("Policy_webhooks", func() {
 				Conditions: []PolicyCondition{
 					{
 						Spec: ConditionSpec{
-							Terms: []AlertConditionTerm{
-								{
-									Duration:     "30",
-									Operator:     "above",
-									Priority:     "critical",
-									Threshold:    "5",
-									TimeFunction: "all",
+							GenericConditionSpec{
+								Terms: []AlertConditionTerm{
+									{
+										Duration:     "30",
+										Operator:     "above",
+										Priority:     "critical",
+										Threshold:    "5",
+										TimeFunction: "all",
+									},
 								},
+								Type:       "NRQL",
+								Name:       "NRQL Condition",
+								RunbookURL: "http://test.com/runbook",
+								Enabled:    true,
 							},
-							Nrql: NrqlQuery{
-								Query:      "SELECT 1 FROM MyEvents",
-								SinceValue: "5",
+							NrqlSpecificSpec{
+								Nrql: NrqlQuery{
+									Query:      "SELECT 1 FROM MyEvents",
+									SinceValue: "5",
+								},
+								ValueFunction:       "max",
+								ViolationCloseTimer: 60,
+								ExpectedGroups:      2,
+								IgnoreOverlap:       true,
 							},
-							Type:                "NRQL",
-							Name:                "NRQL Condition",
-							RunbookURL:          "http://test.com/runbook",
-							ValueFunction:       "max",
-							ViolationCloseTimer: 60,
-							ExpectedGroups:      2,
-							IgnoreOverlap:       true,
-							Enabled:             true,
+							APMSpecificSpec{},
 						},
 					},
 				},

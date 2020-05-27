@@ -1,5 +1,3 @@
-// +build integration
-
 package v1
 
 import (
@@ -21,29 +19,34 @@ var _ = Describe("Equals", func() {
 			Name:      "policy-name",
 			Namespace: "default",
 			Spec: ConditionSpec{
-				Terms: []AlertConditionTerm{
-					{
-						Duration:     "30",
-						Operator:     "above",
-						Priority:     "critical",
-						Threshold:    "5",
-						TimeFunction: "all",
+				GenericConditionSpec{
+					Terms: []AlertConditionTerm{
+						{
+							Duration:     "30",
+							Operator:     "above",
+							Priority:     "critical",
+							Threshold:    "5",
+							TimeFunction: "all",
+						},
 					},
+					Type:             "NRQL",
+					Name:             "NRQL Condition",
+					RunbookURL:       "http://test.com/runbook",
+					ID:               777,
+					Enabled:          true,
+					ExistingPolicyID: 42,
 				},
-				Nrql: NrqlQuery{
-					Query:      "SELECT 1 FROM MyEvents",
-					SinceValue: "5",
+				NrqlSpecificSpec{
+					Nrql: NrqlQuery{
+						Query:      "SELECT 1 FROM MyEvents",
+						SinceValue: "5",
+					},
+					ViolationCloseTimer: 60,
+					ExpectedGroups:      2,
+					IgnoreOverlap:       true,
+					ValueFunction:       "max",
 				},
-				Type:                "NRQL",
-				Name:                "NRQL Condition",
-				RunbookURL:          "http://test.com/runbook",
-				ValueFunction:       "max",
-				ID:                  777,
-				ViolationCloseTimer: 60,
-				ExpectedGroups:      2,
-				IgnoreOverlap:       true,
-				Enabled:             true,
-				ExistingPolicyID:    42,
+				APMSpecificSpec{},
 			},
 		}
 
@@ -95,29 +98,35 @@ var _ = Describe("Equals", func() {
 					Name:      "",
 					Namespace: "",
 					Spec: ConditionSpec{
-						Terms: []AlertConditionTerm{
-							{
-								Duration:     "30",
-								Operator:     "above",
-								Priority:     "critical",
-								Threshold:    "5",
-								TimeFunction: "all",
+						GenericConditionSpec{
+							Terms: []AlertConditionTerm{
+								{
+									Duration:     "30",
+									Operator:     "above",
+									Priority:     "critical",
+									Threshold:    "5",
+									TimeFunction: "all",
+								},
+							},
+							Type:       "NRQL",
+							Name:       "NRQL Condition",
+							RunbookURL: "http://test.com/runbook",
+							ID:         777,
+
+							Enabled:          true,
+							ExistingPolicyID: 42,
+						},
+						NrqlSpecificSpec{
+							ViolationCloseTimer: 60,
+							ExpectedGroups:      2,
+							IgnoreOverlap:       true,
+							ValueFunction:       "max",
+							Nrql: NrqlQuery{
+								Query:      "SELECT 1 FROM MyEvents",
+								SinceValue: "5",
 							},
 						},
-						Nrql: NrqlQuery{
-							Query:      "SELECT 1 FROM MyEvents",
-							SinceValue: "5",
-						},
-						Type:                "NRQL",
-						Name:                "NRQL Condition",
-						RunbookURL:          "http://test.com/runbook",
-						ValueFunction:       "max",
-						ID:                  777,
-						ViolationCloseTimer: 60,
-						ExpectedGroups:      2,
-						IgnoreOverlap:       true,
-						Enabled:             true,
-						ExistingPolicyID:    42,
+						APMSpecificSpec{},
 					},
 				},
 			}
@@ -133,7 +142,11 @@ var _ = Describe("Equals", func() {
 					Name:      "policy-name",
 					Namespace: "default",
 					Spec: ConditionSpec{
-						Name: "test condition 222",
+						GenericConditionSpec{
+							Name: "test condition 222",
+						},
+						NrqlSpecificSpec{},
+						APMSpecificSpec{},
 					},
 				},
 			}
@@ -147,24 +160,40 @@ var _ = Describe("Equals", func() {
 			p.Conditions = []PolicyCondition{
 				{
 					Spec: ConditionSpec{
-						Name: "test condition",
+						GenericConditionSpec{
+							Name: "test condition",
+						},
+						NrqlSpecificSpec{},
+						APMSpecificSpec{},
 					},
 				},
 				{
 					Spec: ConditionSpec{
-						Name: "test condition 2",
+						GenericConditionSpec{
+							Name: "test condition 2",
+						},
+						NrqlSpecificSpec{},
+						APMSpecificSpec{},
 					},
 				},
 			}
 			policyToCompare.Conditions = []PolicyCondition{
 				{
 					Spec: ConditionSpec{
-						Name: "test condition",
+						GenericConditionSpec{
+							Name: "test condition",
+						},
+						NrqlSpecificSpec{},
+						APMSpecificSpec{},
 					},
 				},
 				{
 					Spec: ConditionSpec{
-						Name: "test condition is awesome",
+						GenericConditionSpec{
+							Name: "test condition is awesome",
+						},
+						NrqlSpecificSpec{},
+						APMSpecificSpec{},
 					},
 				},
 			}
@@ -178,12 +207,20 @@ var _ = Describe("Equals", func() {
 			p.Conditions = []PolicyCondition{
 				{
 					Spec: ConditionSpec{
-						Name: "test condition",
+						GenericConditionSpec{
+							Name: "test condition",
+						},
+						NrqlSpecificSpec{},
+						APMSpecificSpec{},
 					},
 				},
 				{
 					Spec: ConditionSpec{
-						Name: "test condition 2",
+						GenericConditionSpec{
+							Name: "test condition 2",
+						},
+						NrqlSpecificSpec{},
+						APMSpecificSpec{},
 					},
 				},
 			}
@@ -223,34 +260,39 @@ var _ = Describe("Equals", func() {
 
 var _ = Describe("GetNrqlConditionSpec", func() {
 	Context("With a NRQL condition type PolicyCondition", func() {
-		var condition PolicyCondition
-		condition = PolicyCondition{
+		condition := PolicyCondition{
 			Name:      "my-policy",
 			Namespace: "default",
 			Spec: ConditionSpec{
-				Terms: []AlertConditionTerm{
-					{
-						Duration:     "30",
-						Operator:     "above",
-						Priority:     "critical",
-						Threshold:    "5",
-						TimeFunction: "all",
+				GenericConditionSpec{
+					Terms: []AlertConditionTerm{
+						{
+							Duration:     "30",
+							Operator:     "above",
+							Priority:     "critical",
+							Threshold:    "5",
+							TimeFunction: "all",
+						},
+					},
+					Type:       "NRQL",
+					Name:       "NRQL Condition",
+					RunbookURL: "http://test.com/runbook",
+					ID:         777,
+
+					Enabled:          true,
+					ExistingPolicyID: 42,
+				},
+				NrqlSpecificSpec{
+					ViolationCloseTimer: 60,
+					ExpectedGroups:      2,
+					IgnoreOverlap:       true,
+					ValueFunction:       "max",
+					Nrql: NrqlQuery{
+						Query:      "SELECT 1 FROM MyEvents",
+						SinceValue: "5",
 					},
 				},
-				Nrql: NrqlQuery{
-					Query:      "SELECT 1 FROM MyEvents",
-					SinceValue: "5",
-				},
-				Type:                "NRQL",
-				Name:                "NRQL Condition",
-				RunbookURL:          "http://test.com/runbook",
-				ValueFunction:       "max",
-				ID:                  777,
-				ViolationCloseTimer: 60,
-				ExpectedGroups:      2,
-				IgnoreOverlap:       true,
-				Enabled:             true,
-				ExistingPolicyID:    42,
+				APMSpecificSpec{},
 			},
 		}
 		It("Should return a matching NrqlConditionSpec", func() {
@@ -284,36 +326,41 @@ var _ = Describe("GetNrqlConditionSpec", func() {
 
 var _ = Describe("GetApmConditionSpec", func() {
 	Context("With a NRQL condition type PolicyCondition", func() {
-		var condition PolicyCondition
-		condition = PolicyCondition{
+		condition := PolicyCondition{
 			Name:      "my-policy",
 			Namespace: "default",
 			Spec: ConditionSpec{
-				Terms: []AlertConditionTerm{
-					{
-						Duration:     "30",
-						Operator:     "above",
-						Priority:     "critical",
-						Threshold:    "1.5",
-						TimeFunction: "all",
+				GenericConditionSpec{
+					Terms: []AlertConditionTerm{
+						{
+							Duration:     "30",
+							Operator:     "above",
+							Priority:     "critical",
+							Threshold:    "1.5",
+							TimeFunction: "all",
+						},
 					},
+					Type:       "apm_app_metric",
+					Name:       "APM Condition",
+					RunbookURL: "http://test.com/runbook",
+					ID:         888,
+
+					Enabled:          true,
+					ExistingPolicyID: 42,
 				},
-				Type:       "apm_app_metric",
-				Name:       "APM Condition",
-				RunbookURL: "http://test.com/runbook",
-				Metric:     "apdex",
-				Entities:   []string{"333"},
-				UserDefined: alerts.ConditionUserDefined{
-					Metric:        "Custom/foo",
-					ValueFunction: "average",
+				NrqlSpecificSpec{},
+				APMSpecificSpec{
+					ViolationCloseTimer: 60,
+					Scope:               "application",
+					UserDefined: alerts.ConditionUserDefined{
+						Metric:        "Custom/foo",
+						ValueFunction: "average",
+					},
+					Entities: []string{
+						"333",
+					},
+					Metric: "apdex",
 				},
-				Scope:               "application",
-				GCMetric:            "",
-				PolicyID:            0,
-				ID:                  888,
-				ViolationCloseTimer: 60,
-				Enabled:             true,
-				ExistingPolicyID:    42,
 			},
 		}
 		It("Should return a matching ApmConditionSpec", func() {

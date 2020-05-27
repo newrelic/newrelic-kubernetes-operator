@@ -1,5 +1,3 @@
-// +build integration
-
 package v1
 
 import (
@@ -30,26 +28,30 @@ var _ = Describe("ValidateCreate", func() {
 				Name: "test apm condition",
 			},
 			Spec: ApmAlertConditionSpec{
-				Terms: []AlertConditionTerm{
-					{
-						Duration:     "30",
-						Operator:     "above",
-						Priority:     "critical",
-						Threshold:    "0.9",
-						TimeFunction: "all",
+				GenericConditionSpec{
+					Terms: []AlertConditionTerm{
+						{
+							Duration:     "30",
+							Operator:     "above",
+							Priority:     "critical",
+							Threshold:    "0.9",
+							TimeFunction: "all",
+						},
 					},
+					Type:             "apm_app_metric",
+					Name:             "K8s generated apm alert condition",
+					Enabled:          true,
+					ExistingPolicyID: 46286,
+					APIKey:           "111222333",
+					APIKeySecret:     NewRelicAPIKeySecret{},
+					Region:           "staging",
 				},
-				Type:             "apm_app_metric",
-				Name:             "K8s generated apm alert condition",
-				Metric:           "apdex",
-				UserDefined:      alerts.ConditionUserDefined{},
-				Scope:            "",
-				Entities:         []string{"5950260"},
-				Enabled:          true,
-				ExistingPolicyID: 46286,
-				APIKey:           "111222333",
-				APIKeySecret:     NewRelicAPIKeySecret{},
-				Region:           "staging",
+				APMSpecificSpec{
+					Metric:      "apdex",
+					UserDefined: alerts.ConditionUserDefined{},
+					Scope:       "",
+					Entities:    []string{"5950260"},
+				},
 			},
 		}
 

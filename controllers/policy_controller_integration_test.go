@@ -64,27 +64,34 @@ var _ = Describe("policy reconciliation", func() {
 		}
 
 		conditionSpec = &nrv1.ConditionSpec{
-			Terms: []nrv1.AlertConditionTerm{
-				{
-					Duration:     "30",
-					Operator:     "above",
-					Priority:     "critical",
-					Threshold:    "5",
-					TimeFunction: "all",
+			nrv1.GenericConditionSpec{
+				Terms: []nrv1.AlertConditionTerm{
+					{
+						Duration:     "30",
+						Operator:     "above",
+						Priority:     "critical",
+						Threshold:    "5",
+						TimeFunction: "all",
+					},
 				},
+				Type:                "NRQL",
+				Name:                "NRQL Condition",
+				RunbookURL:          "http://test.com/runbook",
+				Enabled:             true,
+
 			},
-			Nrql: nrv1.NrqlQuery{
-				Query:      "SELECT 1 FROM MyEvents",
-				SinceValue: "5",
+			nrv1.NrqlSpecificSpec{
+				Nrql: nrv1.NrqlQuery{
+					Query:      "SELECT 1 FROM MyEvents",
+					SinceValue: "5",
+				},
+				ValueFunction:       "max",
+				ViolationCloseTimer: 60,
+				ExpectedGroups:      2,
+				IgnoreOverlap:       true,
+
 			},
-			Type:                "NRQL",
-			Name:                "NRQL Condition",
-			RunbookURL:          "http://test.com/runbook",
-			ValueFunction:       "max",
-			ViolationCloseTimer: 60,
-			ExpectedGroups:      2,
-			IgnoreOverlap:       true,
-			Enabled:             true,
+			nrv1.APMSpecificSpec{},
 		}
 
 		policy = &nrv1.Policy{
@@ -554,19 +561,34 @@ var _ = Describe("policy reconciliation", func() {
 		Context("and adding another condition ", func() {
 			BeforeEach(func() {
 				secondConditionSpec := nrv1.ConditionSpec{
-					Terms: []nrv1.AlertConditionTerm{
-						{
-							Duration:     "30",
-							Operator:     "above",
-							Priority:     "critical",
-							Threshold:    "5",
-							TimeFunction: "all",
+					nrv1.GenericConditionSpec{
+						Terms: []nrv1.AlertConditionTerm{
+							{
+								Duration:     "30",
+								Operator:     "above",
+								Priority:     "critical",
+								Threshold:    "5",
+								TimeFunction: "all",
+							},
 						},
+						Type:                "NRQL",
+						Name:                "second alert condition",
+						RunbookURL:          "http://test.com/runbook",
+						Enabled:             true,
+
 					},
-					Nrql:    nrv1.NrqlQuery{},
-					Type:    "",
-					Name:    "second alert condition",
-					Enabled: true,
+					nrv1.NrqlSpecificSpec{
+						Nrql: nrv1.NrqlQuery{
+							Query:      "SELECT 1 FROM MyEvents",
+							SinceValue: "5",
+						},
+						ValueFunction:       "max",
+						ViolationCloseTimer: 60,
+						ExpectedGroups:      2,
+						IgnoreOverlap:       true,
+
+					},
+					nrv1.APMSpecificSpec{},
 				}
 				secondCondition := nrv1.PolicyCondition{
 					Spec: secondConditionSpec,
@@ -632,19 +654,34 @@ var _ = Describe("policy reconciliation", func() {
 		BeforeEach(func() {
 
 			secondConditionSpec := nrv1.ConditionSpec{
-				Terms: []nrv1.AlertConditionTerm{
-					{
-						Duration:     "30",
-						Operator:     "above",
-						Priority:     "critical",
-						Threshold:    "5",
-						TimeFunction: "all",
+				nrv1.GenericConditionSpec{
+					Terms: []nrv1.AlertConditionTerm{
+						{
+							Duration:     "30",
+							Operator:     "above",
+							Priority:     "critical",
+							Threshold:    "5",
+							TimeFunction: "all",
+						},
 					},
+					Type:                "NRQL",
+					Name:                "second alert condition",
+					RunbookURL:          "http://test.com/runbook",
+					Enabled:             true,
+
 				},
-				Nrql:    nrv1.NrqlQuery{},
-				Type:    "",
-				Name:    "second alert condition",
-				Enabled: true,
+				nrv1.NrqlSpecificSpec{
+					Nrql: nrv1.NrqlQuery{
+						Query:      "SELECT 1 FROM MyEvents",
+						SinceValue: "5",
+					},
+					ValueFunction:       "max",
+					ViolationCloseTimer: 60,
+					ExpectedGroups:      2,
+					IgnoreOverlap:       true,
+
+				},
+				nrv1.APMSpecificSpec{},
 			}
 			secondCondition := nrv1.PolicyCondition{
 				Spec: secondConditionSpec,
