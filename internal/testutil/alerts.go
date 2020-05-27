@@ -41,10 +41,22 @@ func AlertsPolicyTestSetup(t *testing.T) client.Client {
 }
 
 func NewTestAlertsPolicy(t *testing.T) *nrv1.AlertsPolicy {
-	policyName := fmt.Sprintf("test-policy-%s", testhelpers.RandSeq(5))
+	envAPIKey := os.Getenv("NEW_RELIC_API_KEY")
+	envRegion := os.Getenv("NEW_RELIC_REGION")
+	envAccountID := os.Getenv("NEW_RELIC_ACCOUNT_ID")
 
-	accountID, err := strconv.Atoi(os.Getenv("NEW_RELIC_ACCOUNT_ID"))
+	if envAPIKey == "" || envAccountID == "" {
+		t.Skipf("acceptance testing requires NEW_RELIC_API_KEY and NEW_RELIC_ACCOUNT_ID")
+	}
+
+	accountID, err := strconv.Atoi(envAccountID)
 	assert.NoError(t, err)
+
+	if envRegion == "" {
+		envRegion = "us"
+	}
+
+	policyName := fmt.Sprintf("test-policy-%s", testhelpers.RandSeq(5))
 
 	return &nrv1.AlertsPolicy{
 		ObjectMeta: metav1.ObjectMeta{
@@ -52,11 +64,11 @@ func NewTestAlertsPolicy(t *testing.T) *nrv1.AlertsPolicy {
 			Namespace: "default",
 		},
 		Spec: nrv1.AlertsPolicySpec{
-			APIKey:             os.Getenv("NEW_RELIC_API_KEY"),
+			APIKey:             envAPIKey,
 			AccountID:          accountID,
 			IncidentPreference: "PER_POLICY",
 			Name:               policyName,
-			Region:             "US",
+			Region:             envRegion,
 			// Conditions: []nrv1.AlertsPolicyCondition{
 			// 	{
 			// 		Spec: *conditionSpec,
@@ -72,10 +84,22 @@ func NewTestAlertsPolicy(t *testing.T) *nrv1.AlertsPolicy {
 }
 
 func NewTestAlertsNrqlCondition(t *testing.T) *nrv1.AlertsNrqlCondition {
-	conditionName := fmt.Sprintf("test-condition-%s", testhelpers.RandSeq(5))
+	envAPIKey := os.Getenv("NEW_RELIC_API_KEY")
+	envRegion := os.Getenv("NEW_RELIC_REGION")
+	envAccountID := os.Getenv("NEW_RELIC_ACCOUNT_ID")
 
-	accountID, err := strconv.Atoi(os.Getenv("NEW_RELIC_ACCOUNT_ID"))
+	if envAPIKey == "" || envAccountID == "" {
+		t.Skipf("acceptance testing requires NEW_RELIC_API_KEY and NEW_RELIC_ACCOUNT_ID")
+	}
+
+	accountID, err := strconv.Atoi(envAccountID)
 	assert.NoError(t, err)
+
+	if envRegion == "" {
+		envRegion = "us"
+	}
+
+	conditionName := fmt.Sprintf("test-condition-%s", testhelpers.RandSeq(5))
 
 	return &nrv1.AlertsNrqlCondition{
 		ObjectMeta: metav1.ObjectMeta{
@@ -85,7 +109,7 @@ func NewTestAlertsNrqlCondition(t *testing.T) *nrv1.AlertsNrqlCondition {
 
 		// TODO make use of NewTestAlertsNrqlConditionSpec()
 		Spec: nrv1.AlertsNrqlConditionSpec{
-			APIKey:    os.Getenv("NEW_RELIC_API_KEY"),
+			APIKey:    envAPIKey,
 			AccountID: accountID,
 			Terms: []nrv1.AlertsNrqlConditionTerm{
 				{
@@ -105,6 +129,7 @@ func NewTestAlertsNrqlCondition(t *testing.T) *nrv1.AlertsNrqlCondition {
 			RunbookURL:         "http://test.com/runbook",
 			ValueFunction:      &alerts.NrqlConditionValueFunctions.SingleValue,
 			ViolationTimeLimit: alerts.NrqlConditionViolationTimeLimits.OneHour,
+			Region:             envRegion,
 			ExpectedGroups:     2,
 			IgnoreOverlap:      true,
 			Enabled:            true,

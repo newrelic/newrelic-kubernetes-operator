@@ -18,6 +18,7 @@ package controllers
 import (
 	"context"
 	"errors"
+	"fmt"
 	"reflect"
 	"strings"
 
@@ -51,7 +52,7 @@ type AlertsPolicyReconciler struct {
 
 func (r *AlertsPolicyReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 	r.ctx = context.Background()
-	_ = r.Log.WithValues("policy", req.NamespacedName)
+	_ = r.Log.WithValues("policy to reconcile", req.NamespacedName)
 
 	var policy nrv1.AlertsPolicy
 	err := r.Client.Get(r.ctx, req.NamespacedName, &policy)
@@ -150,13 +151,16 @@ func (r *AlertsPolicyReconciler) createAlertsPolicy(policy *nrv1.AlertsPolicy) e
 		r.Log.Error(err, "tried updating policy status", "name", policy.Name)
 		return err
 	}
+
 	return nil
 }
 
 func (r *AlertsPolicyReconciler) createConditions(policy *nrv1.AlertsPolicy) error {
+	r.Log.Info("creating conditions for policy")
+	fmt.Printf("\ncreating conditions for policy: %+v\n", policy)
 
-	r.Log.Info("initial policy creation so create all policies")
 	collectedErrors := new(customErrors.ErrorCollector)
+
 	for i, condition := range policy.Spec.Conditions {
 		err := r.createCondition(policy, &condition)
 		if err != nil {
@@ -165,12 +169,13 @@ func (r *AlertsPolicyReconciler) createConditions(policy *nrv1.AlertsPolicy) err
 		} else {
 			policy.Spec.Conditions[i] = condition
 		}
-
 	}
+
 	if len(*collectedErrors) > 0 {
 		r.Log.Info("errors encountered creating conditions", "collectoredErrors", collectedErrors)
 		return collectedErrors
 	}
+
 	return nil
 }
 
@@ -239,7 +244,7 @@ func (r *AlertsPolicyReconciler) createOrUpdateConditions(policy *nrv1.AlertsPol
 			condition: condition,
 		}
 
-		retrievedCondition := r.getAlertsNrqlConditionFromAlertsPolicyCondition(&condition) // := nrv1.NrqlAlertCondition{}
+		retrievedCondition := r.getAlertsNrqlConditionFromAlertsPolicyCondition(&condition)
 
 		r.Log.Info("Found condition to update", "retrievedCondition", retrievedCondition)
 
@@ -314,14 +319,18 @@ func (r *AlertsPolicyReconciler) createCondition(policy *nrv1.AlertsPolicy, cond
 	alertsNrqlCondition.Status.AppliedSpec = &nrv1.AlertsNrqlConditionSpec{}
 
 	r.Log.Info("creating condition", "condition", condition.Name, "conditionName", condition.Spec.Name, "nrqlAlertCondition", alertsNrqlCondition)
+
 	errCondition := r.Create(r.ctx, &alertsNrqlCondition)
 	if errCondition != nil {
 		r.Log.Error(errCondition, "error creating condition")
 		return errCondition
 	}
+
 	condition.Name = alertsNrqlCondition.Name //created from generated name
 	condition.Namespace = alertsNrqlCondition.Namespace
 	//condition.SpecHash = nrv1.ComputeHash(&condition.Spec)
+
+	fmt.Printf("\ncreateCondition(): alertsNrqlCondition: %+v\n", alertsNrqlCondition)
 
 	r.Log.Info("created condition", "condition", condition.Name, "conditionName", condition.Spec.Name, "nrqlAlertCondition", alertsNrqlCondition)
 
