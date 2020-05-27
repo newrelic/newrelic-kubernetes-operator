@@ -18,6 +18,7 @@ package controllers
 import (
 	"context"
 	"errors"
+	"fmt"
 	"reflect"
 	"strconv"
 	"strings"
@@ -32,7 +33,7 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	nralertsv1 "github.com/newrelic/newrelic-kubernetes-operator/api/v1"
+	nrv1 "github.com/newrelic/newrelic-kubernetes-operator/api/v1"
 )
 
 // AlertsNrqlConditionReconciler reconciles a AlertsNrqlCondition object
@@ -59,8 +60,8 @@ func (r *AlertsNrqlConditionReconciler) Reconcile(req ctrl.Request) (ctrl.Result
 	//
 	//r.Log.Info("secret", "secret", thing, "error", getErr)
 
-	r.Log.Info("Starting reconcile action")
-	var condition nralertsv1.AlertsNrqlCondition
+	r.Log.Info("starting reconcile action")
+	var condition nrv1.AlertsNrqlCondition
 	err := r.Client.Get(ctx, req.NamespacedName, &condition)
 	if err != nil {
 		if strings.Contains(err.Error(), " not found") {
@@ -180,6 +181,7 @@ func (r *AlertsNrqlConditionReconciler) Reconcile(req ctrl.Request) (ctrl.Result
 			)
 		} else {
 			condition.Status.AppliedSpec = &condition.Spec
+			fmt.Printf("condition: %+v", condition)
 			intID, err := strconv.Atoi(createdCondition.ID)
 			if err != nil {
 				r.Log.Error(err, "error converting condition ID to int", "conditionID", createdCondition.ID)
@@ -197,7 +199,7 @@ func (r *AlertsNrqlConditionReconciler) Reconcile(req ctrl.Request) (ctrl.Result
 	return ctrl.Result{}, nil
 }
 
-func (r *AlertsNrqlConditionReconciler) checkForExistingCondition(condition *nralertsv1.AlertsNrqlCondition) {
+func (r *AlertsNrqlConditionReconciler) checkForExistingCondition(condition *nrv1.AlertsNrqlCondition) {
 	if condition.Status.ConditionID == 0 {
 		r.Log.Info("Checking for existing condition", "conditionName", condition.Name)
 		//if no conditionId, get list of conditions and compare name
@@ -223,11 +225,11 @@ func (r *AlertsNrqlConditionReconciler) checkForExistingCondition(condition *nra
 func (r *AlertsNrqlConditionReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	r.AlertClientFunc = interfaces.InitializeAlertsClient
 	return ctrl.NewControllerManagedBy(mgr).
-		For(&nralertsv1.AlertsNrqlCondition{}).
+		For(&nrv1.AlertsNrqlCondition{}).
 		Complete(r)
 }
 
-func (r *AlertsNrqlConditionReconciler) deleteNewRelicAlertCondition(condition nralertsv1.AlertsNrqlCondition) error {
+func (r *AlertsNrqlConditionReconciler) deleteNewRelicAlertCondition(condition nrv1.AlertsNrqlCondition) error {
 	r.Log.Info("Deleting condition", "conditionName", condition.Spec.Name)
 	_, err := r.Alerts.DeleteNrqlCondition(condition.Status.ConditionID)
 	if err != nil {
@@ -241,12 +243,12 @@ func (r *AlertsNrqlConditionReconciler) deleteNewRelicAlertCondition(condition n
 	return nil
 }
 
-func (r *AlertsNrqlConditionReconciler) getAPIKeyOrSecret(condition nralertsv1.AlertsNrqlCondition) string {
+func (r *AlertsNrqlConditionReconciler) getAPIKeyOrSecret(condition nrv1.AlertsNrqlCondition) string {
 
 	if condition.Spec.APIKey != "" {
 		return condition.Spec.APIKey
 	}
-	if condition.Spec.APIKeySecret != (nralertsv1.NewRelicAPIKeySecret{}) {
+	if condition.Spec.APIKeySecret != (nrv1.NewRelicAPIKeySecret{}) {
 		key := types.NamespacedName{Namespace: condition.Spec.APIKeySecret.Namespace, Name: condition.Spec.APIKeySecret.Name}
 		var apiKeySecret v1.Secret
 		if getErr := r.Client.Get(context.Background(), key, &apiKeySecret); getErr != nil {

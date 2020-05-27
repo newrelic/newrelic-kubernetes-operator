@@ -3,10 +3,10 @@
 package controllers
 
 import (
+	"fmt"
 	"os"
 	"testing"
 
-	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -14,8 +14,10 @@ import (
 
 	"github.com/stretchr/testify/require"
 
+	"github.com/newrelic/newrelic-client-go/pkg/alerts"
 	nrv1 "github.com/newrelic/newrelic-kubernetes-operator/api/v1"
 	"github.com/newrelic/newrelic-kubernetes-operator/interfaces"
+	"github.com/newrelic/newrelic-kubernetes-operator/internal/testutil"
 )
 
 func TestIntegrationAlertsPolicyController(t *testing.T) {
@@ -24,25 +26,25 @@ func TestIntegrationAlertsPolicyController(t *testing.T) {
 	conditionSpec := &nrv1.AlertsNrqlConditionSpec{
 		Terms: []nrv1.AlertsNrqlConditionTerm{
 			{
-				//Duration:     resource.MustParse("30"),
-				Operator:     "above",
-				Priority:     "critical",
-				Threshold:    resource.MustParse("5"),
-				TimeFunction: "all",
+				Operator:             alerts.NrqlConditionOperators.Above,
+				Priority:             alerts.NrqlConditionPriorities.Critical,
+				Threshold:            "5",
+				ThresholdDuration:    60,
+				ThresholdOccurrences: alerts.ThresholdOccurrences.AtLeastOnce,
 			},
 		},
-		Nrql: nrv1.AlertsNrqlConditionQuery{
-			Query:      "SELECT 1 FROM MyEvents",
-			SinceValue: "5",
+		Nrql: alerts.NrqlConditionQuery{
+			Query:            "SELECT 1 FROM MyEvents",
+			EvaluationOffset: 5,
 		},
-		Type:                "NRQL",
-		Name:                "NRQL Condition",
-		RunbookURL:          "http://test.com/runbook",
-		ValueFunction:       "max",
-		ViolationCloseTimer: 60,
-		ExpectedGroups:      2,
-		IgnoreOverlap:       true,
-		Enabled:             true,
+		Type:               "NRQL",
+		Name:               "NRQL Condition",
+		RunbookURL:         "http://test.com/runbook",
+		ValueFunction:      &alerts.NrqlConditionValueFunctions.SingleValue,
+		ViolationTimeLimit: alerts.NrqlConditionViolationTimeLimits.OneHour,
+		ExpectedGroups:     2,
+		IgnoreOverlap:      true,
+		Enabled:            true,
 	}
 
 	policy := &nrv1.AlertsPolicy{
@@ -67,8 +69,10 @@ func TestIntegrationAlertsPolicyController(t *testing.T) {
 		},
 	}
 
+	fmt.Printf("unused policy: %+v", policy)
+
 	// Must come before calling reconciler.Reconcile()
-	k8sClient := alertsPolicyTestSetup(t, policy)
+	k8sClient := testutil.AlertsPolicyTestSetup(t)
 
 	namespacedName := types.NamespacedName{
 		Namespace: "default",
