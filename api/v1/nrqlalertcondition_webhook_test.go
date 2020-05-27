@@ -13,7 +13,6 @@ import (
 	"github.com/newrelic/newrelic-client-go/pkg/alerts"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	"k8s.io/apimachinery/pkg/api/resource"
 
 	"github.com/newrelic/newrelic-kubernetes-operator/interfaces/interfacesfakes"
 )
@@ -37,10 +36,10 @@ var _ = Describe("ValidateCreate", func() {
 			Spec: NrqlAlertConditionSpec{
 				Terms: []AlertConditionTerm{
 					{
-						Duration:     resource.MustParse("30"),
+						Duration:     "30",
 						Operator:     "above",
 						Priority:     "critical",
-						Threshold:    resource.MustParse("5"),
+						Threshold:    "5",
 						TimeFunction: "all",
 					},
 				},

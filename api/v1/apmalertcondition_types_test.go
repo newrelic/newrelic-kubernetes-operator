@@ -17,7 +17,7 @@ var _ = Describe("ApmAlertConditionSpec", func() {
 
 	BeforeEach(func() {
 		condition = ApmAlertConditionSpec{
-			Terms: []NRAlertConditionTerm{
+			Terms: []AlertConditionTerm{
 				{
 					Duration:     "30",
 					Operator:     "above",

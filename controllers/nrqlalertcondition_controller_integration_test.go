@@ -9,7 +9,6 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	v1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -78,10 +77,10 @@ var _ = Describe("NrqlCondition reconciliation", func() {
 			Spec: nralertsv1.NrqlAlertConditionSpec{
 				Terms: []nralertsv1.AlertConditionTerm{
 					{
-						Duration:     resource.MustParse("30"),
+						Duration:     "30",
 						Operator:     "Above",
 						Priority:     "Critical",
-						Threshold:    resource.MustParse("5"),
+						Threshold:    "5",
 						TimeFunction: "All",
 					},
 				},
@@ -114,10 +113,10 @@ var _ = Describe("NrqlCondition reconciliation", func() {
 			Spec: nralertsv1.NrqlAlertConditionSpec{
 				Terms: []nralertsv1.AlertConditionTerm{
 					{
-						Duration:     resource.MustParse("30"),
+						Duration:     "30",
 						Operator:     "Above",
 						Priority:     "Critical",
-						Threshold:    resource.MustParse("5"),
+						Threshold:    "5",
 						TimeFunction: "All",
 					},
 				},
@@ -274,10 +273,10 @@ var _ = Describe("NrqlCondition reconciliation", func() {
 					Spec: nralertsv1.NrqlAlertConditionSpec{
 						Terms: []nralertsv1.AlertConditionTerm{
 							{
-								Duration:     resource.MustParse("30"),
+								Duration:     "30",
 								Operator:     "Above",
 								Priority:     "Critical",
-								Threshold:    resource.MustParse("5"),
+								Threshold:    "5",
 								TimeFunction: "All",
 							},
 						},

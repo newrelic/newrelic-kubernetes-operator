@@ -6,8 +6,6 @@ import (
 	"context"
 	"errors"
 
-	"k8s.io/apimachinery/pkg/api/resource"
-
 	"github.com/newrelic/newrelic-client-go/pkg/alerts"
 	ctrl "sigs.k8s.io/controller-runtime"
 
@@ -29,7 +27,7 @@ var _ = Describe("policy reconciliation", func() {
 		ctx            context.Context
 		r              *PolicyReconciler
 		policy         *nrv1.Policy
-		conditionSpec  *nrv1.NrqlAlertConditionSpec
+		conditionSpec  *nrv1.ConditionSpec
 		request        ctrl.Request
 		namespacedName types.NamespacedName
 		conditionName  types.NamespacedName
@@ -65,13 +63,13 @@ var _ = Describe("policy reconciliation", func() {
 			AlertClientFunc: fakeAlertFunc,
 		}
 
-		conditionSpec = &nrv1.NrqlAlertConditionSpec{
+		conditionSpec = &nrv1.ConditionSpec{
 			Terms: []nrv1.AlertConditionTerm{
 				{
-					Duration:     resource.MustParse("30"),
+					Duration:     "30",
 					Operator:     "above",
 					Priority:     "critical",
-					Threshold:    resource.MustParse("5"),
+					Threshold:    "5",
 					TimeFunction: "all",
 				},
 			},
@@ -555,13 +553,13 @@ var _ = Describe("policy reconciliation", func() {
 
 		Context("and adding another condition ", func() {
 			BeforeEach(func() {
-				secondConditionSpec := nrv1.NrqlAlertConditionSpec{
+				secondConditionSpec := nrv1.ConditionSpec{
 					Terms: []nrv1.AlertConditionTerm{
 						{
-							Duration:     resource.MustParse("30"),
+							Duration:     "30",
 							Operator:     "above",
 							Priority:     "critical",
-							Threshold:    resource.MustParse("5"),
+							Threshold:    "5",
 							TimeFunction: "all",
 						},
 					},
@@ -633,13 +631,13 @@ var _ = Describe("policy reconciliation", func() {
 	Context("When starting with an existing policy with two conditions", func() {
 		BeforeEach(func() {
 
-			secondConditionSpec := nrv1.NrqlAlertConditionSpec{
+			secondConditionSpec := nrv1.ConditionSpec{
 				Terms: []nrv1.AlertConditionTerm{
 					{
-						Duration:     resource.MustParse("30"),
+						Duration:     "30",
 						Operator:     "above",
 						Priority:     "critical",
-						Threshold:    resource.MustParse("5"),
+						Threshold:    "5",
 						TimeFunction: "all",
 					},
 				},

@@ -4,7 +4,6 @@ package v1
 
 import (
 	v1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/newrelic/newrelic-kubernetes-operator/interfaces"
@@ -103,13 +102,13 @@ var _ = Describe("Policy_webhooks", func() {
 			BeforeEach(func() {
 				r.Spec.Conditions = []PolicyCondition{
 					{
-						Spec: NrqlAlertConditionSpec{
+						Spec: ConditionSpec{
 							Terms: []AlertConditionTerm{
 								{
-									Duration:     resource.MustParse("30"),
+									Duration:     "30",
 									Operator:     "above",
 									Priority:     "critical",
-									Threshold:    resource.MustParse("5"),
+									Threshold:    "5",
 									TimeFunction: "all",
 								},
 							},
@@ -128,13 +127,13 @@ var _ = Describe("Policy_webhooks", func() {
 						},
 					},
 					{
-						Spec: NrqlAlertConditionSpec{
+						Spec: ConditionSpec{
 							Terms: []AlertConditionTerm{
 								{
-									Duration:     resource.MustParse("30"),
+									Duration:     "30",
 									Operator:     "above",
 									Priority:     "critical",
-									Threshold:    resource.MustParse("5"),
+									Threshold:    "5",
 									TimeFunction: "all",
 								},
 							},
@@ -186,13 +185,13 @@ var _ = Describe("Policy_webhooks", func() {
 				APIKey:             "api-key",
 				Conditions: []PolicyCondition{
 					{
-						Spec: NrqlAlertConditionSpec{
+						Spec: ConditionSpec{
 							Terms: []AlertConditionTerm{
 								{
-									Duration:     resource.MustParse("30"),
+									Duration:     "30",
 									Operator:     "above",
 									Priority:     "critical",
-									Threshold:    resource.MustParse("5"),
+									Threshold:    "5",
 									TimeFunction: "all",
 								},
 							},

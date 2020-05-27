@@ -37,7 +37,7 @@ spec:
         metadata:
           type: object
         spec:
-          description: ApmAlertConditionSpec defines the desired state of NrqlAlertCondition
+          description: ApmAlertConditionSpec defines the desired state of ApmAlertCondition
           properties:
             api_key:
               type: string
@@ -113,7 +113,7 @@ spec:
           description: ApmAlertConditionStatus defines the observed state of ApmAlertCondition
           properties:
             applied_spec:
-              description: ApmAlertConditionSpec defines the desired state of NrqlAlertCondition
+              description: ApmAlertConditionSpec defines the desired state of ApmAlertCondition
               properties:
                 api_key:
                   type: string

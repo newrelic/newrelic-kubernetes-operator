@@ -10,7 +10,6 @@ import (
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	"k8s.io/apimachinery/pkg/api/resource"
 )
 
 var _ = Describe("NrqlAlertConditionSpec", func() {
@@ -20,10 +19,10 @@ var _ = Describe("NrqlAlertConditionSpec", func() {
 		condition = NrqlAlertConditionSpec{
 			Terms: []AlertConditionTerm{
 				{
-					Duration:     resource.MustParse("30"),
+					Duration:     "30",
 					Operator:     "above",
 					Priority:     "critical",
-					Threshold:    resource.MustParse("5"),
+					Threshold:    "5",
 					TimeFunction: "all",
 				},
 			},

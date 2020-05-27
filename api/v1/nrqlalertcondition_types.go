@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 
 	"github.com/newrelic/newrelic-client-go/pkg/alerts"
-	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -32,15 +31,6 @@ type NrqlAlertConditionSpec struct {
 type NrqlQuery struct {
 	Query      string `json:"query,omitempty"`
 	SinceValue string `json:"since_value,omitempty"`
-}
-
-// AlertConditionTerm represents the terms of a New Relic alert condition.
-type AlertConditionTerm struct {
-	Duration     resource.Quantity `json:"duration,omitempty"`
-	Operator     string            `json:"operator,omitempty"`
-	Priority     string            `json:"priority,omitempty"`
-	Threshold    resource.Quantity `json:"threshold"`
-	TimeFunction string            `json:"time_function,omitempty"`
 }
 
 // NrqlAlertConditionStatus defines the observed state of NrqlAlertCondition

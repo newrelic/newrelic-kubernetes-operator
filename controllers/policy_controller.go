@@ -155,7 +155,7 @@ func (r *PolicyReconciler) createConditions(policy *nrv1.Policy) error {
 	r.Log.Info("initial policy creation so create all policies")
 	collectedErrors := new(customErrors.ErrorCollector)
 	for i, condition := range policy.Spec.Conditions {
-		err := r.createCondition(policy, &condition)
+		err := r.createNrqlCondition(policy, &condition)
 		if err != nil {
 			r.Log.Error(err, "error creating condition")
 			collectedErrors.Collect(err)
@@ -195,18 +195,21 @@ func (r *PolicyReconciler) createOrUpdateCondition(policy *nrv1.Policy, conditio
 
 		if condition.Name == "" {
 			r.Log.Info("made it through all existing appliedConditions, creating a new one")
-			err := r.createCondition(policy, condition)
+			err := r.createNrqlCondition(policy, condition)
 			return condition, err
 		}
 	}
 
-	nrqlCondition := r.getNrqlConditionFromPolicyCondition(condition)
+	//condition is the entry from the policy object v1.PolicyCondition
+	//policyCondition is what is retrieved from kubernetes  v1.NrqlAlertCondition
+	//retrievedPolicyCondition is needed for reasons? nrv1.NrqlAlertCondition
+	policyCondition := r.getNrqlConditionFromPolicyCondition(condition)
 
-	r.Log.Info("Found condition to update", "retrievedCondition", nrqlCondition)
+	r.Log.Info("Found condition to update", "retrievedCondition", policyCondition)
 
 	//Now check to confirm the NrqlCondition matches our PolicyCondition
-	retrievedPolicyCondition := nrv1.PolicyCondition{Spec: nrqlCondition.Spec}
-	r.Log.Info("spec hash", "retrieved", retrievedPolicyCondition.SpecHash(), "condition", condition.SpecHash())
+	retrievedPolicyCondition := nrv1.PolicyCondition{}
+	retrievedPolicyCondition.GenerateSpecFromNrqlConditionSpec(policyCondition.Spec)
 	r.Log.Info("conditions", "retrieved", retrievedPolicyCondition, "condition", condition)
 
 	if retrievedPolicyCondition.SpecHash() == condition.SpecHash() {
@@ -216,14 +219,14 @@ func (r *PolicyReconciler) createOrUpdateCondition(policy *nrv1.Policy, conditio
 
 	r.Log.Info("updating existing condition", "policyRegion", policy.Spec.Region, "policyId", policy.Status.PolicyID)
 
-	nrqlCondition.Spec = condition.Spec
+	policyCondition.Spec = condition.ReturnNrqlConditionSpec()
 	//Set inherited values
-	nrqlCondition.Spec.Region = policy.Spec.Region
-	nrqlCondition.Spec.ExistingPolicyID = policy.Status.PolicyID
-	nrqlCondition.Spec.APIKey = policy.Spec.APIKey
-	nrqlCondition.Spec.APIKeySecret = policy.Spec.APIKeySecret
+	policyCondition.Spec.Region = policy.Spec.Region
+	policyCondition.Spec.ExistingPolicyID = policy.Status.PolicyID
+	policyCondition.Spec.APIKey = policy.Spec.APIKey
+	policyCondition.Spec.APIKeySecret = policy.Spec.APIKeySecret
 
-	err := r.Client.Update(r.ctx, &nrqlCondition)
+	err := r.Client.Update(r.ctx, &policyCondition)
 	return condition, err
 }
 
@@ -286,7 +289,7 @@ func (r *PolicyReconciler) createOrUpdateConditions(policy *nrv1.Policy) error {
 	return nil
 }
 
-func (r *PolicyReconciler) createCondition(policy *nrv1.Policy, condition *nrv1.PolicyCondition) error {
+func (r *PolicyReconciler) createNrqlCondition(policy *nrv1.Policy, condition *nrv1.PolicyCondition) error {
 	var nrqlAlertCondition nrv1.NrqlAlertCondition
 	nrqlAlertCondition.GenerateName = policy.Name + "-condition-"
 	nrqlAlertCondition.Namespace = policy.Namespace
@@ -294,7 +297,7 @@ func (r *PolicyReconciler) createCondition(policy *nrv1.Policy, condition *nrv1.
 	//TODO: no clue if this is needed, I'm guessing no
 	//condition.OwnerReferences: []metav1.OwnerReference{*metav1.NewControllerRef(policy, conditionKind)},
 
-	nrqlAlertCondition.Spec = condition.Spec
+	nrqlAlertCondition.Spec = condition.ReturnNrqlConditionSpec()
 	nrqlAlertCondition.Spec.Region = policy.Spec.Region
 	nrqlAlertCondition.Spec.ExistingPolicyID = policy.Status.PolicyID
 	nrqlAlertCondition.Spec.APIKey = policy.Spec.APIKey
@@ -311,7 +314,7 @@ func (r *PolicyReconciler) createCondition(policy *nrv1.Policy, condition *nrv1.
 	condition.Namespace = nrqlAlertCondition.Namespace
 	//condition.SpecHash = nrv1.ComputeHash(&condition.Spec)
 
-	r.Log.Info("created condition", "condition", condition.Name, "conditionName", condition.Spec.Name, "nrqlAlertCondition", nrqlAlertCondition)
+	r.Log.Info("created condition", "condition", condition.Name, "conditionName", condition.Spec.Name, "nrqlAlertCondition", nrqlAlertCondition, "actualCondition", condition.Spec)
 
 	return nil
 }

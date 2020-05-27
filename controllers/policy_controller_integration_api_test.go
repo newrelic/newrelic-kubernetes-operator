@@ -8,7 +8,6 @@ import (
 	"path/filepath"
 	"testing"
 
-	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/kubernetes/scheme"
@@ -81,13 +80,13 @@ func TestIntegrationPolicyController(t *testing.T) {
 		envRegion = "us"
 	}
 
-	conditionSpec := &nrv1.NrqlAlertConditionSpec{
+	conditionSpec := &nrv1.ConditionSpec{
 		Terms: []nrv1.AlertConditionTerm{
 			{
-				Duration:     resource.MustParse("30"),
+				Duration:     "30",
 				Operator:     "above",
 				Priority:     "critical",
-				Threshold:    resource.MustParse("5"),
+				Threshold:    "5",
 				TimeFunction: "all",
 			},
 		},

@@ -7,9 +7,9 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-// ApmAlertConditionSpec defines the desired state of NrqlAlertCondition
+// ApmAlertConditionSpec defines the desired state of ApmAlertCondition
 type ApmAlertConditionSpec struct {
-	Terms               []NRAlertConditionTerm      `json:"terms,omitempty"`
+	Terms               []AlertConditionTerm        `json:"terms,omitempty"`
 	Type                string                      `json:"type,omitempty"` //TODO: add conditionType or pull from alerts package or make string
 	Name                string                      `json:"name,omitempty"`
 	RunbookURL          string                      `json:"runbook_url,omitempty"`
@@ -29,49 +29,13 @@ type ApmAlertConditionSpec struct {
 }
 
 // AlertConditionTerm represents the terms of a New Relic alert condition.
-type NRAlertConditionTerm struct {
+type AlertConditionTerm struct {
 	Duration     string `json:"duration,omitempty"`
 	Operator     string `json:"operator,omitempty"`
 	Priority     string `json:"priority,omitempty"`
 	Threshold    string `json:"threshold"`
 	TimeFunction string `json:"time_function,omitempty"`
 }
-
-/* going to need to address these metrictypes with conditions
-AjaxResponseTime:       "ajax_response_time",
-AjaxThroughput:         "ajax_throughput",
-Apdex:                  "apdex",
-CPUPercentage:          "cpu_percentage",
-Database:               "database",
-DiskIOPercentage:       "disk_io_percentage",
-DomProcessing:          "dom_processing",
-EndUserApdex:           "end_user_apdex",
-ErrorCount:             "error_count",
-ErrorPercentage:        "error_percentage",
-FullestDiskPercentage:  "fullest_disk_percentage",
-Images:                 "images",
-JSON:                   "json",
-LoadAverageOneMinute:   "load_average_one_minute",
-MemoryPercentage:       "memory_percentage",
-MobileCrashRate:        "mobile_crash_rate",
-Network:                "network",
-NetworkErrorPercentage: "network_error_percentage",
-PageRendering:          "page_rendering",
-PageViewThroughput:     "page_view_throughput",
-PageViewsWithJsErrors:  "page_views_with_js_errors",
-RequestQueuing:         "request_queuing",
-ResponseTime:           "response_time",
-ResponseTimeBackground: "response_time_background",
-ResponseTimeWeb:        "response_time_web",
-StatusErrorPercentage:  "status_error_percentage",
-Throughput:             "throughput",
-ThroughputBackground:   "throughput_background",
-ThroughputWeb:          "throughput_web",
-TotalPageLoad:          "total_page_load",
-UserDefined:            "user_defined",
-ViewLoading:            "view_loading",
-WebApplication:         "web_application",
-*/
 
 // ApmAlertConditionStatus defines the observed state of ApmAlertCondition
 type ApmAlertConditionStatus struct {

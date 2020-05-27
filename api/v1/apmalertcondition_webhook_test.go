@@ -30,7 +30,7 @@ var _ = Describe("ValidateCreate", func() {
 				Name: "test apm condition",
 			},
 			Spec: ApmAlertConditionSpec{
-				Terms: []NRAlertConditionTerm{
+				Terms: []AlertConditionTerm{
 					{
 						Duration:     "30",
 						Operator:     "above",

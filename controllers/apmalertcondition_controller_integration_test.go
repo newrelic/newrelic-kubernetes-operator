@@ -74,7 +74,7 @@ var _ = Describe("ApmCondition reconciliation", func() {
 				Namespace: "default",
 			},
 			Spec: nralertsv1.ApmAlertConditionSpec{
-				Terms: []nralertsv1.NRAlertConditionTerm{
+				Terms: []nralertsv1.AlertConditionTerm{
 					{
 						Duration:     "30",
 						Operator:     "above",
@@ -236,7 +236,7 @@ var _ = Describe("ApmCondition reconciliation", func() {
 						Namespace: "default",
 					},
 					Spec: nralertsv1.ApmAlertConditionSpec{
-						Terms: []nralertsv1.NRAlertConditionTerm{
+						Terms: []nralertsv1.AlertConditionTerm{
 							{
 								Duration:     "30",
 								Operator:     "above",

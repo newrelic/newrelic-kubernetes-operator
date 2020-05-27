@@ -55,8 +55,7 @@ spec:
                   namespace:
                     type: string
                   spec:
-                    description: NrqlAlertConditionSpec defines the desired state
-                      of NrqlAlertCondition
+                    description: Merged superset of Condition types
                     properties:
                       api_key:
                         type: string
@@ -69,16 +68,28 @@ spec:
                           namespace:
                             type: string
                         type: object
+                      condition_scope:
+                        type: string
                       enabled:
                         type: boolean
+                      entities:
+                        items:
+                          type: string
+                        type: array
                       existing_policy_id:
                         type: integer
                       expected_groups:
+                        description: NRQL condition fields
                         type: integer
+                      gc_metric:
+                        type: string
                       id:
                         type: integer
                       ignore_overlap:
                         type: boolean
+                      metric:
+                        description: APM condition fields
+                        type: string
                       name:
                         type: string
                       nrql:
@@ -100,21 +111,13 @@ spec:
                             a New Relic alert condition.
                           properties:
                             duration:
-                              anyOf:
-                              - type: integer
-                              - type: string
-                              pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
-                              x-kubernetes-int-or-string: true
+                              type: string
                             operator:
                               type: string
                             priority:
                               type: string
                             threshold:
-                              anyOf:
-                              - type: integer
-                              - type: string
-                              pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
-                              x-kubernetes-int-or-string: true
+                              type: string
                             time_function:
                               type: string
                           required:
@@ -123,9 +126,20 @@ spec:
                         type: array
                       type:
                         type: string
+                      user_defined:
+                        description: ConditionUserDefined represents user defined
+                          metrics for the New Relic alert condition.
+                        properties:
+                          metric:
+                            type: string
+                          value_function:
+                            description: ValueFunctionType specifies the value function
+                              to be used for returning custom metric data.
+                            type: string
+                        type: object
                       value_function:
                         type: string
-                      violation_time_limit_seconds:
+                      violation_close_timer:
                         type: integer
                     required:
                     - enabled
@@ -172,8 +186,7 @@ spec:
                       namespace:
                         type: string
                       spec:
-                        description: NrqlAlertConditionSpec defines the desired state
-                          of NrqlAlertCondition
+                        description: Merged superset of Condition types
                         properties:
                           api_key:
                             type: string
@@ -186,16 +199,28 @@ spec:
                               namespace:
                                 type: string
                             type: object
+                          condition_scope:
+                            type: string
                           enabled:
                             type: boolean
+                          entities:
+                            items:
+                              type: string
+                            type: array
                           existing_policy_id:
                             type: integer
                           expected_groups:
+                            description: NRQL condition fields
                             type: integer
+                          gc_metric:
+                            type: string
                           id:
                             type: integer
                           ignore_overlap:
                             type: boolean
+                          metric:
+                            description: APM condition fields
+                            type: string
                           name:
                             type: string
                           nrql:
@@ -217,21 +242,13 @@ spec:
                                 of a New Relic alert condition.
                               properties:
                                 duration:
-                                  anyOf:
-                                  - type: integer
-                                  - type: string
-                                  pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
-                                  x-kubernetes-int-or-string: true
+                                  type: string
                                 operator:
                                   type: string
                                 priority:
                                   type: string
                                 threshold:
-                                  anyOf:
-                                  - type: integer
-                                  - type: string
-                                  pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
-                                  x-kubernetes-int-or-string: true
+                                  type: string
                                 time_function:
                                   type: string
                               required:
@@ -240,9 +257,21 @@ spec:
                             type: array
                           type:
                             type: string
+                          user_defined:
+                            description: ConditionUserDefined represents user defined
+                              metrics for the New Relic alert condition.
+                            properties:
+                              metric:
+                                type: string
+                              value_function:
+                                description: ValueFunctionType specifies the value
+                                  function to be used for returning custom metric
+                                  data.
+                                type: string
+                            type: object
                           value_function:
                             type: string
-                          violation_time_limit_seconds:
+                          violation_close_timer:
                             type: integer
                         required:
                         - enabled

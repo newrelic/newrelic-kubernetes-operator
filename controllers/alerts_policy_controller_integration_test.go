@@ -9,7 +9,6 @@ import (
 	"strconv"
 	"testing"
 
-	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/kubernetes/scheme"
@@ -73,10 +72,10 @@ func TestIntegrationAlertsPolicyController(t *testing.T) {
 	conditionSpec := &nrv1.NrqlAlertConditionSpec{
 		Terms: []nrv1.AlertConditionTerm{
 			{
-				Duration:     resource.MustParse("30"),
+				Duration:     "30",
 				Operator:     "above",
 				Priority:     "critical",
-				Threshold:    resource.MustParse("5"),
+				Threshold:    "5",
 				TimeFunction: "all",
 			},
 		},
