@@ -92,7 +92,7 @@ var _ = Describe("NrqlCondition reconciliation", func() {
 
 					Enabled:          true,
 					ExistingPolicyID: 42,
-					APIKey: "112233",
+					APIKey:           "112233",
 				},
 				NrqlSpecificSpec: nrv1.NrqlSpecificSpec{
 					ViolationCloseTimer: 60,
@@ -258,7 +258,7 @@ var _ = Describe("NrqlCondition reconciliation", func() {
 
 							Enabled:          true,
 							ExistingPolicyID: 42,
-							APIKey: "112233",
+							APIKey:           "112233",
 						},
 						NrqlSpecificSpec: nrv1.NrqlSpecificSpec{
 							ViolationCloseTimer: 60,

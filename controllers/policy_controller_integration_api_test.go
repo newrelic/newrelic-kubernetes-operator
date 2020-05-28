@@ -91,11 +91,10 @@ func TestIntegrationPolicyController(t *testing.T) {
 					TimeFunction: "all",
 				},
 			},
-			Type:                "NRQL",
-			Name:                "NRQL Condition",
-			RunbookURL:          "http://test.com/runbook",
-			Enabled:             true,
-
+			Type:       "NRQL",
+			Name:       "NRQL Condition",
+			RunbookURL: "http://test.com/runbook",
+			Enabled:    true,
 		},
 		NrqlSpecificSpec: nrv1.NrqlSpecificSpec{
 			Nrql: nrv1.NrqlQuery{
@@ -106,7 +105,6 @@ func TestIntegrationPolicyController(t *testing.T) {
 			ViolationCloseTimer: 60,
 			ExpectedGroups:      2,
 			IgnoreOverlap:       true,
-
 		},
 		APMSpecificSpec: nrv1.APMSpecificSpec{},
 	}

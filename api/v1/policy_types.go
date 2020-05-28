@@ -169,6 +169,11 @@ func (p *PolicyCondition) GenerateSpecFromNrqlConditionSpec(nrqlConditionSpec Nr
 	json.Unmarshal(jsonString, &p.Spec) //nolint
 }
 
+func (p *PolicyCondition) GenerateSpecFromApmConditionSpec(apmConditionSpec ApmAlertConditionSpec) {
+	jsonString, _ := json.Marshal(apmConditionSpec)
+	json.Unmarshal(jsonString, &p.Spec) //nolint
+}
+
 func (p *PolicyCondition) ReturnNrqlConditionSpec() (nrqlAlertConditionSpec NrqlAlertConditionSpec) {
 	jsonString, _ := json.Marshal(p.Spec)
 	json.Unmarshal(jsonString, &nrqlAlertConditionSpec) //nolint
