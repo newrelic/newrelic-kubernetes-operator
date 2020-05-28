@@ -49,7 +49,7 @@ type AlertsNrqlConditionReconciler struct {
 // +kubebuilder:rbac:groups=nr.k8s.newrelic.com,resources=alertsnrqlconditions,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=nr.k8s.newrelic.com,resources=alertsnrqlconditions/status,verbs=get;update;patch
 
-func (r *AlertsNrqlConditionReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
+func (r *AlertsNrqlConditionReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) { //nolint: gocyclo
 	ctx := context.Background()
 	_ = r.Log.WithValues("nrqlalertcondition", req.NamespacedName)
 
@@ -158,9 +158,9 @@ func (r *AlertsNrqlConditionReconciler) Reconcile(req ctrl.Request) (ctrl.Result
 			r.Log.Error(err, "failed to update condition")
 		} else {
 			condition.Status.AppliedSpec = &condition.Spec
-			intID, err := strconv.Atoi(updatedCondition.ID)
-			if err != nil {
-				r.Log.Error(err, "error converting condition ID to int", "conditionID", updatedCondition.ID)
+			intID, convErr := strconv.Atoi(updatedCondition.ID)
+			if convErr != nil {
+				r.Log.Error(convErr, "error converting condition ID to int", "conditionID", updatedCondition.ID)
 			}
 
 			condition.Status.ConditionID = intID
@@ -182,9 +182,9 @@ func (r *AlertsNrqlConditionReconciler) Reconcile(req ctrl.Request) (ctrl.Result
 		} else {
 			condition.Status.AppliedSpec = &condition.Spec
 			fmt.Printf("condition: %+v", condition)
-			intID, err := strconv.Atoi(createdCondition.ID)
-			if err != nil {
-				r.Log.Error(err, "error converting condition ID to int", "conditionID", createdCondition.ID)
+			intID, convErr := strconv.Atoi(createdCondition.ID)
+			if convErr != nil {
+				r.Log.Error(convErr, "error converting condition ID to int", "conditionID", createdCondition.ID)
 			}
 
 			condition.Status.ConditionID = intID
