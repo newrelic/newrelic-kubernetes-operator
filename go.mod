@@ -10,11 +10,13 @@ require (
 	github.com/davecgh/go-spew v1.1.1
 	github.com/go-logr/logr v0.1.0
 	github.com/maxbrunsfeld/counterfeiter/v6 v6.2.3 // indirect
-	github.com/newrelic/newrelic-client-go v0.23.2
+	github.com/newrelic/newrelic-client-go v0.26.0
 	github.com/onsi/ginkgo v1.12.0
 	github.com/onsi/gomega v1.10.0
+	github.com/securego/gosec v0.0.0-20200316084457-7da9f46445fd // indirect
 	github.com/stretchr/testify v1.5.1
-	golang.org/x/tools v0.0.0-20200511202723-1762287ae9dd
+	github.com/tj/assert v0.0.0-20171129193455-018094318fb0
+	golang.org/x/tools v0.0.0-20200527150044-688b3c5d9fa5
 	k8s.io/api v0.17.5
 	k8s.io/apimachinery v0.17.5
 	k8s.io/client-go v0.17.5
