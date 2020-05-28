@@ -2,11 +2,12 @@ package v1
 
 import (
 	"errors"
+	"time"
+
 	"github.com/newrelic/newrelic-client-go/pkg/alerts"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"time"
 
 	"github.com/newrelic/newrelic-kubernetes-operator/interfaces"
 	"github.com/newrelic/newrelic-kubernetes-operator/interfaces/interfacesfakes"
@@ -16,7 +17,6 @@ var _ = Describe("apmAlertCondition_webhook", func() {
 	var (
 		r            ApmAlertCondition
 		alertsClient *interfacesfakes.FakeNewRelicAlertsClient
-		//secret       *v1.Secret
 	)
 
 	BeforeEach(func() {

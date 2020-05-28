@@ -78,10 +78,8 @@ func (r *ApmAlertCondition) Default() {
 		log.Info("Setting null Applied Spec to empty interface")
 		r.Status.AppliedSpec = &ApmAlertConditionSpec{}
 	}
-	// TODO(user): fill in your defaulting logic.
 }
 
-// TODO(user): change verbs to "verbs=create;update;delete" if you want to enable deletion validation.
 // +kubebuilder:webhook:verbs=create;update,path=/validate-nr-k8s-newrelic-com-v1-apmalertcondition,mutating=false,failurePolicy=fail,groups=nr.k8s.newrelic.com,resources=apmalertconditions,versions=v1,name=vapmalertcondition.kb.io
 
 var _ webhook.Validator = &ApmAlertCondition{}

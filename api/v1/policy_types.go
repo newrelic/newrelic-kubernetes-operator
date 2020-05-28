@@ -39,18 +39,10 @@ type PolicySpec struct {
 
 //PolicyCondition defined the conditions contained within a a policy
 type PolicyCondition struct {
-	Name          string                 `json:"name"`
-	Namespace     string                 `json:"namespace"`
-	Spec          ConditionSpec          `json:"spec,omitempty"`
-	NrqlAliasSpec NrqlAlertConditionSpec `json:"-"`
-	ApmAliasSpec  ApmAlertConditionSpec  `json:"-"`
+	Name      string        `json:"name"`
+	Namespace string        `json:"namespace"`
+	Spec      ConditionSpec `json:"spec,omitempty"`
 }
-
-//type NrqlAlertConditionSpec = ConditionSpec
-//type ApmAlertConditionSpec = ConditionSpec
-
-type NrqlAliasSpec ConditionSpec
-type ApmAliasSpec ConditionSpec
 
 //ConditionSpec - Merged superset of Condition types
 type ConditionSpec struct {

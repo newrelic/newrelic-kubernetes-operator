@@ -25,8 +25,6 @@ var _ = Describe("ValidateCreate", func() {
 		secret       *v1.Secret
 	)
 
-
-
 	BeforeEach(func() {
 		k8Client = testk8sClient
 		alertsClient = &interfacesfakes.FakeNewRelicAlertsClient{}
@@ -220,6 +218,5 @@ var _ = Describe("ValidateCreate", func() {
 			})
 		})
 	})
-
 
 })

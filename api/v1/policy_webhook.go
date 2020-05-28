@@ -55,7 +55,6 @@ func (r *Policy) Default() {
 	r.DefaultIncidentPreference()
 }
 
-// TODO(user): change verbs to "verbs=create;update;delete" if you want to enable deletion validation.
 // +kubebuilder:webhook:verbs=create;update,path=/validate-nr-k8s-newrelic-com-v1-policy,mutating=false,failurePolicy=fail,groups=nr.k8s.newrelic.com,resources=policies,versions=v1,name=vpolicy.kb.io
 
 var _ webhook.Validator = &Policy{}

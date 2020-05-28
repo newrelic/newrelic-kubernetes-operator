@@ -197,10 +197,6 @@ var _ = Describe("ApmCondition reconciliation", func() {
 					Expect(alertsClient.CreateConditionCallCount()).To(Equal(1))
 					Expect(alertsClient.UpdateConditionCallCount()).To(Equal(0))
 				})
-				AfterEach(func() {
-					//k8sClient.Delete(ctx, secret)
-
-				})
 
 				It("updates the ConditionID on the kubernetes object", func() {
 					err := k8sClient.Create(ctx, condition)

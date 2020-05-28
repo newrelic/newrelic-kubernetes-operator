@@ -24,15 +24,13 @@ import (
 
 var _ = Describe("policy reconciliation", func() {
 	var (
-		ctx            context.Context
-		r              *PolicyReconciler
-		policy         *nrv1.Policy
-		conditionSpec  *nrv1.ConditionSpec
-		request        ctrl.Request
-		namespacedName types.NamespacedName
-		conditionName  types.NamespacedName
-		//expectedEvents []string
-		//secret        *v1.Secret
+		ctx                       context.Context
+		r                         *PolicyReconciler
+		policy                    *nrv1.Policy
+		conditionSpec             *nrv1.ConditionSpec
+		request                   ctrl.Request
+		namespacedName            types.NamespacedName
+		conditionName             types.NamespacedName
 		fakeAlertFunc             func(string, string) (interfaces.NewRelicAlertsClient, error)
 		deletedConditionNamespace types.NamespacedName
 	)
@@ -62,57 +60,6 @@ var _ = Describe("policy reconciliation", func() {
 			Log:             logf.Log,
 			AlertClientFunc: fakeAlertFunc,
 		}
-
-		//conditionSpec = &nrv1.ConditionSpec{
-		//	nrv1.GenericConditionSpec{
-		//		Terms: []nrv1.AlertConditionTerm{
-		//			{
-		//				Duration:     "30",
-		//				Operator:     "above",
-		//				Priority:     "critical",
-		//				Threshold:    "5",
-		//				TimeFunction: "all",
-		//			},
-		//		},
-		//		Type:       "NRQL",
-		//		Name:       "NRQL Condition",
-		//		RunbookURL: "http://test.com/runbook",
-		//		Enabled:    true,
-		//	},
-		//	nrv1.NrqlSpecificSpec{
-		//		Nrql: nrv1.NrqlQuery{
-		//			Query:      "SELECT 1 FROM MyEvents",
-		//			SinceValue: "5",
-		//		},
-		//		ValueFunction:       "max",
-		//		ViolationCloseTimer: 60,
-		//		ExpectedGroups:      2,
-		//		IgnoreOverlap:       true,
-		//	},
-		//	nrv1.APMSpecificSpec{},
-		//}
-		//
-		//policy = &nrv1.Policy{
-		//	ObjectMeta: metav1.ObjectMeta{
-		//		Name:      "test-policy",
-		//		Namespace: "default",
-		//	},
-		//	Spec: nrv1.PolicySpec{
-		//		Name:               "test policy",
-		//		APIKey:             "112233",
-		//		IncidentPreference: "PER_POLICY",
-		//		Region:             "us",
-		//		Conditions: []nrv1.PolicyCondition{
-		//			{
-		//				Spec: *conditionSpec,
-		//			},
-		//		},
-		//	},
-		//	Status: nrv1.PolicyStatus{
-		//		AppliedSpec: &nrv1.PolicySpec{},
-		//		PolicyID:    0,
-		//	},
-		//}
 
 		namespacedName = types.NamespacedName{
 			Namespace: "default",
@@ -243,9 +190,9 @@ var _ = Describe("policy reconciliation", func() {
 				_, err = r.Reconcile(request)
 				Expect(err).ToNot(HaveOccurred())
 
-				var endStatePolicy nrv1.Policy //test-policy1942898816
+				var endStatePolicy nrv1.Policy
 				var endStateCondition nrv1.NrqlAlertCondition
-				err = k8sClient.Get(ctx, namespacedName, &endStatePolicy) //1942898816
+				err = k8sClient.Get(ctx, namespacedName, &endStatePolicy)
 				Expect(err).To(BeNil())
 				conditionNameType := types.NamespacedName{
 					Name:      endStatePolicy.Spec.Conditions[0].Name,

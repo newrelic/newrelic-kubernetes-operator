@@ -68,12 +68,6 @@ type NrqlAlertConditionList struct {
 	Items           []NrqlAlertCondition `json:"items"`
 }
 
-type NewRelicAPIKeySecret struct {
-	Name      string `json:"name,omitempty"`
-	Namespace string `json:"namespace,omitempty"`
-	KeyName   string `json:"key_name,omitempty"`
-}
-
 func init() {
 	SchemeBuilder.Register(&NrqlAlertCondition{}, &NrqlAlertConditionList{})
 }
@@ -82,8 +76,5 @@ func (in NrqlAlertConditionSpec) APICondition() alerts.NrqlCondition {
 	jsonString, _ := json.Marshal(in)
 	var APICondition alerts.NrqlCondition
 	json.Unmarshal(jsonString, &APICondition) //nolint
-
-	//APICondition.PolicyID = spec.ExistingPolicyId
-
 	return APICondition
 }

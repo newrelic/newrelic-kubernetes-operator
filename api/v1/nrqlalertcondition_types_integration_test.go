@@ -57,7 +57,6 @@ var _ = Describe("NrqlAlertConditionSpec", func() {
 			Expect(apiCondition.Name).To(Equal("NRQL Condition"))
 			Expect(apiCondition.RunbookURL).To(Equal("http://test.com/runbook"))
 			Expect(apiCondition.ValueFunction).To(Equal(alerts.ValueFunctionTypes.Max))
-			//Expect(apiCondition.PolicyID).To(Equal(42))
 			Expect(apiCondition.ID).To(Equal(777))
 			Expect(apiCondition.ViolationCloseTimer).To(Equal(60))
 			Expect(apiCondition.ExpectedGroups).To(Equal(2))

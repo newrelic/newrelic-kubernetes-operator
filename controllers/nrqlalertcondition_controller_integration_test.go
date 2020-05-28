@@ -23,15 +23,13 @@ import (
 
 var _ = Describe("NrqlCondition reconciliation", func() {
 	var (
-		ctx context.Context
-		//events         chan string
+		ctx            context.Context
 		r              *NrqlAlertConditionReconciler
 		condition      *nrv1.NrqlAlertCondition
 		request        ctrl.Request
 		namespacedName types.NamespacedName
-		//expectedEvents []string
-		secret        *v1.Secret
-		fakeAlertFunc func(string, string) (interfaces.NewRelicAlertsClient, error)
+		secret         *v1.Secret
+		fakeAlertFunc  func(string, string) (interfaces.NewRelicAlertsClient, error)
 	)
 	BeforeEach(func() {
 		ctx = context.Background()

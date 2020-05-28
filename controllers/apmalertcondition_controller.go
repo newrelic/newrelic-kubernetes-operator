@@ -50,13 +50,6 @@ func (r *ApmAlertConditionReconciler) Reconcile(req ctrl.Request) (ctrl.Result, 
 	ctx := context.Background()
 	_ = r.Log.WithValues("apmalertcondition", req.NamespacedName)
 
-	// the testing code
-	//key := types.NamespacedName{Namespace: "default", Name: "newrelic"}
-	//var thing v1.Secret
-	//getErr := r.Client.Get(ctx, key, &thing)
-	//
-	//r.Log.Info("secret", "secret", thing, "error", getErr)
-
 	r.Log.Info("Starting reconcile action")
 	var condition nralertsv1.ApmAlertCondition
 	err := r.Client.Get(ctx, req.NamespacedName, &condition)

@@ -22,16 +22,6 @@ type APMSpecificSpec struct {
 	ViolationCloseTimer int                         `json:"violation_close_timer,omitempty"`
 }
 
-// AlertConditionTerm represents the terms of a New Relic alert condition.
-type AlertConditionTerm struct {
-	Duration            string `json:"duration,omitempty"`
-	Operator            string `json:"operator,omitempty"`
-	Priority            string `json:"priority,omitempty"`
-	Threshold           string `json:"threshold"`
-	TimeFunction        string `json:"time_function,omitempty"`
-	ViolationCloseTimer int    `json:"violation_close_timer,omitempty"`
-}
-
 // ApmAlertConditionStatus defines the observed state of ApmAlertCondition
 type ApmAlertConditionStatus struct {
 	AppliedSpec *ApmAlertConditionSpec `json:"applied_spec"`
@@ -67,6 +57,5 @@ func (in ApmAlertConditionSpec) APICondition() alerts.Condition {
 	jsonString, _ := json.Marshal(in)
 	var APICondition alerts.Condition
 	json.Unmarshal(jsonString, &APICondition) //nolint
-	//APICondition.PolicyID = spec.ExistingPolicyId
 	return APICondition
 }
