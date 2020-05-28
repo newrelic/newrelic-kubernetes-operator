@@ -23,7 +23,7 @@ var _ = Describe("NrqlAlertConditionSpec", func() {
 					Duration:     resource.MustParse("30"),
 					Operator:     "above",
 					Priority:     "critical",
-					Threshold:    resource.MustParse("5"),
+					Threshold:    resource.MustParse("0.5"),
 					TimeFunction: "all",
 				},
 			},
@@ -46,7 +46,8 @@ var _ = Describe("NrqlAlertConditionSpec", func() {
 
 	Describe("APICondition", func() {
 		It("converts NrqlAlertConditionSpec object to NrqlCondition object from go client, retaining field values", func() {
-			apiCondition := condition.APICondition()
+			apiCondition, err := condition.APICondition()
+			Expect(err).ToNot(HaveOccurred())
 
 			Expect(fmt.Sprint(reflect.TypeOf(apiCondition))).To(Equal("alerts.NrqlCondition"))
 
@@ -68,7 +69,7 @@ var _ = Describe("NrqlAlertConditionSpec", func() {
 			Expect(apiTerm.Duration).To(Equal(30))
 			Expect(apiTerm.Operator).To(Equal(alerts.OperatorTypes.Above))
 			Expect(apiTerm.Priority).To(Equal(alerts.PriorityTypes.Critical))
-			Expect(apiTerm.Threshold).To(Equal(float64(5)))
+			Expect(apiTerm.Threshold).To(Equal(float64(0.5)))
 			Expect(apiTerm.TimeFunction).To(Equal(alerts.TimeFunctionTypes.All))
 
 			apiQuery := apiCondition.Nrql

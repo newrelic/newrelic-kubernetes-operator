@@ -147,7 +147,10 @@ func (r *NrqlAlertConditionReconciler) Reconcile(req ctrl.Request) (ctrl.Result,
 	//check if condition has condition id
 	r.checkForExistingCondition(&condition)
 
-	APICondition := condition.Spec.APICondition()
+	APICondition, err := condition.Spec.APICondition()
+	if err != nil {
+		return ctrl.Result{}, err
+	}
 
 	if condition.Status.ConditionID != 0 && !reflect.DeepEqual(&condition.Spec, condition.Status.AppliedSpec) {
 		r.Log.Info("updating condition", "ConditionName", condition.Name, "API fields", APICondition)

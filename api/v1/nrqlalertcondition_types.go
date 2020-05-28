@@ -80,12 +80,34 @@ func init() {
 	SchemeBuilder.Register(&NrqlAlertCondition{}, &NrqlAlertConditionList{})
 }
 
-func (in NrqlAlertConditionSpec) APICondition() alerts.NrqlCondition {
-	jsonString, _ := json.Marshal(in)
+func (in NrqlAlertConditionSpec) APICondition() (alerts.NrqlCondition, error) {
+	terms := in.Terms
+	in.Terms = []AlertConditionTerm{}
+	jsonString, err := json.Marshal(in)
+	if err != nil {
+		return alerts.NrqlCondition{}, err
+	}
 	var APICondition alerts.NrqlCondition
-	json.Unmarshal(jsonString, &APICondition) //nolint
-
+	err = json.Unmarshal(jsonString, &APICondition)
+	if err != nil {
+		return alerts.NrqlCondition{}, err
+	}
 	//APICondition.PolicyID = spec.ExistingPolicyId
 
-	return APICondition
+	apiTerms := make([]alerts.ConditionTerm, 0, len(terms))
+	for _, t := range terms {
+		duration, _ := t.Duration.AsInt64()
+
+		apiTerms = append(apiTerms, alerts.ConditionTerm{
+			Duration:     int(duration),
+			Operator:     alerts.OperatorType(t.Operator),
+			Priority:     alerts.PriorityType(t.Priority),
+			Threshold:    float64(t.Threshold.ScaledValue(resource.Micro)) / 1000.0 / 1000.0,
+			TimeFunction: alerts.TimeFunctionType(t.TimeFunction),
+		})
+	}
+
+	APICondition.Terms = apiTerms
+
+	return APICondition, err
 }
