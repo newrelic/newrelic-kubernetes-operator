@@ -18,7 +18,6 @@ package controllers
 import (
 	"context"
 	"errors"
-	"fmt"
 	"reflect"
 	"strings"
 
@@ -157,7 +156,6 @@ func (r *AlertsPolicyReconciler) createAlertsPolicy(policy *nrv1.AlertsPolicy) e
 
 func (r *AlertsPolicyReconciler) createConditions(policy *nrv1.AlertsPolicy) error {
 	r.Log.Info("creating conditions for policy")
-	fmt.Printf("\ncreating conditions for policy: %+v\n", policy)
 
 	collectedErrors := new(customErrors.ErrorCollector)
 
@@ -329,8 +327,6 @@ func (r *AlertsPolicyReconciler) createCondition(policy *nrv1.AlertsPolicy, cond
 	condition.Name = alertsNrqlCondition.Name //created from generated name
 	condition.Namespace = alertsNrqlCondition.Namespace
 	//condition.SpecHash = nrv1.ComputeHash(&condition.Spec)
-
-	fmt.Printf("\ncreateCondition(): alertsNrqlCondition: %+v\n", alertsNrqlCondition)
 
 	r.Log.Info("created condition", "condition", condition.Name, "conditionName", condition.Spec.Name, "nrqlAlertCondition", alertsNrqlCondition)
 
