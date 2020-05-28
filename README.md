@@ -30,6 +30,7 @@ The **newrelic-kubernetes-operator** is a [Kubernetes Operator](https://kubernet
 Currently the operator supports managing the following resources:
 - Alert Policies
 - NRQL Alert Conditions.
+- Alert Conditions for APM, Browser and mobile
 
 
 # Quick Start
@@ -129,17 +130,19 @@ Once you've completed the [Quick Start](#quick-start) section, you can start pro
                 operator: "above"
             name: "K8s generated alert condition"
         - spec:
-            nrql:
-              query: "SELECT count(*) FROM Transactions"
-              since_value: "5"
+            type: "apm_app_metric"
             enabled: true
+            metric: "apdex"
+            condition_scope: application
+            entities:
+              - "5950260"
             terms:
-              - threshold: "150.0"
+              - threshold: "0.9"
                 time_function: "all"
-                duration: "5"
+                duration: "30"
                 priority: "critical"
                 operator: "above"
-            name: "K8s generated alert condition 2"
+            name: "K8s generated apm alert condition 2"
     ```
 
    Once you've added your API key, we can apply it your local cluster.
