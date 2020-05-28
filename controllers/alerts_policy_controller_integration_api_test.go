@@ -15,6 +15,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/newrelic/newrelic-client-go/pkg/alerts"
+
 	nrv1 "github.com/newrelic/newrelic-kubernetes-operator/api/v1"
 	"github.com/newrelic/newrelic-kubernetes-operator/interfaces"
 	"github.com/newrelic/newrelic-kubernetes-operator/internal/testutil"

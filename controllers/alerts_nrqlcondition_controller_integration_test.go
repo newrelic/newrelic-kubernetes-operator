@@ -11,13 +11,14 @@ import (
 
 	"github.com/newrelic/newrelic-client-go/pkg/alerts"
 	"github.com/newrelic/newrelic-client-go/pkg/testhelpers"
-	nrv1 "github.com/newrelic/newrelic-kubernetes-operator/api/v1"
-	"github.com/newrelic/newrelic-kubernetes-operator/interfaces"
-	"github.com/newrelic/newrelic-kubernetes-operator/internal/testutil"
 	"k8s.io/apimachinery/pkg/types"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
+
+	nrv1 "github.com/newrelic/newrelic-kubernetes-operator/api/v1"
+	"github.com/newrelic/newrelic-kubernetes-operator/interfaces"
+	"github.com/newrelic/newrelic-kubernetes-operator/internal/testutil"
 )
 
 var _ = Describe("AlertsNrqlCondition reconciliation", func() {

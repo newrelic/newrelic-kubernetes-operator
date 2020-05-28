@@ -9,13 +9,14 @@ import (
 
 	"github.com/newrelic/newrelic-client-go/pkg/alerts"
 	"github.com/newrelic/newrelic-client-go/pkg/testhelpers"
-	nrv1 "github.com/newrelic/newrelic-kubernetes-operator/api/v1"
 	"github.com/stretchr/testify/require"
 	"github.com/tj/assert"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes/scheme"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/envtest"
+
+	nrv1 "github.com/newrelic/newrelic-kubernetes-operator/api/v1"
 )
 
 func AlertsPolicyTestSetup(t *testing.T) client.Client {
