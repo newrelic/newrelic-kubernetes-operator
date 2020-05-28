@@ -1,0 +1,46 @@
+# Note: If using a k8s secret, remove `api_key`, uncomment `api_key_secret`,
+# add your API key to examples/example_secret.yaml, and run
+# `kubectl apply -f examples/example_secret.yaml`
+
+apiVersion: nr.k8s.newrelic.com/v1
+kind: Policy
+metadata:
+  name: my-apm-policy
+spec:
+  api_key: <your New Relic personal API key>
+#  api_key_secret:
+#    name: nr-api-key
+#    namespace: default
+#    key_name: api-key
+  name: k8s created policy
+  incident_preference: "PER_POLICY"
+  region: "us"
+  conditions:
+    - spec:
+        type: "apm_app_metric"
+        enabled: true
+        metric: "apdex"
+        condition_scope: application
+        entities:
+          - "5950260"
+        terms:
+          - threshold: "0.9"
+            time_function: "all"
+            duration: "5"
+            priority: "critical"
+            operator: "above"
+        name: "K8s generated apm alert condition"
+    - spec:
+        type: "apm_app_metric"
+        enabled: true
+        metric: "apdex"
+        condition_scope: application
+        entities:
+          - "5950260"
+        terms:
+          - threshold: "0.9"
+            time_function: "all"
+            duration: "30"
+            priority: "critical"
+            operator: "above"
+        name: "K8s generated apm alert condition 2"

@@ -115,7 +115,7 @@ func (r *ApmAlertCondition) ValidateCreate() error {
 
 // ValidateUpdate implements webhook.Validator so a webhook will be registered for the type
 func (r *ApmAlertCondition) ValidateUpdate(old runtime.Object) error {
-	apmalertconditionlog.Info("validate update", "name", r.Name)
+	apmalertconditionlog.Info("validate update", "name", r)
 
 	err := r.CheckForAPIKeyOrSecret()
 	if err != nil {
@@ -285,6 +285,13 @@ func (r *ApmAlertCondition) CheckExistingPolicyID() error {
 	}
 	alertPolicy, errAlertPolicy := alertsClient.GetPolicy(r.Spec.ExistingPolicyID)
 	if errAlertPolicy != nil {
+		if r.GetDeletionTimestamp() != nil {
+			log.Info("Deleting resource", "errAlertPolicy", errAlertPolicy)
+			if strings.Contains(errAlertPolicy.Error(), "no alert policy found for id") {
+				log.Info("ExistingAlertPolicy not found but we are deleting the condition so this is ok")
+				return nil
+			}
+		}
 		log.Error(errAlertPolicy, "failed to get policy",
 			"policyId", r.Spec.ExistingPolicyID,
 			"API Key", interfaces.PartialAPIKey(apiKey),

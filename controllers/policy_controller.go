@@ -222,7 +222,7 @@ func (r *PolicyReconciler) createOrUpdateCondition(policy *nrv1.Policy, conditio
 	return condition, err
 }
 
-func (r *PolicyReconciler) updateNrqlCondition(policy *nrv1.Policy, condition *nrv1.PolicyCondition) (error) {
+func (r *PolicyReconciler) updateNrqlCondition(policy *nrv1.Policy, condition *nrv1.PolicyCondition) error {
 	nrqlAlertCondition := r.getNrqlConditionFromPolicyCondition(condition)
 
 	r.Log.Info("Found nrql condition to update", "retrievedCondition", nrqlAlertCondition)
@@ -250,7 +250,7 @@ func (r *PolicyReconciler) updateNrqlCondition(policy *nrv1.Policy, condition *n
 	return err
 }
 
-func (r *PolicyReconciler) updateApmCondition(policy *nrv1.Policy, condition *nrv1.PolicyCondition) (error) {
+func (r *PolicyReconciler) updateApmCondition(policy *nrv1.Policy, condition *nrv1.PolicyCondition) error {
 	apmAlertCondition := r.getApmConditionFromPolicyCondition(condition)
 
 	r.Log.Info("Found apm condition to update", "retrievedCondition", apmAlertCondition)
