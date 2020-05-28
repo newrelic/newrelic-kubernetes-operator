@@ -18,7 +18,6 @@ package controllers
 import (
 	"context"
 	"errors"
-	"fmt"
 	"reflect"
 	"strconv"
 	"strings"
@@ -181,7 +180,6 @@ func (r *AlertsNrqlConditionReconciler) Reconcile(req ctrl.Request) (ctrl.Result
 			)
 		} else {
 			condition.Status.AppliedSpec = &condition.Spec
-			fmt.Printf("condition: %+v", condition)
 			intID, convErr := strconv.Atoi(createdCondition.ID)
 			if convErr != nil {
 				r.Log.Error(convErr, "error converting condition ID to int", "conditionID", createdCondition.ID)

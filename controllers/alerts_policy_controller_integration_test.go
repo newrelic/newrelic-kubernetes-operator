@@ -4,7 +4,6 @@ package controllers
 
 import (
 	"context"
-	"fmt"
 	"testing"
 
 	"github.com/tj/assert"
@@ -170,9 +169,6 @@ var _ = Describe("policy reconciliation", func() {
 				_, err = r.Reconcile(request)
 				Expect(err).To(BeNil())
 
-				// fmt.Printf("\npolicy: %+v", policy)
-				// fmt.Printf("\nStatus: %+v, Spec: %+v\n", policy.Status, policy.Spec)
-
 				// searchResults, err := alertsClient.QueryPolicy(policy.Spec.AccountID, policy.Status.PolicyID)
 				// Expect(err).ToNot(HaveOccurred())
 				// Expect(searchResults.Name).To(Equal(policy.Spec.Name))
@@ -202,36 +198,20 @@ var _ = Describe("policy reconciliation", func() {
 				_, err = r.Reconcile(request)
 				Expect(err).To(BeNil())
 
+				// Get the policy from k8s
 				var endStatePolicy nrv1.AlertsPolicy
 				err = k8sClient.Get(ctx, namespacedName, &endStatePolicy)
 				Expect(err).To(BeNil())
-
-				fmt.Printf("\nendStatePolicy: %+v\n", endStatePolicy)
 
 				conditionNameType := types.NamespacedName{
 					Name:      endStatePolicy.Spec.Conditions[0].Name,
 					Namespace: endStatePolicy.Spec.Conditions[0].Namespace,
 				}
 
-				fmt.Printf("\nconditionNameType: %+v\n", conditionNameType)
-
-				// Get the condition
+				// Get the condition from k8s
 				var endStateCondition nrv1.AlertsNrqlCondition
 				err = k8sClient.Get(ctx, conditionNameType, &endStateCondition)
 				Expect(err).To(BeNil())
-
-				// fmt.Printf("\nendStateCondition: %+v\n", endStateCondition)
-
-				// policyResults, err := alertsClient.QueryPolicy(policy.Spec.AccountID, endStatePolicy.Status.PolicyID)
-				// Expect(err).ToNot(HaveOccurred())
-
-				// _, err = alertsClient.GetNrqlConditionQuery(policy.Spec.AccountID, endStateCondition.Status.ConditionID)
-				// Expect(err).ToNot(HaveOccurred())
-
-				// Expect(endStateCondition.Spec.Nrql.Query).To(Equal(conditionResults.Nrql.Query))
-				// Expect(endStateCondition.Spec.Terms[0].Priority).To(Equal(conditionResults.Terms[0].Priority))
-				// Expect(endStateCondition.Spec.Enabled).To(BeTrue())
-
 			})
 
 			// It("creates the condition with inherited attributes from the Policy resource", func() {
