@@ -90,10 +90,6 @@ func (r *PolicyReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 		return r.deletePolicy(r.ctx, &policy, deleteFinalizer)
 	}
 
-	//if reflect.DeepEqual(&policy.Spec, policy.Status.AppliedSpec) {
-	//	return ctrl.Result{}, nil
-	//}
-
 	if policy.Spec.Equals(*policy.Status.AppliedSpec) {
 		return ctrl.Result{}, nil
 	}
@@ -218,18 +214,15 @@ func (r *PolicyReconciler) createOrUpdateCondition(policy *nrv1.Policy, conditio
 	var err error
 	switch nrv1.GetConditionType(*condition) {
 	case "ApmAlertCondition":
-		condition, err = r.updateApmCondition(policy, condition)
+		err = r.updateApmCondition(policy, condition)
 	case "NrqlAlertCondition":
-		condition, err = r.updateNrqlCondition(policy, condition)
+		err = r.updateNrqlCondition(policy, condition)
 	}
 
 	return condition, err
 }
 
-func (r *PolicyReconciler) updateNrqlCondition(policy *nrv1.Policy, condition *nrv1.PolicyCondition) (*nrv1.PolicyCondition, error) {
-	//condition is the entry from the policy object v1.PolicyCondition
-	//nrqlAlertCondition is what is retrieved from kubernetes  v1.NrqlAlertCondition
-	//retrievedPolicyCondition is needed for reasons? nrv1.NrqlAlertCondition
+func (r *PolicyReconciler) updateNrqlCondition(policy *nrv1.Policy, condition *nrv1.PolicyCondition) (error) {
 	nrqlAlertCondition := r.getNrqlConditionFromPolicyCondition(condition)
 
 	r.Log.Info("Found nrql condition to update", "retrievedCondition", nrqlAlertCondition)
@@ -241,7 +234,7 @@ func (r *PolicyReconciler) updateNrqlCondition(policy *nrv1.Policy, condition *n
 
 	if retrievedPolicyCondition.SpecHash() == condition.SpecHash() {
 		r.Log.Info("existing NrqlCondition matches going to next")
-		return condition, nil
+		return nil
 	}
 
 	r.Log.Info("updating existing condition", "policyRegion", policy.Spec.Region, "policyId", policy.Status.PolicyID)
@@ -254,13 +247,10 @@ func (r *PolicyReconciler) updateNrqlCondition(policy *nrv1.Policy, condition *n
 	nrqlAlertCondition.Spec.APIKeySecret = policy.Spec.APIKeySecret
 
 	err := r.Client.Update(r.ctx, &nrqlAlertCondition)
-	return condition, err
+	return err
 }
 
-func (r *PolicyReconciler) updateApmCondition(policy *nrv1.Policy, condition *nrv1.PolicyCondition) (*nrv1.PolicyCondition, error) {
-	//condition is the entry from the policy object v1.PolicyCondition
-	//apmAlertCondition is what is retrieved from kubernetes  v1.NrqlAlertCondition
-	//retrievedPolicyCondition is needed for reasons? nrv1.NrqlAlertCondition
+func (r *PolicyReconciler) updateApmCondition(policy *nrv1.Policy, condition *nrv1.PolicyCondition) (error) {
 	apmAlertCondition := r.getApmConditionFromPolicyCondition(condition)
 
 	r.Log.Info("Found apm condition to update", "retrievedCondition", apmAlertCondition)
@@ -272,7 +262,7 @@ func (r *PolicyReconciler) updateApmCondition(policy *nrv1.Policy, condition *nr
 
 	if retrievedPolicyCondition.SpecHash() == condition.SpecHash() {
 		r.Log.Info("existing ApmCondition matches going to next")
-		return condition, nil
+		return nil
 	}
 
 	r.Log.Info("updating existing condition", "policyRegion", policy.Spec.Region, "policyId", policy.Status)
@@ -287,10 +277,7 @@ func (r *PolicyReconciler) updateApmCondition(policy *nrv1.Policy, condition *nr
 	r.Log.Info("updating existing condition", "apmAlertCondition", apmAlertCondition)
 
 	err := r.Client.Update(r.ctx, &apmAlertCondition)
-	//condition.Name = apmAlertCondition.Name
-	//condition.Namespace = apmAlertCondition.Namespace
-
-	return condition, err
+	return err
 }
 
 func (r *PolicyReconciler) createOrUpdateConditions(policy *nrv1.Policy) error {
@@ -376,7 +363,6 @@ func (r *PolicyReconciler) createNrqlCondition(policy *nrv1.Policy, condition *n
 	}
 	condition.Name = nrqlAlertCondition.Name //created from generated name
 	condition.Namespace = nrqlAlertCondition.Namespace
-	//condition.SpecHash = nrv1.ComputeHash(&condition.Spec)
 
 	r.Log.Info("created condition", "condition", condition.Name, "conditionName", condition.Spec.Name, "nrqlAlertCondition", nrqlAlertCondition, "actualCondition", condition.Spec)
 
@@ -398,7 +384,7 @@ func (r *PolicyReconciler) createApmCondition(policy *nrv1.Policy, condition *nr
 	apmAlertCondition.Spec.APIKeySecret = policy.Spec.APIKeySecret
 	apmAlertCondition.Status.AppliedSpec = &nrv1.ApmAlertConditionSpec{}
 
-	r.Log.Info("creating apm ondition", "condition", condition.Name, "conditionName", condition.Spec.Name, "apmAlertCondition", apmAlertCondition)
+	r.Log.Info("creating apm condition", "condition", condition.Name, "conditionName", condition.Spec.Name, "apmAlertCondition", apmAlertCondition)
 	errCondition := r.Create(r.ctx, &apmAlertCondition)
 	if errCondition != nil {
 		r.Log.Error(errCondition, "error creating condition")
@@ -406,7 +392,6 @@ func (r *PolicyReconciler) createApmCondition(policy *nrv1.Policy, condition *nr
 	}
 	condition.Name = apmAlertCondition.Name //created from generated name
 	condition.Namespace = apmAlertCondition.Namespace
-	//condition.SpecHash = nrv1.ComputeHash(&condition.Spec)
 
 	r.Log.Info("created apm condition", "condition", condition.Name, "conditionName", condition.Spec.Name, "apmAlertCondition", apmAlertCondition, "actualCondition", condition.Spec)
 
