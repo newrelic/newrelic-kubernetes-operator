@@ -10,7 +10,7 @@ import (
 // ApmAlertConditionSpec defines the desired state of NrqlAlertCondition
 type ApmAlertConditionSpec struct {
 	Terms               []NRAlertConditionTerm      `json:"terms,omitempty"`
-	Type                string                      `json:"type,omitempty"` 
+	Type                string                      `json:"type,omitempty"`
 	Name                string                      `json:"name,omitempty"`
 	RunbookURL          string                      `json:"runbook_url,omitempty"`
 	Metric              string                      `json:"metric,omitempty"`
