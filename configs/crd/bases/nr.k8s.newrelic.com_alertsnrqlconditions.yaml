@@ -91,8 +91,6 @@ spec:
                   threshold_occurrences:
                     description: ThresholdOccurrence specifies the threshold occurrence for NRQL alert condition terms.
                     type: string
-                  time_function:
-                    type: string
                 type: object
               type: array
             type:
@@ -168,8 +166,6 @@ spec:
                         type: integer
                       threshold_occurrences:
                         description: ThresholdOccurrence specifies the threshold occurrence for NRQL alert condition terms.
-                        type: string
-                      time_function:
                         type: string
                     type: object
                   type: array
