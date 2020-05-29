@@ -38,6 +38,7 @@ type NewRelicAlertsClient interface {
 	UpdateNrqlConditionStaticMutation(accountID int, conditionID string, nrqlCondition alerts.NrqlConditionInput) (*alerts.NrqlAlertCondition, error)
 	DeleteConditionMutation(accountID int, conditionID string) (string, error)
 	SearchNrqlConditionsQuery(accountID int, searchCriteria alerts.NrqlConditionsSearchCriteria) ([]*alerts.NrqlAlertCondition, error)
+	GetNrqlConditionQuery(accountID int, conditionID string) (*alerts.NrqlAlertCondition, error)
 }
 
 func NewClient(apiKey string, regionValue string) (*newrelic.NewRelic, error) {

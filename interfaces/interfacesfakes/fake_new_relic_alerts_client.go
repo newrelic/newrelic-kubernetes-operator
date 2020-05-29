@@ -5,7 +5,6 @@ import (
 	"sync"
 
 	"github.com/newrelic/newrelic-client-go/pkg/alerts"
-
 	"github.com/newrelic/newrelic-kubernetes-operator/interfaces"
 )
 
@@ -145,6 +144,20 @@ type FakeNewRelicAlertsClient struct {
 	}
 	deletePolicyMutationReturnsOnCall map[int]struct {
 		result1 *alerts.AlertsPolicy
+		result2 error
+	}
+	GetNrqlConditionQueryStub        func(int, string) (*alerts.NrqlAlertCondition, error)
+	getNrqlConditionQueryMutex       sync.RWMutex
+	getNrqlConditionQueryArgsForCall []struct {
+		arg1 int
+		arg2 string
+	}
+	getNrqlConditionQueryReturns struct {
+		result1 *alerts.NrqlAlertCondition
+		result2 error
+	}
+	getNrqlConditionQueryReturnsOnCall map[int]struct {
+		result1 *alerts.NrqlAlertCondition
 		result2 error
 	}
 	GetPolicyStub        func(int) (*alerts.Policy, error)
@@ -951,6 +964,70 @@ func (fake *FakeNewRelicAlertsClient) DeletePolicyMutationReturnsOnCall(i int, r
 	}{result1, result2}
 }
 
+func (fake *FakeNewRelicAlertsClient) GetNrqlConditionQuery(arg1 int, arg2 string) (*alerts.NrqlAlertCondition, error) {
+	fake.getNrqlConditionQueryMutex.Lock()
+	ret, specificReturn := fake.getNrqlConditionQueryReturnsOnCall[len(fake.getNrqlConditionQueryArgsForCall)]
+	fake.getNrqlConditionQueryArgsForCall = append(fake.getNrqlConditionQueryArgsForCall, struct {
+		arg1 int
+		arg2 string
+	}{arg1, arg2})
+	fake.recordInvocation("GetNrqlConditionQuery", []interface{}{arg1, arg2})
+	fake.getNrqlConditionQueryMutex.Unlock()
+	if fake.GetNrqlConditionQueryStub != nil {
+		return fake.GetNrqlConditionQueryStub(arg1, arg2)
+	}
+	if specificReturn {
+		return ret.result1, ret.result2
+	}
+	fakeReturns := fake.getNrqlConditionQueryReturns
+	return fakeReturns.result1, fakeReturns.result2
+}
+
+func (fake *FakeNewRelicAlertsClient) GetNrqlConditionQueryCallCount() int {
+	fake.getNrqlConditionQueryMutex.RLock()
+	defer fake.getNrqlConditionQueryMutex.RUnlock()
+	return len(fake.getNrqlConditionQueryArgsForCall)
+}
+
+func (fake *FakeNewRelicAlertsClient) GetNrqlConditionQueryCalls(stub func(int, string) (*alerts.NrqlAlertCondition, error)) {
+	fake.getNrqlConditionQueryMutex.Lock()
+	defer fake.getNrqlConditionQueryMutex.Unlock()
+	fake.GetNrqlConditionQueryStub = stub
+}
+
+func (fake *FakeNewRelicAlertsClient) GetNrqlConditionQueryArgsForCall(i int) (int, string) {
+	fake.getNrqlConditionQueryMutex.RLock()
+	defer fake.getNrqlConditionQueryMutex.RUnlock()
+	argsForCall := fake.getNrqlConditionQueryArgsForCall[i]
+	return argsForCall.arg1, argsForCall.arg2
+}
+
+func (fake *FakeNewRelicAlertsClient) GetNrqlConditionQueryReturns(result1 *alerts.NrqlAlertCondition, result2 error) {
+	fake.getNrqlConditionQueryMutex.Lock()
+	defer fake.getNrqlConditionQueryMutex.Unlock()
+	fake.GetNrqlConditionQueryStub = nil
+	fake.getNrqlConditionQueryReturns = struct {
+		result1 *alerts.NrqlAlertCondition
+		result2 error
+	}{result1, result2}
+}
+
+func (fake *FakeNewRelicAlertsClient) GetNrqlConditionQueryReturnsOnCall(i int, result1 *alerts.NrqlAlertCondition, result2 error) {
+	fake.getNrqlConditionQueryMutex.Lock()
+	defer fake.getNrqlConditionQueryMutex.Unlock()
+	fake.GetNrqlConditionQueryStub = nil
+	if fake.getNrqlConditionQueryReturnsOnCall == nil {
+		fake.getNrqlConditionQueryReturnsOnCall = make(map[int]struct {
+			result1 *alerts.NrqlAlertCondition
+			result2 error
+		})
+	}
+	fake.getNrqlConditionQueryReturnsOnCall[i] = struct {
+		result1 *alerts.NrqlAlertCondition
+		result2 error
+	}{result1, result2}
+}
+
 func (fake *FakeNewRelicAlertsClient) GetPolicy(arg1 int) (*alerts.Policy, error) {
 	fake.getPolicyMutex.Lock()
 	ret, specificReturn := fake.getPolicyReturnsOnCall[len(fake.getPolicyArgsForCall)]
@@ -1737,6 +1814,8 @@ func (fake *FakeNewRelicAlertsClient) Invocations() map[string][][]interface{} {
 	defer fake.deletePolicyMutex.RUnlock()
 	fake.deletePolicyMutationMutex.RLock()
 	defer fake.deletePolicyMutationMutex.RUnlock()
+	fake.getNrqlConditionQueryMutex.RLock()
+	defer fake.getNrqlConditionQueryMutex.RUnlock()
 	fake.getPolicyMutex.RLock()
 	defer fake.getPolicyMutex.RUnlock()
 	fake.listConditionsMutex.RLock()
