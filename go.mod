@@ -8,6 +8,7 @@ require (
 	github.com/Azure/go-autorest/autorest/to v0.3.0 // indirect
 	github.com/Azure/go-autorest/autorest/validation v0.2.0 // indirect
 	github.com/davecgh/go-spew v1.1.1
+	github.com/git-chglog/git-chglog v0.0.0-20200414013904-db796966b373
 	github.com/go-logr/logr v0.1.0
 	github.com/maxbrunsfeld/counterfeiter/v6 v6.2.3 // indirect
 	github.com/newrelic/newrelic-client-go v0.23.2
