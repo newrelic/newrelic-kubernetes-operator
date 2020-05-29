@@ -3,7 +3,7 @@ RELEASE_SCRIPT ?= ./scripts/release.sh
 GOTOOLS += github.com/goreleaser/goreleaser
 
 REL_CMD ?= goreleaser
-DIST_DIR ?= ./dist
+# DIST_DIR ?= ./dist
 
 # Example usage: make release version=0.11.0
 release: build
@@ -12,10 +12,14 @@ release: build
 
 release-clean:
 	@echo "=== $(PROJECT_NAME) === [ release-clean    ]: distribution files..."
-	@rm -rfv $(DIST_DIR) $(SRCDIR)/tmp
+	@rm -rfv $(SRCDIR)/tmp
 
 release-publish: clean tools docker-login release-notes
 	@echo "=== $(PROJECT_NAME) === [ release-publish  ]: Publishing release via $(REL_CMD)"
+
+	@echo "Release notes: $(SRCDIR)/tmp/$(RELEASE_NOTES_FILE)"
+	@cat $(SRCDIR)/tmp/$(RELEASE_NOTES_FILE)
+
 	$(REL_CMD) --release-notes=$(SRCDIR)/tmp/$(RELEASE_NOTES_FILE)
 
 # Local Snapshot

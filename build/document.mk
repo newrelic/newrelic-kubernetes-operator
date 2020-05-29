@@ -30,6 +30,9 @@ release-notes: tools
 
 	@ls -la
 
-	@$(CHANGELOG_CMD) --silent -o $(SRCDIR)/tmp/$(RELEASE_NOTES_FILE) v$(PROJECT_VER_TAGGED)
+	@$(CHANGELOG_CMD) -o $(SRCDIR)/tmp/$(RELEASE_NOTES_FILE) v$(PROJECT_VER_TAGGED)
+
+	@echo "Changelog generated for tag: v$(PROJECT_VER_TAGGED)"
+	@ls -la $(SRCDIR)/tmp
 
 .PHONY: docs changelog release-notes
