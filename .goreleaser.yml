@@ -24,7 +24,7 @@ builds:
 
 release:
   # Mark as a pre-release for now
-  prerelease: true
+  # prerelease: true
   name_template: "{{.ProjectName}} v{{.Version}}"
 
 archives:

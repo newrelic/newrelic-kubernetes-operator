@@ -4,8 +4,8 @@ on:
   push:
     branches:
       - 'feat/release-workflow' # TODO: Put back to tags when ready
-    # tags:
-    #   - 'v*'
+    tags:
+      - 'v*'
 
 jobs:
   release:

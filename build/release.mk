@@ -15,8 +15,13 @@ release-clean:
 	@rm -rfv $(DIST_DIR) $(SRCDIR)/tmp
 
 release-publish: clean tools docker-login release-notes
+	# REMOVE THIS WHEN DONE
+	@echo "Tag: $(PROJECT_VER_TAGGED)"
+
 	@echo "=== $(PROJECT_NAME) === [ release-publish  ]: Publishing release via $(REL_CMD)"
-	$(REL_CMD) --release-notes=$(SRCDIR)/tmp/$(RELEASE_NOTES_FILE)
+	$(REL_CMD)
+
+
 
 # Local Snapshot
 snapshot: release-clean
