@@ -12,11 +12,6 @@ require (
 	github.com/goreleaser/goreleaser v0.136.0
 	github.com/maxbrunsfeld/counterfeiter/v6 v6.2.3
 	github.com/newrelic/newrelic-client-go v0.27.0
-	github.com/maxbrunsfeld/counterfeiter/v6 v6.2.3 // indirect
-	github.com/newrelic/newrelic-client-go v0.26.0
-	github.com/onsi/ginkgo v1.12.0
-	github.com/onsi/gomega v1.10.0
-	github.com/stretchr/testify v1.5.1
 	github.com/onsi/ginkgo v1.12.0
 	github.com/onsi/gomega v1.10.0
 	github.com/stretchr/testify v1.6.0

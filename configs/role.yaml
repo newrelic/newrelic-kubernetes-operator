@@ -9,7 +9,6 @@ rules:
 - apiGroups:
   - nr.k8s.newrelic.com
   resources:
-  - apmalertconditions
   - alertsnrqlconditions
   verbs:
   - create
@@ -22,7 +21,6 @@ rules:
 - apiGroups:
   - nr.k8s.newrelic.com
   resources:
-  - apmalertconditions/status
   - alertsnrqlconditions/status
   verbs:
   - get
@@ -44,6 +42,26 @@ rules:
   - nr.k8s.newrelic.com
   resources:
   - alertspolicies/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - nr.k8s.newrelic.com
+  resources:
+  - apmalertconditions
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - nr.k8s.newrelic.com
+  resources:
+  - apmalertconditions/status
   verbs:
   - get
   - patch
