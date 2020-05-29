@@ -17,6 +17,7 @@ spec:
   region: "us"
   conditions:
     - spec:
+        type: "NRQL"
         nrql:
           query: "SELECT count(*) FROM Transactions"
           since_value: "10"
@@ -27,16 +28,18 @@ spec:
             duration: "5"
             priority: "critical"
             operator: "above"
-        name: "K8s generated alert condition"
+        name: "K8s generated nrql alert condition"
     - spec:
-        nrql:
-          query: "SELECT count(*) FROM Transactions"
-          since_value: "5"
+        type: "apm_app_metric"
         enabled: true
+        metric: "apdex"
+        condition_scope: application
+        entities:
+          - "5950260"
         terms:
-          - threshold: "150.0"
+          - threshold: "0.9"
             time_function: "all"
             duration: "5"
             priority: "critical"
             operator: "above"
-        name: "K8s generated alert condition 2"
+        name: "K8s generated apm alert condition"
