@@ -18,8 +18,6 @@ release-publish: clean tools docker-login release-notes
 	@echo "=== $(PROJECT_NAME) === [ release-publish  ]: Publishing release via $(REL_CMD)"
 	$(REL_CMD) --release-notes=$(SRCDIR)/tmp/$(RELEASE_NOTES_FILE)
 
-	@rm -rfv $(SRCDIR)/tmp
-
 # Local Snapshot
 snapshot: release-clean
 	@echo "=== $(PROJECT_NAME) === [ snapshot         ]: Creating release via $(REL_CMD)"
