@@ -5,14 +5,13 @@ env:
 
 before:
   hooks:
-    - make clean
     - go mod download
 
 builds:
   -
     id: newrelic
-    dir: cmd/newrelic
-    binary: newrelic
+    dir: cmd/manager
+    binary: manager
     env:
       - CGO_ENABLED=0
     goos:
@@ -44,11 +43,11 @@ dockers:
   -
     dockerfile: build/package/Dockerfile
     image_templates:
-      - 'newrelic/kubernetes-operator:{{ .Tag }}'
-      - 'newrelic/kubernetes-operator:v{{ .Major }}.{{ .Minor }}'
-      - 'newrelic/kubernetes-operator:latest'
+      - 'newrelic/k8s-operator:{{ .Tag }}'
+      - 'newrelic/k8s-operator:v{{ .Major }}.{{ .Minor }}'
+      # - 'newrelic/k8s-operator:latest'
     binaries:
-      - newrelic
+      - manager
     build_flag_templates:
       - "--pull"
       - "--label=repository=http://github.com/newrelic/newrelic-kubernetes-operator"
