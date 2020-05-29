@@ -44,8 +44,8 @@ dockers:
   -
     dockerfile: build/package/Dockerfile
     image_templates:
-      - 'newrelic/kubernetes-operator:{{ .Tag }}'
-      - 'newrelic/kubernetes-operator:v{{ .Major }}.{{ .Minor }}'
+      - 'newrelic/k8s-operator:{{ .Tag }}'
+      - 'newrelic/k8s-operator:v{{ .Major }}.{{ .Minor }}'
       # - 'newrelic/kubernetes-operator:latest'  # CHANGE THIS BACK WHEN WORKING
     binaries:
       - manager
