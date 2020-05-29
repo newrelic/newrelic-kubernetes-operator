@@ -46,7 +46,7 @@ dockers:
     image_templates:
       - 'newrelic/kubernetes-operator:{{ .Tag }}'
       - 'newrelic/kubernetes-operator:v{{ .Major }}.{{ .Minor }}'
-      - 'newrelic/kubernetes-operator:latest'
+      # - 'newrelic/kubernetes-operator:latest'  # CHANGE THIS BACK WHEN WORKING
     binaries:
       - newrelic
     build_flag_templates:
