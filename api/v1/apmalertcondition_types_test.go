@@ -1,5 +1,3 @@
-// +build integration
-
 package v1
 
 import (
@@ -17,31 +15,35 @@ var _ = Describe("ApmAlertConditionSpec", func() {
 
 	BeforeEach(func() {
 		condition = ApmAlertConditionSpec{
-			Terms: []NRAlertConditionTerm{
-				{
-					Duration:     "30",
-					Operator:     "above",
-					Priority:     "critical",
-					Threshold:    "1.5",
-					TimeFunction: "all",
+			GenericConditionSpec{
+				Terms: []AlertConditionTerm{
+					{
+						Duration:     "30",
+						Operator:     "above",
+						Priority:     "critical",
+						Threshold:    "1.5",
+						TimeFunction: "all",
+					},
 				},
+				Type:             "apm_app_metric",
+				Name:             "APM Condition",
+				RunbookURL:       "http://test.com/runbook",
+				PolicyID:         0,
+				ID:               888,
+				Enabled:          true,
+				ExistingPolicyID: 42,
 			},
-			Type:       "apm_app_metric",
-			Name:       "APM Condition",
-			RunbookURL: "http://test.com/runbook",
-			Metric:     "apdex",
-			Entities:   []string{"333"},
-			UserDefined: alerts.ConditionUserDefined{
-				Metric:        "Custom/foo",
-				ValueFunction: "average",
+			APMSpecificSpec{
+				Metric:   "apdex",
+				Entities: []string{"333"},
+				UserDefined: alerts.ConditionUserDefined{
+					Metric:        "Custom/foo",
+					ValueFunction: "average",
+				},
+				Scope:               "application",
+				GCMetric:            "",
+				ViolationCloseTimer: 60,
 			},
-			Scope:               "application",
-			GCMetric:            "",
-			PolicyID:            0,
-			ID:                  888,
-			ViolationCloseTimer: 60,
-			Enabled:             true,
-			ExistingPolicyID:    42,
 		}
 	})
 

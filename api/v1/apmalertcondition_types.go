@@ -7,71 +7,20 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-// ApmAlertConditionSpec defines the desired state of NrqlAlertCondition
+// ApmAlertConditionSpec defines the desired state of ApmAlertCondition
 type ApmAlertConditionSpec struct {
-	Terms               []NRAlertConditionTerm      `json:"terms,omitempty"`
-	Type                string                      `json:"type,omitempty"` 
-	Name                string                      `json:"name,omitempty"`
-	RunbookURL          string                      `json:"runbook_url,omitempty"`
+	GenericConditionSpec `json:",inline"`
+	APMSpecificSpec      `json:",inline"`
+}
+
+type APMSpecificSpec struct {
 	Metric              string                      `json:"metric,omitempty"`
 	UserDefined         alerts.ConditionUserDefined `json:"user_defined,omitempty"`
 	Scope               string                      `json:"condition_scope,omitempty"`
 	Entities            []string                    `json:"entities,omitempty"`
 	GCMetric            string                      `json:"gc_metric,omitempty"`
-	PolicyID            int                         `json:"-"`
-	ID                  int                         `json:"id,omitempty"`
 	ViolationCloseTimer int                         `json:"violation_close_timer,omitempty"`
-	Enabled             bool                        `json:"enabled"`
-	ExistingPolicyID    int                         `json:"existing_policy_id,omitempty"`
-	APIKey              string                      `json:"api_key,omitempty"`
-	APIKeySecret        NewRelicAPIKeySecret        `json:"api_key_secret,omitempty"`
-	Region              string                      `json:"region,omitempty"`
 }
-
-// AlertConditionTerm represents the terms of a New Relic alert condition.
-type NRAlertConditionTerm struct {
-	Duration     string `json:"duration,omitempty"`
-	Operator     string `json:"operator,omitempty"`
-	Priority     string `json:"priority,omitempty"`
-	Threshold    string `json:"threshold"`
-	TimeFunction string `json:"time_function,omitempty"`
-}
-
-/* going to need to address these metrictypes with conditions
-AjaxResponseTime:       "ajax_response_time",
-AjaxThroughput:         "ajax_throughput",
-Apdex:                  "apdex",
-CPUPercentage:          "cpu_percentage",
-Database:               "database",
-DiskIOPercentage:       "disk_io_percentage",
-DomProcessing:          "dom_processing",
-EndUserApdex:           "end_user_apdex",
-ErrorCount:             "error_count",
-ErrorPercentage:        "error_percentage",
-FullestDiskPercentage:  "fullest_disk_percentage",
-Images:                 "images",
-JSON:                   "json",
-LoadAverageOneMinute:   "load_average_one_minute",
-MemoryPercentage:       "memory_percentage",
-MobileCrashRate:        "mobile_crash_rate",
-Network:                "network",
-NetworkErrorPercentage: "network_error_percentage",
-PageRendering:          "page_rendering",
-PageViewThroughput:     "page_view_throughput",
-PageViewsWithJsErrors:  "page_views_with_js_errors",
-RequestQueuing:         "request_queuing",
-ResponseTime:           "response_time",
-ResponseTimeBackground: "response_time_background",
-ResponseTimeWeb:        "response_time_web",
-StatusErrorPercentage:  "status_error_percentage",
-Throughput:             "throughput",
-ThroughputBackground:   "throughput_background",
-ThroughputWeb:          "throughput_web",
-TotalPageLoad:          "total_page_load",
-UserDefined:            "user_defined",
-ViewLoading:            "view_loading",
-WebApplication:         "web_application",
-*/
 
 // ApmAlertConditionStatus defines the observed state of ApmAlertCondition
 type ApmAlertConditionStatus struct {
@@ -108,6 +57,5 @@ func (in ApmAlertConditionSpec) APICondition() alerts.Condition {
 	jsonString, _ := json.Marshal(in)
 	var APICondition alerts.Condition
 	json.Unmarshal(jsonString, &APICondition) //nolint
-	//APICondition.PolicyID = spec.ExistingPolicyId
 	return APICondition
 }

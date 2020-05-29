@@ -19,3 +19,19 @@ func DeepHashObject(hasher hash.Hash, objectToWrite interface{}) {
 	}
 	printer.Fprintf(hasher, "%#v", objectToWrite)
 }
+
+// AlertConditionTerm represents the terms of a New Relic alert condition.
+type AlertConditionTerm struct {
+	Duration            string `json:"duration,omitempty"`
+	Operator            string `json:"operator,omitempty"`
+	Priority            string `json:"priority,omitempty"`
+	Threshold           string `json:"threshold"`
+	TimeFunction        string `json:"time_function,omitempty"`
+	ViolationCloseTimer int    `json:"violation_close_timer,omitempty"`
+}
+
+type NewRelicAPIKeySecret struct {
+	Name      string `json:"name,omitempty"`
+	Namespace string `json:"namespace,omitempty"`
+	KeyName   string `json:"key_name,omitempty"`
+}
