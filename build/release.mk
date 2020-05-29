@@ -3,7 +3,6 @@ RELEASE_SCRIPT ?= ./scripts/release.sh
 GOTOOLS += github.com/goreleaser/goreleaser
 
 REL_CMD ?= goreleaser
-DIST_DIR ?= ./dist
 
 # Example usage: make release version=0.11.0
 release: build
