@@ -3,7 +3,7 @@
 #
 
 # Image URL to use all building/pushing image targets
-DOCKER_IMAGE   ?= newrelic/k8s-operator:snapshot
+DOCKER_IMAGE   ?= newrelic/kubernetes-operator:snapshot
 # Produce CRDs that work back to Kubernetes 1.11 (no version conversion)
 CRD_OPTIONS    ?= "crd:trivialVersions=true"
 CONFIG_ROOT    ?= $(SRCDIR)/configs

@@ -10,10 +10,10 @@
 [![CLA assistant](https://cla-assistant.io/readme/badge/newrelic/newrelic-kubernetes-operator)](https://cla-assistant.io/newrelic/newrelic-kubernetes-operator)
 [![Release](https://img.shields.io/github/release/newrelic/newrelic-kubernetes-operator/all.svg)](https://github.com/newrelic/newrelic-kubernetes-operator/releases/latest)
 
-[![Docker Stars](https://img.shields.io/docker/stars/newrelic/k8s-operator.svg)](https://hub.docker.com/r/newrelic/k8s-operator)
-[![Docker Pulls](https://img.shields.io/docker/pulls/newrelic/k8s-operator.svg)](https://hub.docker.com/r/newrelic/k8s-operator)
-[![Docker Size](https://img.shields.io/docker/image-size/newrelic/k8s-operator.svg?sort=semver)](https://hub.docker.com/r/newrelic/k8s-operator)
-[![Docker Version](https://img.shields.io/docker/v/newrelic/k8s-operator.svg?sort=semver)](https://hub.docker.com/r/newrelic/k8s-operator)
+[![Docker Stars](https://img.shields.io/docker/stars/newrelic/kubernetes-operator.svg)](https://hub.docker.com/r/newrelic/kubernetes-operator)
+[![Docker Pulls](https://img.shields.io/docker/pulls/newrelic/kubernetes-operator.svg)](https://hub.docker.com/r/newrelic/kubernetes-operator)
+[![Docker Size](https://img.shields.io/docker/image-size/newrelic/kubernetes-operator.svg?sort=semver)](https://hub.docker.com/r/newrelic/kubernetes-operator)
+[![Docker Version](https://img.shields.io/docker/v/newrelic/kubernetes-operator.svg?sort=semver)](https://hub.docker.com/r/newrelic/kubernetes-operator)
 
 - [Overview](#overview)
 - [Quick Start](#quick-start)
@@ -82,7 +82,7 @@ If you want to deploy the operator in a custom container you can override the im
    resources:
      - github.com/newrelic/newrelic-kubernetes-operator/configs/default
    images:
-     - name: newrelic/k8s-operator:snapshot
+     - name: newrelic/kubernetes-operator:snapshot
        newName: <CUSTOM_IMAGE>
        newTag: <CUSTOM_TAG>
    ```
