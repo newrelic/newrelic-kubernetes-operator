@@ -12,7 +12,7 @@ builds:
   -
     id: newrelic
     dir: cmd/manager
-    binary: newrelic
+    binary: manager
     env:
       - CGO_ENABLED=0
     goos:
@@ -48,7 +48,7 @@ dockers:
       - 'newrelic/kubernetes-operator:v{{ .Major }}.{{ .Minor }}'
       # - 'newrelic/kubernetes-operator:latest'  # CHANGE THIS BACK WHEN WORKING
     binaries:
-      - newrelic
+      - manager
     build_flag_templates:
       - "--pull"
       - "--label=repository=http://github.com/newrelic/newrelic-kubernetes-operator"
