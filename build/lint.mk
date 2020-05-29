@@ -29,8 +29,8 @@ GOTOOLS += github.com/client9/misspell/cmd/misspell \
            golang.org/x/tools/cmd/goimports
 
 
-lint: outdated spell-check goimports gofmt golangci lint-commit
-lint-fix: spell-check-fix goimports gofmt-fix
+lint: outdated spell-check gofmt golangci lint-commit goimports
+lint-fix: spell-check-fix gofmt-fix goimports
 
 #
 # Check spelling on all the files, not just source code
@@ -53,7 +53,7 @@ gofmt-fix: tools
 
 goimports: tools
 	@echo "=== $(PROJECT_NAME) === [ goimports        ]: Checking imports with $(GOIMPORTS)..."
-	@$(GOIMPORTS) -l -w -local $(PROJECT_MODULE) $(GO_FILES)
+	@$(GOIMPORTS) -w -local $(PROJECT_MODULE) $(GO_FILES)
 
 lint-commit: tools
 	@echo "=== $(PROJECT_NAME) === [ lint-commit      ]: Checking that commit messages are properly formatted ($(COMMIT_LINT_CMD))..."

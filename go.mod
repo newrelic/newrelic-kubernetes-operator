@@ -17,6 +17,9 @@ require (
 	github.com/onsi/ginkgo v1.12.0
 	github.com/onsi/gomega v1.10.0
 	github.com/stretchr/testify v1.5.1
+	github.com/onsi/ginkgo v1.12.0
+	github.com/onsi/gomega v1.10.0
+	github.com/stretchr/testify v1.6.0
 	golang.org/x/tools v0.0.0-20200527150044-688b3c5d9fa5
 	k8s.io/api v0.17.5
 	k8s.io/apimachinery v0.17.5

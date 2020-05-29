@@ -72,7 +72,7 @@ spec:
                       enabled:
                         type: boolean
                       existing_policy_id:
-                        type: integer
+                        type: string
                       expected_groups:
                         type: integer
                       id:
@@ -187,7 +187,7 @@ spec:
                           enabled:
                             type: boolean
                           existing_policy_id:
-                            type: integer
+                            type: string
                           expected_groups:
                             type: integer
                           id:
@@ -255,7 +255,7 @@ spec:
               - region
               type: object
             policy_id:
-              type: integer
+              type: string
           required:
           - applied_spec
           - policy_id

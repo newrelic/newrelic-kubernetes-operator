@@ -102,7 +102,7 @@ func (r *AlertsPolicyReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error
 
 	r.checkForExistingAlertsPolicy(&policy)
 
-	if policy.Status.PolicyID != 0 {
+	if policy.Status.PolicyID != "" {
 		err := r.updateAlertsPolicy(&policy)
 		if err != nil {
 			r.Log.Error(err, "error updating policy")
@@ -357,17 +357,16 @@ func (r *AlertsPolicyReconciler) updateAlertsPolicy(policy *nrv1.AlertsPolicy) e
 	r.Log.Info("updating policy", "PolicyName", policy.Name)
 
 	//only update policy if policy fields have changed
-	APIPolicy := policy.Spec.APIAlertsPolicy()
-	APIPolicy.ID = policy.Status.PolicyID
-	var updateResult *alerts.Policy
+	updateInput := policy.Spec.ToAlertsPolicyUpdateInput()
+	var updateResult *alerts.AlertsPolicy
 	var err error
 
-	if string(APIPolicy.IncidentPreference) != policy.Status.AppliedSpec.IncidentPreference || APIPolicy.Name != policy.Status.AppliedSpec.Name {
+	if string(updateInput.IncidentPreference) != policy.Status.AppliedSpec.IncidentPreference || updateInput.Name != policy.Status.AppliedSpec.Name {
 		r.Log.Info("need to update alert policy via New Relic API",
-			"Alert AlertsPolicy Name", APIPolicy.Name,
+			"Alert AlertsPolicy Name", updateInput.Name,
 			"incident preference ", policy.Status.AppliedSpec.IncidentPreference,
 		)
-		updateResult, err = r.Alerts.UpdatePolicy(APIPolicy)
+		updateResult, err = r.Alerts.UpdatePolicyMutation(policy.Spec.AccountID, policy.Status.PolicyID, updateInput)
 		if err != nil {
 			r.Log.Error(err, "failed to update policy via New Relic API",
 				"policyId", policy.Status.PolicyID,
@@ -401,7 +400,7 @@ func (r *AlertsPolicyReconciler) deleteAlertsPolicy(ctx context.Context, policy 
 	// The object is being deleted
 	if containsString(policy.Finalizers, deleteFinalizer) {
 		// catch invalid state
-		if policy.Status.PolicyID == 0 {
+		if policy.Status.PolicyID == "" {
 			r.Log.Info("No PolicyID set, removing finalizer")
 			policy.Finalizers = removeString(policy.Finalizers, deleteFinalizer)
 		} else {
@@ -453,13 +452,11 @@ func (r *AlertsPolicyReconciler) SetupWithManager(mgr ctrl.Manager) error {
 }
 
 func (r *AlertsPolicyReconciler) checkForExistingAlertsPolicy(policy *nrv1.AlertsPolicy) {
-	if policy.Status.PolicyID == 0 {
+	if policy.Status.PolicyID == "" {
 		r.Log.Info("checking for existing policy", "policy", policy.Name, "policyName", policy.Spec.Name)
 		//if no policyId, get list of policies and compare name
-		alertParams := &alerts.ListPoliciesParams{
-			Name: policy.Spec.Name,
-		}
-		existingPolicies, err := r.Alerts.ListPolicies(alertParams)
+		searchParams := alerts.AlertsPoliciesSearchCriteriaInput{}
+		existingPolicies, err := r.Alerts.QueryPolicySearch(policy.Spec.AccountID, searchParams)
 		if err != nil {
 			r.Log.Error(err, "failed to get list of policies from New Relic API",
 				"policyId", policy.Status.PolicyID,

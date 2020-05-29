@@ -9,8 +9,8 @@ import (
 
 	"github.com/newrelic/newrelic-client-go/pkg/alerts"
 	"github.com/newrelic/newrelic-client-go/pkg/testhelpers"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"github.com/tj/assert"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes/scheme"
 	"sigs.k8s.io/controller-runtime/pkg/client"

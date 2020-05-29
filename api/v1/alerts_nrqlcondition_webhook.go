@@ -119,7 +119,7 @@ func (r *AlertsNrqlCondition) CheckExistingPolicyID() error {
 		)
 		return errAlertClient
 	}
-	alertPolicy, errAlertPolicy := alertsClient.GetPolicy(r.Spec.ExistingPolicyID)
+	_, errAlertPolicy := alertsClient.QueryPolicy(r.Spec.AccountID, r.Spec.ExistingPolicyID)
 	if errAlertPolicy != nil {
 		log.Error(errAlertPolicy, "failed to get policy",
 			"policyId", r.Spec.ExistingPolicyID,
@@ -127,10 +127,6 @@ func (r *AlertsNrqlCondition) CheckExistingPolicyID() error {
 			"region", r.Spec.Region,
 		)
 		return errAlertPolicy
-	}
-	if alertPolicy.ID != r.Spec.ExistingPolicyID {
-		log.Info("Alert policy returned by the API failed to match provided policy ID")
-		return errors.New("alert policy returned by API did not match")
 	}
 	return nil
 }
@@ -153,7 +149,7 @@ func (r *AlertsNrqlCondition) CheckRequiredFields() error {
 	if r.Spec.Region == "" {
 		missingFields = append(missingFields, "region")
 	}
-	if r.Spec.ExistingPolicyID == 0 {
+	if r.Spec.ExistingPolicyID == "" {
 		missingFields = append(missingFields, "existing_policy_id")
 	}
 	if len(missingFields) > 0 {

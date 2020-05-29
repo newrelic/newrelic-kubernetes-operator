@@ -6,7 +6,7 @@ import (
 	"context"
 	"testing"
 
-	"github.com/tj/assert"
+	"github.com/stretchr/testify/assert"
 	ctrl "sigs.k8s.io/controller-runtime"
 
 	. "github.com/onsi/ginkgo"

@@ -56,7 +56,7 @@ var _ = Describe("ValidateCreate", func() {
 				ExpectedGroups:     2,
 				IgnoreOverlap:      true,
 				Enabled:            true,
-				ExistingPolicyID:   42,
+				ExistingPolicyID:   "42",
 				APIKey:             "api-key",
 				Region:             "us",
 			},
@@ -135,7 +135,7 @@ var _ = Describe("ValidateCreate", func() {
 
 	Context("when given a NRQL condition without required field ExistingPolicyId", func() {
 		It("should reject resource creation", func() {
-			r.Spec.ExistingPolicyID = 0
+			r.Spec.ExistingPolicyID = ""
 			err := r.ValidateCreate()
 			Expect(err).To(HaveOccurred())
 		})
@@ -143,7 +143,7 @@ var _ = Describe("ValidateCreate", func() {
 		Context("when missing multiple required fields, include all messages in one error", func() {
 			It("should reject resource creation", func() {
 				r.Spec.Region = ""
-				r.Spec.ExistingPolicyID = 0
+				r.Spec.ExistingPolicyID = ""
 				err := r.ValidateCreate()
 				Expect(err).To(HaveOccurred())
 				Expect(err).To(MatchError(errors.New("region and existing_policy_id must be set")))
@@ -160,13 +160,13 @@ var _ = Describe("ValidateCreate", func() {
 			It("verifies existing policies exist", func() {
 				err := r.CheckExistingPolicyID()
 				Expect(err).To(BeNil())
-				Expect(r.Spec.ExistingPolicyID).To(Equal(42))
+				Expect(r.Spec.ExistingPolicyID).To(Equal("42"))
 			})
 		})
 
 		Context("With an invalid API Key", func() {
 			BeforeEach(func() {
-				alertsClient.GetPolicyStub = func(int) (*alerts.Policy, error) {
+				alertsClient.QueryPolicyStub = func(int, string) (*alerts.AlertsPolicy, error) {
 					return nil, errors.New("401 response returned: The API key provided is invalid")
 				}
 			})
@@ -181,7 +181,7 @@ var _ = Describe("ValidateCreate", func() {
 	Describe("InvalidPolicyID", func() {
 		Context("With a Policy ID that does not exist", func() {
 			BeforeEach(func() {
-				r.Spec.ExistingPolicyID = 0
+				r.Spec.ExistingPolicyID = ""
 			})
 
 			It("returns an error", func() {

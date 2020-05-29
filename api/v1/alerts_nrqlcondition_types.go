@@ -15,7 +15,7 @@ type AlertsNrqlConditionSpec struct {
 	APIKeySecret       NewRelicAPIKeySecret                   `json:"api_key_secret,omitempty"`
 	AccountID          int                                    `json:"account_id,omitempty"`
 	Description        string                                 `json:"description,omitempty"`
-	ExistingPolicyID   int                                    `json:"existing_policy_id,omitempty"`
+	ExistingPolicyID   string                                 `json:"existing_policy_id,omitempty"`
 	ExpectedGroups     int                                    `json:"expected_groups,omitempty"`
 	ID                 int                                    `json:"id,omitempty"`
 	Name               string                                 `json:"name,omitempty"`
@@ -47,7 +47,7 @@ type AlertsNrqlConditionTerm struct {
 // AlertsNrqlConditionStatus defines the observed state of AlertsNrqlCondition
 type AlertsNrqlConditionStatus struct {
 	AppliedSpec *AlertsNrqlConditionSpec `json:"applied_spec"`
-	ConditionID int                      `json:"condition_id"`
+	ConditionID string                   `json:"condition_id"`
 }
 
 // +kubebuilder:object:root=true
@@ -75,7 +75,7 @@ func init() {
 	SchemeBuilder.Register(&AlertsNrqlCondition{}, &AlertsNrqlConditionList{})
 }
 
-func (in AlertsNrqlConditionSpec) APIConditionInput() alerts.NrqlConditionInput {
+func (in AlertsNrqlConditionSpec) ToNrqlConditionInput() alerts.NrqlConditionInput {
 	conditionInput := alerts.NrqlConditionInput{}
 	conditionInput.Description = in.Description
 	conditionInput.Enabled = in.Enabled

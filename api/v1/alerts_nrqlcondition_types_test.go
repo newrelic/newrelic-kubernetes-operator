@@ -40,29 +40,29 @@ var _ = Describe("AlertsNrqlConditionSpec", func() {
 			ExpectedGroups:     2,
 			IgnoreOverlap:      true,
 			Enabled:            true,
-			ExistingPolicyID:   42,
+			ExistingPolicyID:   "42",
 		}
 	})
 
-	Describe("APIConditionInput", func() {
-		It("converts AlertsNrqlConditionSpec object to AlertsNrqlCondition object from go client, retaining field values", func() {
-			apiCondition := condition.APIConditionInput()
+	Describe("ToNrqlConditionInput", func() {
+		It("converts AlertsNrqlConditionSpec object to NrqlConditionInput object, retaining field values", func() {
+			conditionInput := condition.ToNrqlConditionInput()
 
-			Expect(fmt.Sprint(reflect.TypeOf(apiCondition))).To(Equal("alerts.NrqlConditionInput"))
+			Expect(fmt.Sprint(reflect.TypeOf(conditionInput))).To(Equal("alerts.NrqlConditionInput"))
 
-			// Expect(apiCondition.Type).To(Equal("NRQL"))
-			Expect(apiCondition.Name).To(Equal("NRQL Condition"))
-			Expect(apiCondition.RunbookURL).To(Equal("http://test.com/runbook"))
-			Expect(string(*apiCondition.ValueFunction)).To(Equal(string(alerts.NrqlConditionValueFunctions.SingleValue)))
-			//Expect(apiCondition.PolicyID).To(Equal(42))
-			//Expect(apiCondition.ID).To(Equal(777))
-			//Expect(apiCondition.ViolationCloseTimer).To(Equal(60))
-			Expect(apiCondition.ViolationTimeLimit).To(Equal(alerts.NrqlConditionViolationTimeLimits.OneHour))
-			//Expect(apiCondition.ExpectedGroups).To(Equal(2))
-			//Expect(apiCondition.IgnoreOverlap).To(Equal(true))
-			Expect(apiCondition.Enabled).To(Equal(true))
+			// Expect(conditionInput.Type).To(Equal("NRQL"))
+			Expect(conditionInput.Name).To(Equal("NRQL Condition"))
+			Expect(conditionInput.RunbookURL).To(Equal("http://test.com/runbook"))
+			Expect(string(*conditionInput.ValueFunction)).To(Equal(string(alerts.NrqlConditionValueFunctions.SingleValue)))
+			//Expect(conditionInput.PolicyID).To(Equal(42))
+			//Expect(conditionInput.ID).To(Equal(777))
+			//Expect(conditionInput.ViolationCloseTimer).To(Equal(60))
+			Expect(conditionInput.ViolationTimeLimit).To(Equal(alerts.NrqlConditionViolationTimeLimits.OneHour))
+			//Expect(conditionInput.ExpectedGroups).To(Equal(2))
+			//Expect(conditionInput.IgnoreOverlap).To(Equal(true))
+			Expect(conditionInput.Enabled).To(Equal(true))
 
-			apiTerm := apiCondition.Terms[0]
+			apiTerm := conditionInput.Terms[0]
 
 			Expect(fmt.Sprint(reflect.TypeOf(apiTerm))).To(Equal("alerts.NrqlConditionTerms"))
 
@@ -73,7 +73,7 @@ var _ = Describe("AlertsNrqlConditionSpec", func() {
 			Expect(apiTerm.ThresholdDuration).To(Equal(60))
 			Expect(apiTerm.ThresholdOccurrences).To(Equal(alerts.ThresholdOccurrences.AtLeastOnce))
 
-			apiQuery := apiCondition.Nrql
+			apiQuery := conditionInput.Nrql
 
 			Expect(fmt.Sprint(reflect.TypeOf(apiQuery))).To(Equal("alerts.NrqlConditionQuery"))
 

@@ -43,7 +43,7 @@ var _ = Describe("Equals", func() {
 				ExpectedGroups:     2,
 				IgnoreOverlap:      true,
 				Enabled:            true,
-				ExistingPolicyID:   42,
+				ExistingPolicyID:   "42",
 			},
 		}
 
@@ -117,7 +117,7 @@ var _ = Describe("Equals", func() {
 						ExpectedGroups:     2,
 						IgnoreOverlap:      true,
 						Enabled:            true,
-						ExistingPolicyID:   42,
+						ExistingPolicyID:   "42",
 					},
 				},
 			}

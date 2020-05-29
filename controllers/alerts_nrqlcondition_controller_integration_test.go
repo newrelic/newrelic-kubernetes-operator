@@ -4,7 +4,6 @@ package controllers
 
 import (
 	"context"
-	"strconv"
 	"testing"
 
 	. "github.com/onsi/ginkgo"
@@ -97,10 +96,7 @@ var _ = Describe("AlertsNrqlCondition reconciliation", func() {
 					getResult, err := alertsClient.GetNrqlConditionQuery(condition.Spec.AccountID, endStateCondition.Status.ConditionID)
 					Expect(err).To(BeNil())
 
-					id, err := strconv.Atoi(getResult.ID)
-					Expect(err).To(BeNil())
-
-					Expect(endStateCondition.Status.ConditionID).To(Equal(id))
+					Expect(endStateCondition.Status.ConditionID).To(Equal(getResult.ID))
 				})
 
 				It("has the expected AppliedSpec", func() {

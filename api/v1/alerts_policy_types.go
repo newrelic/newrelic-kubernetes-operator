@@ -49,7 +49,7 @@ type AlertsPolicyCondition struct {
 // AlertsPolicyStatus defines the observed state of AlertsPolicy
 type AlertsPolicyStatus struct {
 	AppliedSpec *AlertsPolicySpec `json:"applied_spec"`
-	PolicyID    int               `json:"policy_id"`
+	PolicyID    string            `json:"policy_id"`
 }
 
 // +kubebuilder:object:root=true
@@ -76,14 +76,28 @@ func init() {
 	SchemeBuilder.Register(&AlertsPolicy{}, &AlertsPolicyList{})
 }
 
-func (in AlertsPolicySpec) APIAlertsPolicy() alerts.Policy {
+func (in AlertsPolicySpec) ToAlertsPolicy() alerts.AlertsPolicy {
 	jsonString, _ := json.Marshal(in)
-	var APIAlertsPolicy alerts.Policy
-	json.Unmarshal(jsonString, &APIAlertsPolicy) //nolint
+	var result alerts.AlertsPolicy
+	json.Unmarshal(jsonString, &result) //nolint
 
-	//APICondition.AlertsPolicyID = spec.ExistingAlertsPolicyId
+	return result
+}
 
-	return APIAlertsPolicy
+func (in AlertsPolicySpec) ToAlertsPolicyUpdateInput() alerts.AlertsPolicyUpdateInput {
+	jsonString, _ := json.Marshal(in)
+	var result alerts.AlertsPolicyUpdateInput
+	json.Unmarshal(jsonString, &result) //nolint
+
+	return result
+}
+
+func (in AlertsPolicySpec) ToAlertsPolicyInput() alerts.AlertsPolicyInput {
+	jsonString, _ := json.Marshal(in)
+	var result alerts.AlertsPolicyInput
+	json.Unmarshal(jsonString, &result) //nolint
+
+	return result
 }
 
 func (p *AlertsPolicyCondition) SpecHash() uint32 {
@@ -94,7 +108,7 @@ func (p *AlertsPolicyCondition) SpecHash() uint32 {
 	strippedAlertsPolicy.Spec.APIKeySecret = NewRelicAPIKeySecret{}
 	strippedAlertsPolicy.Spec.APIKey = ""
 	strippedAlertsPolicy.Spec.Region = ""
-	strippedAlertsPolicy.Spec.ExistingPolicyID = 0
+	strippedAlertsPolicy.Spec.ExistingPolicyID = ""
 	conditionTemplateSpecHasher := fnv.New32a()
 	DeepHashObject(conditionTemplateSpecHasher, strippedAlertsPolicy)
 	return conditionTemplateSpecHasher.Sum32()
