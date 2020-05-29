@@ -367,7 +367,7 @@ func (r *PolicyReconciler) updatePolicy(policy *nrv1.Policy) error {
 		r.Log.Error(errConditions, "error creating or updating conditions")
 		return errConditions
 	}
-	r.Log.Info("policySpecx before update", "policy.Spec", policy.Spec)
+	r.Log.Info("policySpec before update", "policy.Spec", policy.Spec)
 
 	policy.Status.AppliedSpec = &policy.Spec
 

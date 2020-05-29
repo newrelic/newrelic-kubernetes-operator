@@ -81,8 +81,6 @@ func (in AlertsPolicySpec) APIAlertsPolicy() alerts.Policy {
 	var APIAlertsPolicy alerts.Policy
 	json.Unmarshal(jsonString, &APIAlertsPolicy) //nolint
 
-	//APICondition.AlertsPolicyID = spec.ExistingAlertsPolicyId
-
 	return APIAlertsPolicy
 }
 

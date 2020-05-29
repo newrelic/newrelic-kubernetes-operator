@@ -60,10 +60,10 @@ func (r *AlertsPolicyReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error
 			r.Log.Info("AlertsPolicy 'not found' after being deleted. This is expected and no cause for alarm", "error", err)
 			return ctrl.Result{}, nil
 		}
-		r.Log.Error(err, "Failed to GET policy", "name", req.NamespacedName.String())
+		r.Log.Error(err, "failed to GET policy", "name", req.NamespacedName.String())
 		return ctrl.Result{}, nil
 	}
-	r.Log.Info("Starting reconcile action")
+	r.Log.Info("starting reconcile action")
 	r.Log.Info("policy", "policy.Spec.Condition", policy.Spec.Conditions, "policy.status.applied.conditions", policy.Status.AppliedSpec.Conditions)
 
 	r.apiKey = r.getAPIKeyOrSecret(policy)
@@ -74,7 +74,7 @@ func (r *AlertsPolicyReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error
 	//initial alertsClient
 	alertsClient, errAlertsClient := r.AlertClientFunc(r.apiKey, policy.Spec.Region)
 	if errAlertsClient != nil {
-		r.Log.Error(errAlertsClient, "Failed to create AlertsClient")
+		r.Log.Error(errAlertsClient, "failed to create AlertsClient")
 		return ctrl.Result{}, errAlertsClient
 	}
 	r.Alerts = alertsClient
@@ -111,7 +111,7 @@ func (r *AlertsPolicyReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error
 	} else {
 		err := r.createAlertsPolicy(&policy)
 		if err != nil {
-			r.Log.Error(err, "Error creating policy")
+			r.Log.Error(err, "error creating policy")
 			return ctrl.Result{}, err
 		}
 	}
@@ -124,7 +124,7 @@ func (r *AlertsPolicyReconciler) createAlertsPolicy(policy *nrv1.AlertsPolicy) e
 	p.IncidentPreference = alerts.AlertsIncidentPreference(policy.Spec.IncidentPreference)
 	p.Name = policy.Spec.Name
 
-	r.Log.Info("Creating policy", "PolicyName", p.Name)
+	r.Log.Info("creating policy", "PolicyName", p.Name)
 	createResult, err := r.Alerts.CreatePolicyMutation(policy.Spec.AccountID, p)
 	if err != nil {
 		r.Log.Error(err, "failed to create policy via New Relic API",
@@ -200,11 +200,11 @@ func (r *AlertsPolicyReconciler) createOrUpdateConditions(policy *nrv1.AlertsPol
 
 	for i, condition := range policy.Spec.Conditions {
 		//loop through the policies, creating/updating as needed
-		r.Log.Info("Checking on condition", "resourceName", condition.Name, "conditionName", condition.Spec.Name)
+		r.Log.Info("checking on condition", "resourceName", condition.Name, "conditionName", condition.Spec.Name)
 		//first we check to see if the name is set
 		if condition.Name == "" {
 			//If resource name is not set, let's see if a appliedSpec matches the NR condition name
-			r.Log.Info("Condition name not set, checking name values")
+			r.Log.Info("condition name not set, checking name values")
 			for _, appliedCondition := range policy.Status.AppliedSpec.Conditions {
 
 				if appliedCondition.Spec.Name == condition.Spec.Name {
@@ -236,7 +236,7 @@ func (r *AlertsPolicyReconciler) createOrUpdateConditions(policy *nrv1.AlertsPol
 			}
 		}
 
-		r.Log.Info("Now we have a condition name", "conditionName", condition.Name)
+		r.Log.Info("now we have a condition name", "conditionName", condition.Name)
 		existingConditions[condition.Name] = processedAlertsNrqlConditions{
 			processed: true,
 			condition: condition,
@@ -244,7 +244,7 @@ func (r *AlertsPolicyReconciler) createOrUpdateConditions(policy *nrv1.AlertsPol
 
 		retrievedCondition := r.getAlertsNrqlConditionFromAlertsPolicyCondition(&condition)
 
-		r.Log.Info("Found condition to update", "retrievedCondition", retrievedCondition)
+		r.Log.Info("found condition to update", "retrievedCondition", retrievedCondition)
 
 		//Now check to confirm the NrqlCondition matches out AlertsPolicyCondition
 		retrievedAlertsPolicyCondition := nrv1.AlertsPolicyCondition{Spec: retrievedCondition.Spec}
@@ -282,7 +282,7 @@ func (r *AlertsPolicyReconciler) createOrUpdateConditions(policy *nrv1.AlertsPol
 	for conditionName, processedCondition := range existingConditions {
 		r.Log.Info("checking "+processedCondition.condition.Name, "bool is", processedCondition.processed)
 		if !processedCondition.processed {
-			r.Log.Info("Need to delete", "ppliedConditionName", conditionName)
+			r.Log.Info("need to delete", "ppliedConditionName", conditionName)
 			err := r.deleteCondition(&processedCondition.condition)
 			if err != nil {
 				r.Log.Error(err, "error deleting condition resource")
@@ -334,7 +334,7 @@ func (r *AlertsPolicyReconciler) createCondition(policy *nrv1.AlertsPolicy, cond
 }
 
 func (r *AlertsPolicyReconciler) deleteCondition(condition *nrv1.AlertsPolicyCondition) error {
-	r.Log.Info("Deleting condition", "condition", condition.Name, "conditionName", condition.Spec.Name)
+	r.Log.Info("deleting condition", "condition", condition.Name, "conditionName", condition.Spec.Name)
 	retrievedCondition := r.getAlertsNrqlConditionFromAlertsPolicyCondition(condition)
 	r.Log.Info("retrieved condition for deletion", "retrievedCondition", retrievedCondition)
 	err := r.Delete(r.ctx, &retrievedCondition)
@@ -364,7 +364,7 @@ func (r *AlertsPolicyReconciler) updateAlertsPolicy(policy *nrv1.AlertsPolicy) e
 
 	if string(APIPolicy.IncidentPreference) != policy.Status.AppliedSpec.IncidentPreference || APIPolicy.Name != policy.Status.AppliedSpec.Name {
 		r.Log.Info("need to update alert policy via New Relic API",
-			"Alert AlertsPolicy Name", APIPolicy.Name,
+			"alerts policy Name", APIPolicy.Name,
 			"incident preference ", policy.Status.AppliedSpec.IncidentPreference,
 		)
 		updateResult, err = r.Alerts.UpdatePolicy(APIPolicy)
@@ -384,7 +384,7 @@ func (r *AlertsPolicyReconciler) updateAlertsPolicy(policy *nrv1.AlertsPolicy) e
 		r.Log.Error(errConditions, "error creating or updating conditions")
 		return errConditions
 	}
-	r.Log.Info("policySpecx before update", "policy.Spec", policy.Spec)
+	r.Log.Info("policySpec before update", "policy.Spec", policy.Spec)
 
 	policy.Status.AppliedSpec = &policy.Spec
 
@@ -402,7 +402,7 @@ func (r *AlertsPolicyReconciler) deleteAlertsPolicy(ctx context.Context, policy 
 	if containsString(policy.Finalizers, deleteFinalizer) {
 		// catch invalid state
 		if policy.Status.PolicyID == 0 {
-			r.Log.Info("No PolicyID set, removing finalizer")
+			r.Log.Info("no PolicyID set, removing finalizer")
 			policy.Finalizers = removeString(policy.Finalizers, deleteFinalizer)
 		} else {
 			// our finalizer is present, so lets handle any external dependency
@@ -422,7 +422,7 @@ func (r *AlertsPolicyReconciler) deleteAlertsPolicy(ctx context.Context, policy 
 			if err := r.deleteNewRelicAlertPolicy(policy); err != nil {
 				// if fail to delete the external dependency here, return with error
 				// so that it can be retried
-				r.Log.Error(err, "Failed to delete Alert AlertsPolicy via New Relic API",
+				r.Log.Error(err, "failed to delete alerts policy via New Relic API",
 					"policyId", policy.Status.PolicyID,
 					"region", policy.Spec.Region,
 					"apiKey", interfaces.PartialAPIKey(r.apiKey),
@@ -434,7 +434,7 @@ func (r *AlertsPolicyReconciler) deleteAlertsPolicy(ctx context.Context, policy 
 			r.Log.Info("removing finalizer")
 			policy.Finalizers = removeString(policy.Finalizers, deleteFinalizer)
 			if err := r.Client.Update(ctx, policy); err != nil {
-				r.Log.Error(err, "Failed to update k8s records for this policy after successfully deleting the policy via New Relic Alert API")
+				r.Log.Error(err, "failed to update k8s records for this policy after successfully deleting the policy via New Relic Alert API")
 				return ctrl.Result{}, err
 			}
 		}
@@ -479,7 +479,7 @@ func (r *AlertsPolicyReconciler) checkForExistingAlertsPolicy(policy *nrv1.Alert
 }
 
 func (r *AlertsPolicyReconciler) deleteNewRelicAlertPolicy(policy *nrv1.AlertsPolicy) error {
-	r.Log.Info("Deleting policy", "policyName", policy.Spec.Name)
+	r.Log.Info("deleting policy", "policyName", policy.Spec.Name)
 	_, err := r.Alerts.DeletePolicyMutation(policy.Spec.AccountID, policy.Status.PolicyID)
 	if err != nil {
 		r.Log.Error(err, "error deleting policy via New Relic API",
@@ -503,7 +503,7 @@ func (r *AlertsPolicyReconciler) getAPIKeyOrSecret(policy nrv1.AlertsPolicy) str
 		var apiKeySecret v1.Secret
 		getErr := r.Client.Get(context.Background(), key, &apiKeySecret)
 		if getErr != nil {
-			r.Log.Error(getErr, "Failed to retrieve secret", "secret", apiKeySecret)
+			r.Log.Error(getErr, "failed to retrieve secret", "secret", apiKeySecret)
 			return ""
 		}
 		return string(apiKeySecret.Data[policy.Spec.APIKeySecret.KeyName])

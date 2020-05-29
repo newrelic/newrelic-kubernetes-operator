@@ -164,7 +164,7 @@ The operator will create and update alert policies and NRQL alert conditions as 
 
     ```yaml
     apiVersion: nr.k8s.newrelic.com/v1
-    kind: NrqlAlerttsNrqlCondition
+    kind: AlertsNrqlCondition
     metadata:
       name: my-alert-condition
     spec:
