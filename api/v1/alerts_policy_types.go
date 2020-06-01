@@ -16,10 +16,8 @@ limitations under the License.
 package v1
 
 import (
-	"encoding/json"
 	"hash/fnv"
 
-	"github.com/newrelic/newrelic-client-go/pkg/alerts"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 )
@@ -74,14 +72,6 @@ type AlertsPolicyList struct {
 
 func init() {
 	SchemeBuilder.Register(&AlertsPolicy{}, &AlertsPolicyList{})
-}
-
-func (in AlertsPolicySpec) APIAlertsPolicy() alerts.Policy {
-	jsonString, _ := json.Marshal(in)
-	var APIAlertsPolicy alerts.Policy
-	json.Unmarshal(jsonString, &APIAlertsPolicy) //nolint
-
-	return APIAlertsPolicy
 }
 
 func (p *AlertsPolicyCondition) SpecHash() uint32 {

@@ -24,7 +24,6 @@ func AlertsPolicyTestSetup(t *testing.T) client.Client {
 		CRDDirectoryPaths: []string{filepath.Join("..", "configs", "crd", "bases")},
 	}
 
-	// var err error
 	cfg, err := testEnv.Start()
 	require.NoError(t, err)
 	require.NotNil(t, cfg)
@@ -70,15 +69,9 @@ func NewTestAlertsPolicy(t *testing.T) *nrv1.AlertsPolicy {
 			IncidentPreference: "PER_POLICY",
 			Name:               policyName,
 			Region:             envRegion,
-			// Conditions: []nrv1.AlertsPolicyCondition{
-			// 	{
-			// 		Spec: *conditionSpec,
-			// 	},
-			// },
 		},
 		Status: nrv1.AlertsPolicyStatus{
 			AppliedSpec: &nrv1.AlertsPolicySpec{},
-			// PolicyID:    0,
 		},
 	}
 
@@ -137,7 +130,6 @@ func NewTestAlertsNrqlCondition(t *testing.T) *nrv1.AlertsNrqlCondition {
 		},
 		Status: nrv1.AlertsNrqlConditionStatus{
 			AppliedSpec: &nrv1.AlertsNrqlConditionSpec{},
-			// ConditionID: 0,
 		},
 	}
 
@@ -166,8 +158,5 @@ func NewTestAlertsNrqlConditionSpec(t *testing.T) *nrv1.AlertsNrqlConditionSpec 
 		ExpectedGroups:     2,
 		IgnoreOverlap:      true,
 		Enabled:            true,
-		// ExistingPolicyID:   integrationPolicy.ID,
-		// APIKey:             integrationAlertsConfig.PersonalAPIKey,
-		// AccountID:          accountID,
 	}
 }

@@ -71,12 +71,14 @@ func (r *AlertsPolicyReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error
 	if r.apiKey == "" {
 		return ctrl.Result{}, errors.New("api key is blank")
 	}
+
 	//initial alertsClient
 	alertsClient, errAlertsClient := r.AlertClientFunc(r.apiKey, policy.Spec.Region)
 	if errAlertsClient != nil {
 		r.Log.Error(errAlertsClient, "failed to create AlertsClient")
 		return ctrl.Result{}, errAlertsClient
 	}
+
 	r.Alerts = alertsClient
 
 	deleteFinalizer := "policies.finalizers.nr.k8s.newrelic.com"
@@ -356,18 +358,19 @@ func (r *AlertsPolicyReconciler) getAlertsNrqlConditionFromAlertsPolicyCondition
 func (r *AlertsPolicyReconciler) updateAlertsPolicy(policy *nrv1.AlertsPolicy) error {
 	r.Log.Info("updating policy", "PolicyName", policy.Name)
 
-	//only update policy if policy fields have changed
-	APIPolicy := policy.Spec.APIAlertsPolicy()
-	APIPolicy.ID = policy.Status.PolicyID
-	var updateResult *alerts.Policy
+	p := alerts.AlertsPolicyUpdateInput{}
+	p.IncidentPreference = alerts.AlertsIncidentPreference(policy.Spec.IncidentPreference)
+	p.Name = policy.Spec.Name
+
+	var updateResult *alerts.AlertsPolicy
 	var err error
 
-	if string(APIPolicy.IncidentPreference) != policy.Status.AppliedSpec.IncidentPreference || APIPolicy.Name != policy.Status.AppliedSpec.Name {
+	if string(p.IncidentPreference) != policy.Status.AppliedSpec.IncidentPreference || p.Name != policy.Status.AppliedSpec.Name {
 		r.Log.Info("need to update alert policy via New Relic API",
-			"alerts policy Name", APIPolicy.Name,
+			"alerts policy Name", p.Name,
 			"incident preference ", policy.Status.AppliedSpec.IncidentPreference,
 		)
-		updateResult, err = r.Alerts.UpdatePolicy(APIPolicy)
+		updateResult, err = r.Alerts.UpdatePolicyMutation(policy.Spec.AccountID, policy.Status.PolicyID, p)
 		if err != nil {
 			r.Log.Error(err, "failed to update policy via New Relic API",
 				"policyId", policy.Status.PolicyID,
