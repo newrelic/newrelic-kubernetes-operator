@@ -1,11 +1,9 @@
-// +build integration
-
 package v1
 
 import (
+	"github.com/newrelic/newrelic-client-go/pkg/alerts"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	"k8s.io/apimachinery/pkg/api/resource"
 )
 
 var _ = Describe("Equals", func() {
@@ -20,30 +18,35 @@ var _ = Describe("Equals", func() {
 		condition = PolicyCondition{
 			Name:      "policy-name",
 			Namespace: "default",
-			Spec: NrqlAlertConditionSpec{
-				Terms: []AlertConditionTerm{
-					{
-						Duration:     resource.MustParse("30"),
-						Operator:     "above",
-						Priority:     "critical",
-						Threshold:    resource.MustParse("5"),
-						TimeFunction: "all",
+			Spec: ConditionSpec{
+				GenericConditionSpec{
+					Terms: []AlertConditionTerm{
+						{
+							Duration:     "30",
+							Operator:     "above",
+							Priority:     "critical",
+							Threshold:    "5",
+							TimeFunction: "all",
+						},
 					},
+					Type:             "NRQL",
+					Name:             "NRQL Condition",
+					RunbookURL:       "http://test.com/runbook",
+					ID:               777,
+					Enabled:          true,
+					ExistingPolicyID: 42,
 				},
-				Nrql: NrqlQuery{
-					Query:      "SELECT 1 FROM MyEvents",
-					SinceValue: "5",
+				NrqlSpecificSpec{
+					Nrql: NrqlQuery{
+						Query:      "SELECT 1 FROM MyEvents",
+						SinceValue: "5",
+					},
+					ViolationCloseTimer: 60,
+					ExpectedGroups:      2,
+					IgnoreOverlap:       true,
+					ValueFunction:       "max",
 				},
-				Type:                "NRQL",
-				Name:                "NRQL Condition",
-				RunbookURL:          "http://test.com/runbook",
-				ValueFunction:       "max",
-				ID:                  777,
-				ViolationCloseTimer: 60,
-				ExpectedGroups:      2,
-				IgnoreOverlap:       true,
-				Enabled:             true,
-				ExistingPolicyID:    42,
+				APMSpecificSpec{},
 			},
 		}
 
@@ -94,30 +97,36 @@ var _ = Describe("Equals", func() {
 				{
 					Name:      "",
 					Namespace: "",
-					Spec: NrqlAlertConditionSpec{
-						Terms: []AlertConditionTerm{
-							{
-								Duration:     resource.MustParse("30"),
-								Operator:     "above",
-								Priority:     "critical",
-								Threshold:    resource.MustParse("5"),
-								TimeFunction: "all",
+					Spec: ConditionSpec{
+						GenericConditionSpec{
+							Terms: []AlertConditionTerm{
+								{
+									Duration:     "30",
+									Operator:     "above",
+									Priority:     "critical",
+									Threshold:    "5",
+									TimeFunction: "all",
+								},
+							},
+							Type:       "NRQL",
+							Name:       "NRQL Condition",
+							RunbookURL: "http://test.com/runbook",
+							ID:         777,
+
+							Enabled:          true,
+							ExistingPolicyID: 42,
+						},
+						NrqlSpecificSpec{
+							ViolationCloseTimer: 60,
+							ExpectedGroups:      2,
+							IgnoreOverlap:       true,
+							ValueFunction:       "max",
+							Nrql: NrqlQuery{
+								Query:      "SELECT 1 FROM MyEvents",
+								SinceValue: "5",
 							},
 						},
-						Nrql: NrqlQuery{
-							Query:      "SELECT 1 FROM MyEvents",
-							SinceValue: "5",
-						},
-						Type:                "NRQL",
-						Name:                "NRQL Condition",
-						RunbookURL:          "http://test.com/runbook",
-						ValueFunction:       "max",
-						ID:                  777,
-						ViolationCloseTimer: 60,
-						ExpectedGroups:      2,
-						IgnoreOverlap:       true,
-						Enabled:             true,
-						ExistingPolicyID:    42,
+						APMSpecificSpec{},
 					},
 				},
 			}
@@ -132,8 +141,12 @@ var _ = Describe("Equals", func() {
 				{
 					Name:      "policy-name",
 					Namespace: "default",
-					Spec: NrqlAlertConditionSpec{
-						Name: "test condition 222",
+					Spec: ConditionSpec{
+						GenericConditionSpec{
+							Name: "test condition 222",
+						},
+						NrqlSpecificSpec{},
+						APMSpecificSpec{},
 					},
 				},
 			}
@@ -146,25 +159,41 @@ var _ = Describe("Equals", func() {
 		It("should return false", func() {
 			p.Conditions = []PolicyCondition{
 				{
-					Spec: NrqlAlertConditionSpec{
-						Name: "test condition",
+					Spec: ConditionSpec{
+						GenericConditionSpec{
+							Name: "test condition",
+						},
+						NrqlSpecificSpec{},
+						APMSpecificSpec{},
 					},
 				},
 				{
-					Spec: NrqlAlertConditionSpec{
-						Name: "test condition 2",
+					Spec: ConditionSpec{
+						GenericConditionSpec{
+							Name: "test condition 2",
+						},
+						NrqlSpecificSpec{},
+						APMSpecificSpec{},
 					},
 				},
 			}
 			policyToCompare.Conditions = []PolicyCondition{
 				{
-					Spec: NrqlAlertConditionSpec{
-						Name: "test condition",
+					Spec: ConditionSpec{
+						GenericConditionSpec{
+							Name: "test condition",
+						},
+						NrqlSpecificSpec{},
+						APMSpecificSpec{},
 					},
 				},
 				{
-					Spec: NrqlAlertConditionSpec{
-						Name: "test condition is awesome",
+					Spec: ConditionSpec{
+						GenericConditionSpec{
+							Name: "test condition is awesome",
+						},
+						NrqlSpecificSpec{},
+						APMSpecificSpec{},
 					},
 				},
 			}
@@ -177,13 +206,21 @@ var _ = Describe("Equals", func() {
 		It("should return false", func() {
 			p.Conditions = []PolicyCondition{
 				{
-					Spec: NrqlAlertConditionSpec{
-						Name: "test condition",
+					Spec: ConditionSpec{
+						GenericConditionSpec{
+							Name: "test condition",
+						},
+						NrqlSpecificSpec{},
+						APMSpecificSpec{},
 					},
 				},
 				{
-					Spec: NrqlAlertConditionSpec{
-						Name: "test condition 2",
+					Spec: ConditionSpec{
+						GenericConditionSpec{
+							Name: "test condition 2",
+						},
+						NrqlSpecificSpec{},
+						APMSpecificSpec{},
 					},
 				},
 			}
@@ -217,6 +254,141 @@ var _ = Describe("Equals", func() {
 			}
 			output = p.Equals(policyToCompare)
 			Expect(output).ToNot(BeTrue())
+		})
+	})
+})
+
+var _ = Describe("GetNrqlConditionSpec", func() {
+	Context("With a NRQL condition type PolicyCondition", func() {
+		condition := PolicyCondition{
+			Name:      "my-policy",
+			Namespace: "default",
+			Spec: ConditionSpec{
+				GenericConditionSpec{
+					Terms: []AlertConditionTerm{
+						{
+							Duration:     "30",
+							Operator:     "above",
+							Priority:     "critical",
+							Threshold:    "5",
+							TimeFunction: "all",
+						},
+					},
+					Type:       "NRQL",
+					Name:       "NRQL Condition",
+					RunbookURL: "http://test.com/runbook",
+					ID:         777,
+
+					Enabled:          true,
+					ExistingPolicyID: 42,
+				},
+				NrqlSpecificSpec{
+					ViolationCloseTimer: 60,
+					ExpectedGroups:      2,
+					IgnoreOverlap:       true,
+					ValueFunction:       "max",
+					Nrql: NrqlQuery{
+						Query:      "SELECT 1 FROM MyEvents",
+						SinceValue: "5",
+					},
+				},
+				APMSpecificSpec{},
+			},
+		}
+		It("Should return a matching NrqlConditionSpec", func() {
+			nrqlConditionSpec := condition.ReturnNrqlConditionSpec()
+			Expect(nrqlConditionSpec.Type).To(Equal("NRQL"))
+			Expect(nrqlConditionSpec.Name).To(Equal("NRQL Condition"))
+			Expect(nrqlConditionSpec.RunbookURL).To(Equal("http://test.com/runbook"))
+			Expect(nrqlConditionSpec.ValueFunction).To(Equal("max"))
+			Expect(nrqlConditionSpec.ID).To(Equal(777))
+			Expect(nrqlConditionSpec.ViolationCloseTimer).To(Equal(60))
+			Expect(nrqlConditionSpec.ExpectedGroups).To(Equal(2))
+			Expect(nrqlConditionSpec.IgnoreOverlap).To(BeTrue())
+			Expect(nrqlConditionSpec.Enabled).To(BeTrue())
+			Expect(nrqlConditionSpec.ExistingPolicyID).To(Equal(42))
+			expectedAlertConditionTerm := AlertConditionTerm{
+				Duration:     "30",
+				Operator:     "above",
+				Priority:     "critical",
+				Threshold:    "5",
+				TimeFunction: "all",
+			}
+			Expect(nrqlConditionSpec.Terms[0]).To(Equal(expectedAlertConditionTerm))
+			expectedNrql := NrqlQuery{
+				Query:      "SELECT 1 FROM MyEvents",
+				SinceValue: "5",
+			}
+			Expect(nrqlConditionSpec.Nrql).To(Equal(expectedNrql))
+		})
+	})
+})
+
+var _ = Describe("GetApmConditionSpec", func() {
+	Context("With a NRQL condition type PolicyCondition", func() {
+		condition := PolicyCondition{
+			Name:      "my-policy",
+			Namespace: "default",
+			Spec: ConditionSpec{
+				GenericConditionSpec{
+					Terms: []AlertConditionTerm{
+						{
+							Duration:     "30",
+							Operator:     "above",
+							Priority:     "critical",
+							Threshold:    "1.5",
+							TimeFunction: "all",
+						},
+					},
+					Type:       "apm_app_metric",
+					Name:       "APM Condition",
+					RunbookURL: "http://test.com/runbook",
+					ID:         888,
+
+					Enabled:          true,
+					ExistingPolicyID: 42,
+				},
+				NrqlSpecificSpec{},
+				APMSpecificSpec{
+					ViolationCloseTimer: 60,
+					Scope:               "application",
+					UserDefined: alerts.ConditionUserDefined{
+						Metric:        "Custom/foo",
+						ValueFunction: "average",
+					},
+					Entities: []string{
+						"333",
+					},
+					Metric: "apdex",
+				},
+			},
+		}
+		It("Should return a matching ApmConditionSpec", func() {
+			apmConditionSpec := condition.ReturnApmConditionSpec()
+			Expect(apmConditionSpec.Type).To(Equal("apm_app_metric"))
+			Expect(apmConditionSpec.Name).To(Equal("APM Condition"))
+			Expect(apmConditionSpec.RunbookURL).To(Equal("http://test.com/runbook"))
+			Expect(apmConditionSpec.ID).To(Equal(888))
+			Expect(apmConditionSpec.ViolationCloseTimer).To(Equal(60))
+			Expect(apmConditionSpec.Enabled).To(BeTrue())
+			Expect(apmConditionSpec.ExistingPolicyID).To(Equal(42))
+			expectedAlertConditionTerm := AlertConditionTerm{
+				Duration:     "30",
+				Operator:     "above",
+				Priority:     "critical",
+				Threshold:    "1.5",
+				TimeFunction: "all",
+			}
+			Expect(apmConditionSpec.Terms[0]).To(Equal(expectedAlertConditionTerm))
+
+			Expect(apmConditionSpec.Entities[0]).To(Equal("333"))
+			Expect(apmConditionSpec.Scope).To(Equal("application"))
+			expectedUserDefined := alerts.ConditionUserDefined{
+				Metric:        "Custom/foo",
+				ValueFunction: "average",
+			}
+			Expect(apmConditionSpec.UserDefined).To(Equal(expectedUserDefined))
+			Expect(apmConditionSpec.Metric).To(Equal("apdex"))
 		})
 	})
 })

@@ -9,7 +9,6 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	v1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -17,22 +16,20 @@ import (
 
 	"github.com/newrelic/newrelic-client-go/pkg/alerts"
 
-	nralertsv1 "github.com/newrelic/newrelic-kubernetes-operator/api/v1"
+	nrv1 "github.com/newrelic/newrelic-kubernetes-operator/api/v1"
 	"github.com/newrelic/newrelic-kubernetes-operator/interfaces"
 	"github.com/newrelic/newrelic-kubernetes-operator/interfaces/interfacesfakes"
 )
 
 var _ = Describe("NrqlCondition reconciliation", func() {
 	var (
-		ctx context.Context
-		//events         chan string
+		ctx            context.Context
 		r              *NrqlAlertConditionReconciler
-		condition      *nralertsv1.NrqlAlertCondition
+		condition      *nrv1.NrqlAlertCondition
 		request        ctrl.Request
 		namespacedName types.NamespacedName
-		//expectedEvents []string
-		secret        *v1.Secret
-		fakeAlertFunc func(string, string) (interfaces.NewRelicAlertsClient, error)
+		secret         *v1.Secret
+		fakeAlertFunc  func(string, string) (interfaces.NewRelicAlertsClient, error)
 	)
 	BeforeEach(func() {
 		ctx = context.Background()
@@ -70,75 +67,45 @@ var _ = Describe("NrqlCondition reconciliation", func() {
 			AlertClientFunc: fakeAlertFunc,
 		}
 
-		condition = &nralertsv1.NrqlAlertCondition{
+		condition = &nrv1.NrqlAlertCondition{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      "test-condition",
 				Namespace: "default",
 			},
-			Spec: nralertsv1.NrqlAlertConditionSpec{
-				Terms: []nralertsv1.AlertConditionTerm{
-					{
-						Duration:     resource.MustParse("30"),
-						Operator:     "Above",
-						Priority:     "Critical",
-						Threshold:    resource.MustParse("5"),
-						TimeFunction: "All",
+			Spec: nrv1.NrqlAlertConditionSpec{
+				GenericConditionSpec: nrv1.GenericConditionSpec{
+					Terms: []nrv1.AlertConditionTerm{
+						{
+							Duration:     "30",
+							Operator:     "above",
+							Priority:     "critical",
+							Threshold:    "5",
+							TimeFunction: "all",
+						},
+					},
+					Type:       "NRQL",
+					Name:       "NRQL Condition",
+					RunbookURL: "http://test.com/runbook",
+					ID:         777,
+
+					Enabled:          true,
+					ExistingPolicyID: 42,
+					APIKey:           "112233",
+				},
+				NrqlSpecificSpec: nrv1.NrqlSpecificSpec{
+					ViolationCloseTimer: 60,
+					ExpectedGroups:      2,
+					IgnoreOverlap:       true,
+					ValueFunction:       "max",
+					Nrql: nrv1.NrqlQuery{
+						Query:      "SELECT 1 FROM MyEvents",
+						SinceValue: "5",
 					},
 				},
-				Nrql: nralertsv1.NrqlQuery{
-					Query:      "SELECT 1 FROM MyEvents",
-					SinceValue: "5",
-				},
-				Type:                "NRQL",
-				Name:                "NRQL Condition",
-				RunbookURL:          "http://test.com/runbook",
-				ValueFunction:       "Over",
-				ID:                  777,
-				ViolationCloseTimer: 60,
-				ExpectedGroups:      2,
-				IgnoreOverlap:       true,
-				Enabled:             true,
-				ExistingPolicyID:    42,
-				APIKey:              "nraa-key",
 			},
-			Status: nralertsv1.NrqlAlertConditionStatus{
-				AppliedSpec: &nralertsv1.NrqlAlertConditionSpec{},
-				ConditionID: 0,
-			},
-		}
-		condition = &nralertsv1.NrqlAlertCondition{
-			ObjectMeta: metav1.ObjectMeta{
-				Name:      "test-condition",
-				Namespace: "default",
-			},
-			Spec: nralertsv1.NrqlAlertConditionSpec{
-				Terms: []nralertsv1.AlertConditionTerm{
-					{
-						Duration:     resource.MustParse("30"),
-						Operator:     "Above",
-						Priority:     "Critical",
-						Threshold:    resource.MustParse("5"),
-						TimeFunction: "All",
-					},
-				},
-				Nrql: nralertsv1.NrqlQuery{
-					Query:      "SELECT 1 FROM MyEvents",
-					SinceValue: "5",
-				},
-				Type:                "NRQL",
-				Name:                "NRQL Condition",
-				RunbookURL:          "http://test.com/runbook",
-				ValueFunction:       "Over",
-				ID:                  777,
-				ViolationCloseTimer: 60,
-				ExpectedGroups:      2,
-				IgnoreOverlap:       true,
-				Enabled:             true,
-				ExistingPolicyID:    42,
-				APIKey:              "nraa-key",
-			},
-			Status: nralertsv1.NrqlAlertConditionStatus{
-				AppliedSpec: &nralertsv1.NrqlAlertConditionSpec{},
+
+			Status: nrv1.NrqlAlertConditionStatus{
+				AppliedSpec: &nrv1.NrqlAlertConditionSpec{},
 				ConditionID: 0,
 			},
 		}
@@ -174,7 +141,7 @@ var _ = Describe("NrqlCondition reconciliation", func() {
 					_, err = r.Reconcile(request)
 					Expect(err).ToNot(HaveOccurred())
 
-					var endStateCondition nralertsv1.NrqlAlertCondition
+					var endStateCondition nrv1.NrqlAlertCondition
 					err = k8sClient.Get(ctx, namespacedName, &endStateCondition)
 					Expect(err).To(BeNil())
 					Expect(endStateCondition.Status.ConditionID).To(Equal(111))
@@ -188,7 +155,7 @@ var _ = Describe("NrqlCondition reconciliation", func() {
 					_, err = r.Reconcile(request)
 					Expect(err).ToNot(HaveOccurred())
 
-					var endStateCondition nralertsv1.NrqlAlertCondition
+					var endStateCondition nrv1.NrqlAlertCondition
 					err = k8sClient.Get(ctx, namespacedName, &endStateCondition)
 					Expect(err).To(BeNil())
 					Expect(endStateCondition.Status.AppliedSpec).To(Equal(&condition.Spec))
@@ -200,7 +167,7 @@ var _ = Describe("NrqlCondition reconciliation", func() {
 			Context("with a valid condition and a kubernetes secret", func() {
 				BeforeEach(func() {
 					condition.Spec.APIKey = ""
-					condition.Spec.APIKeySecret = nralertsv1.NewRelicAPIKeySecret{
+					condition.Spec.APIKeySecret = nrv1.NewRelicAPIKeySecret{
 						Name:      "my-api-key-secret",
 						Namespace: "my-namespace",
 						KeyName:   "my-api-key",
@@ -242,7 +209,7 @@ var _ = Describe("NrqlCondition reconciliation", func() {
 					_, err = r.Reconcile(request)
 					Expect(err).ToNot(HaveOccurred())
 
-					var endStateCondition nralertsv1.NrqlAlertCondition
+					var endStateCondition nrv1.NrqlAlertCondition
 					err = k8sClient.Get(ctx, namespacedName, &endStateCondition)
 					Expect(err).To(BeNil())
 					Expect(endStateCondition.Status.ConditionID).To(Equal(111))
@@ -256,7 +223,7 @@ var _ = Describe("NrqlCondition reconciliation", func() {
 					_, err = r.Reconcile(request)
 					Expect(err).ToNot(HaveOccurred())
 
-					var endStateCondition nralertsv1.NrqlAlertCondition
+					var endStateCondition nrv1.NrqlAlertCondition
 					err = k8sClient.Get(ctx, namespacedName, &endStateCondition)
 					Expect(err).To(BeNil())
 					Expect(endStateCondition.Status.AppliedSpec).To(Equal(&condition.Spec))
@@ -266,42 +233,48 @@ var _ = Describe("NrqlCondition reconciliation", func() {
 
 		Context("and given a NrqlAlertCondition that exists in New Relic", func() {
 			JustBeforeEach(func() {
-				condition = &nralertsv1.NrqlAlertCondition{
+				condition = &nrv1.NrqlAlertCondition{
 					ObjectMeta: metav1.ObjectMeta{
 						Name:      "test-condition",
 						Namespace: "default",
 					},
-					Spec: nralertsv1.NrqlAlertConditionSpec{
-						Terms: []nralertsv1.AlertConditionTerm{
-							{
-								Duration:     resource.MustParse("30"),
-								Operator:     "Above",
-								Priority:     "Critical",
-								Threshold:    resource.MustParse("5"),
-								TimeFunction: "All",
+					Spec: nrv1.NrqlAlertConditionSpec{
+						GenericConditionSpec: nrv1.GenericConditionSpec{
+							Terms: []nrv1.AlertConditionTerm{
+								{
+									Duration:     "30",
+									Operator:     "above",
+									Priority:     "critical",
+									Threshold:    "5",
+									TimeFunction: "all",
+								},
+							},
+							Type:       "NRQL",
+							Name:       "NRQL Condition matches",
+							RunbookURL: "http://test.com/runbook",
+							ID:         777,
+
+							Enabled:          true,
+							ExistingPolicyID: 42,
+							APIKey:           "112233",
+						},
+						NrqlSpecificSpec: nrv1.NrqlSpecificSpec{
+							ViolationCloseTimer: 60,
+							ExpectedGroups:      2,
+							IgnoreOverlap:       true,
+							ValueFunction:       "max",
+							Nrql: nrv1.NrqlQuery{
+								Query:      "SELECT 1 FROM MyEvents",
+								SinceValue: "5",
 							},
 						},
-						Nrql: nralertsv1.NrqlQuery{
-							Query:      "SELECT 1 FROM MyEvents",
-							SinceValue: "5",
-						},
-						Type:                "NRQL",
-						Name:                "NRQL Condition matches",
-						RunbookURL:          "http://test.com/runbook",
-						ValueFunction:       "Over",
-						ID:                  777,
-						ViolationCloseTimer: 60,
-						ExpectedGroups:      2,
-						IgnoreOverlap:       true,
-						Enabled:             true,
-						ExistingPolicyID:    42,
-						APIKey:              "nraa-key",
 					},
-					Status: nralertsv1.NrqlAlertConditionStatus{
-						AppliedSpec: &nralertsv1.NrqlAlertConditionSpec{},
+					Status: nrv1.NrqlAlertConditionStatus{
+						AppliedSpec: &nrv1.NrqlAlertConditionSpec{},
 						ConditionID: 0,
 					},
 				}
+
 			})
 
 			Context("with a valid condition", func() {
@@ -325,7 +298,7 @@ var _ = Describe("NrqlCondition reconciliation", func() {
 					_, err = r.Reconcile(request)
 					Expect(err).ToNot(HaveOccurred())
 
-					var endStateCondition nralertsv1.NrqlAlertCondition
+					var endStateCondition nrv1.NrqlAlertCondition
 					err = k8sClient.Get(ctx, namespacedName, &endStateCondition)
 					Expect(err).To(BeNil())
 					Expect(endStateCondition.Status.ConditionID).To(Equal(112))
@@ -339,7 +312,7 @@ var _ = Describe("NrqlCondition reconciliation", func() {
 					_, err = r.Reconcile(request)
 					Expect(err).ToNot(HaveOccurred())
 
-					var endStateCondition nralertsv1.NrqlAlertCondition
+					var endStateCondition nrv1.NrqlAlertCondition
 					err = k8sClient.Get(ctx, namespacedName, &endStateCondition)
 					Expect(err).To(BeNil())
 					Expect(endStateCondition.Status.AppliedSpec).To(Equal(&condition.Spec))
@@ -392,7 +365,7 @@ var _ = Describe("NrqlCondition reconciliation", func() {
 					_, err = r.Reconcile(request)
 					Expect(err).ToNot(HaveOccurred())
 
-					var endStateCondition nralertsv1.NrqlAlertCondition
+					var endStateCondition nrv1.NrqlAlertCondition
 					err = k8sClient.Get(ctx, namespacedName, &endStateCondition)
 					Expect(err).To(BeNil())
 					Expect(endStateCondition.Status.ConditionID).To(Equal(112))
@@ -406,7 +379,7 @@ var _ = Describe("NrqlCondition reconciliation", func() {
 					_, err = r.Reconcile(request)
 					Expect(err).ToNot(HaveOccurred())
 
-					var endStateCondition nralertsv1.NrqlAlertCondition
+					var endStateCondition nrv1.NrqlAlertCondition
 					err = k8sClient.Get(ctx, namespacedName, &endStateCondition)
 					Expect(err).To(BeNil())
 					Expect(endStateCondition.Status.AppliedSpec).To(Equal(&condition.Spec))
@@ -477,7 +450,7 @@ var _ = Describe("NrqlCondition reconciliation", func() {
 					_, err = r.Reconcile(request)
 					Expect(err).ToNot(HaveOccurred())
 
-					var endStateCondition nralertsv1.NrqlAlertCondition
+					var endStateCondition nrv1.NrqlAlertCondition
 					err = k8sClient.Get(ctx, namespacedName, &endStateCondition)
 					Expect(err).To(HaveOccurred())
 				})
@@ -503,7 +476,7 @@ var _ = Describe("NrqlCondition reconciliation", func() {
 					Expect(alertsClient.UpdateNrqlConditionCallCount()).To(Equal(0))
 					Expect(alertsClient.DeleteNrqlConditionCallCount()).To(Equal(0))
 
-					var endStateCondition nralertsv1.NrqlAlertCondition
+					var endStateCondition nrv1.NrqlAlertCondition
 					err = k8sClient.Get(ctx, namespacedName, &endStateCondition)
 					Expect(err).To(HaveOccurred())
 					Expect(endStateCondition.Name).To(Equal(""))
@@ -531,7 +504,7 @@ var _ = Describe("NrqlCondition reconciliation", func() {
 					Expect(alertsClient.UpdateNrqlConditionCallCount()).To(Equal(0))
 					Expect(alertsClient.DeleteNrqlConditionCallCount()).To(Equal(1))
 
-					var endStateCondition nralertsv1.NrqlAlertCondition
+					var endStateCondition nrv1.NrqlAlertCondition
 					err = k8sClient.Get(ctx, namespacedName, &endStateCondition)
 					Expect(err).To(HaveOccurred())
 					Expect(endStateCondition.Name).To(Equal(""))
@@ -541,28 +514,5 @@ var _ = Describe("NrqlCondition reconciliation", func() {
 
 		})
 	})
-
-	//Context("When reading the API key from a secret", func() {
-	//	It("should read the secret", func() {
-	//		secret := &v1.Secret{
-	//			ObjectMeta: metav1.ObjectMeta{
-	//				Name:      "newrelic",
-	//				Namespace: "default",
-	//			},
-	//			Data: map[string][]byte{
-	//				"api_key": []byte("api-key"),
-	//			},
-	//		}
-	//		err := k8sClient.Create(ctx, secret)
-	//
-	//		Expect(err).ToNot(HaveOccurred())
-	//		_, err = r.Reconcile(request)
-	//
-	//
-	//		Expect("this").To(Equal("that"))
-	//
-	//
-	//	})
-	//})
 
 })

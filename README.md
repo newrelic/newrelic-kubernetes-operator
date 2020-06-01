@@ -10,10 +10,10 @@
 [![CLA assistant](https://cla-assistant.io/readme/badge/newrelic/newrelic-kubernetes-operator)](https://cla-assistant.io/newrelic/newrelic-kubernetes-operator)
 [![Release](https://img.shields.io/github/release/newrelic/newrelic-kubernetes-operator/all.svg)](https://github.com/newrelic/newrelic-kubernetes-operator/releases/latest)
 
-[![Docker Stars](https://img.shields.io/docker/stars/newrelic/k8s-operator.svg)](https://hub.docker.com/r/newrelic/k8s-operator)
-[![Docker Pulls](https://img.shields.io/docker/pulls/newrelic/k8s-operator.svg)](https://hub.docker.com/r/newrelic/k8s-operator)
-[![Docker Size](https://img.shields.io/docker/image-size/newrelic/k8s-operator.svg?sort=semver)](https://hub.docker.com/r/newrelic/k8s-operator)
-[![Docker Version](https://img.shields.io/docker/v/newrelic/k8s-operator.svg?sort=semver)](https://hub.docker.com/r/newrelic/k8s-operator)
+[![Docker Stars](https://img.shields.io/docker/stars/newrelic/kubernetes-operator.svg)](https://hub.docker.com/r/newrelic/kubernetes-operator)
+[![Docker Pulls](https://img.shields.io/docker/pulls/newrelic/kubernetes-operator.svg)](https://hub.docker.com/r/newrelic/kubernetes-operator)
+[![Docker Size](https://img.shields.io/docker/image-size/newrelic/kubernetes-operator.svg?sort=semver)](https://hub.docker.com/r/newrelic/kubernetes-operator)
+[![Docker Version](https://img.shields.io/docker/v/newrelic/kubernetes-operator.svg?sort=semver)](https://hub.docker.com/r/newrelic/kubernetes-operator)
 
 - [Overview](#overview)
 - [Quick Start](#quick-start)
@@ -30,6 +30,7 @@ The **newrelic-kubernetes-operator** is a [Kubernetes Operator](https://kubernet
 Currently the operator supports managing the following resources:
 - Alert Policies
 - NRQL Alert Conditions.
+- Alert Conditions for APM, Browser and mobile
 
 
 # Quick Start
@@ -81,7 +82,7 @@ If you want to deploy the operator in a custom container you can override the im
    resources:
      - github.com/newrelic/newrelic-kubernetes-operator/configs/default
    images:
-     - name: newrelic/k8s-operator:snapshot
+     - name: newrelic/kubernetes-operator:snapshot
        newName: <CUSTOM_IMAGE>
        newTag: <CUSTOM_TAG>
    ```
@@ -129,17 +130,19 @@ Once you've completed the [Quick Start](#quick-start) section, you can start pro
                 operator: "above"
             name: "K8s generated alert condition"
         - spec:
-            nrql:
-              query: "SELECT count(*) FROM Transactions"
-              since_value: "5"
+            type: "apm_app_metric"
             enabled: true
+            metric: "apdex"
+            condition_scope: application
+            entities:
+              - "5950260"
             terms:
-              - threshold: "150.0"
+              - threshold: "0.9"
                 time_function: "all"
-                duration: "5"
+                duration: "30"
                 priority: "critical"
                 operator: "above"
-            name: "K8s generated alert condition 2"
+            name: "K8s generated apm alert condition 2"
     ```
 
    Once you've added your API key, we can apply it your local cluster.

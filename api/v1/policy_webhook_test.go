@@ -4,7 +4,6 @@ package v1
 
 import (
 	v1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/newrelic/newrelic-kubernetes-operator/interfaces"
@@ -103,53 +102,69 @@ var _ = Describe("Policy_webhooks", func() {
 			BeforeEach(func() {
 				r.Spec.Conditions = []PolicyCondition{
 					{
-						Spec: NrqlAlertConditionSpec{
-							Terms: []AlertConditionTerm{
-								{
-									Duration:     resource.MustParse("30"),
-									Operator:     "above",
-									Priority:     "critical",
-									Threshold:    resource.MustParse("5"),
-									TimeFunction: "all",
+						Spec: ConditionSpec{
+							GenericConditionSpec{
+								Terms: []AlertConditionTerm{
+									{
+										Duration:     "30",
+										Operator:     "above",
+										Priority:     "critical",
+										Threshold:    "5",
+										TimeFunction: "all",
+									},
+								},
+								Type:       "NRQL",
+								Name:       "NRQL Condition",
+								RunbookURL: "http://test.com/runbook",
+								ID:         777,
+
+								Enabled:          true,
+								ExistingPolicyID: 42,
+							},
+							NrqlSpecificSpec{
+								ViolationCloseTimer: 60,
+								ExpectedGroups:      2,
+								IgnoreOverlap:       true,
+								ValueFunction:       "max",
+								Nrql: NrqlQuery{
+									Query:      "SELECT 1 FROM MyEvents",
+									SinceValue: "5",
 								},
 							},
-							Nrql: NrqlQuery{
-								Query:      "SELECT 1 FROM MyEvents",
-								SinceValue: "5",
-							},
-							Type:                "NRQL",
-							Name:                "NRQL Condition",
-							RunbookURL:          "http://test.com/runbook",
-							ValueFunction:       "max",
-							ViolationCloseTimer: 60,
-							ExpectedGroups:      2,
-							IgnoreOverlap:       true,
-							Enabled:             true,
+							APMSpecificSpec{},
 						},
 					},
 					{
-						Spec: NrqlAlertConditionSpec{
-							Terms: []AlertConditionTerm{
-								{
-									Duration:     resource.MustParse("30"),
-									Operator:     "above",
-									Priority:     "critical",
-									Threshold:    resource.MustParse("5"),
-									TimeFunction: "all",
+						Spec: ConditionSpec{
+							GenericConditionSpec{
+								Terms: []AlertConditionTerm{
+									{
+										Duration:     "30",
+										Operator:     "above",
+										Priority:     "critical",
+										Threshold:    "5",
+										TimeFunction: "all",
+									},
+								},
+								Type:       "NRQL",
+								Name:       "NRQL Condition",
+								RunbookURL: "http://test.com/runbook",
+								ID:         777,
+
+								Enabled:          true,
+								ExistingPolicyID: 42,
+							},
+							NrqlSpecificSpec{
+								ViolationCloseTimer: 60,
+								ExpectedGroups:      2,
+								IgnoreOverlap:       true,
+								ValueFunction:       "max",
+								Nrql: NrqlQuery{
+									Query:      "SELECT 1 FROM MyEvents",
+									SinceValue: "5",
 								},
 							},
-							Nrql: NrqlQuery{
-								Query:      "SELECT 1 FROM MyEvents",
-								SinceValue: "5",
-							},
-							Type:                "NRQL",
-							Name:                "NRQL Condition",
-							RunbookURL:          "http://test.com/runbook",
-							ValueFunction:       "max",
-							ViolationCloseTimer: 60,
-							ExpectedGroups:      2,
-							IgnoreOverlap:       true,
-							Enabled:             true,
+							APMSpecificSpec{},
 						},
 					},
 				}
@@ -186,28 +201,33 @@ var _ = Describe("Policy_webhooks", func() {
 				APIKey:             "api-key",
 				Conditions: []PolicyCondition{
 					{
-						Spec: NrqlAlertConditionSpec{
-							Terms: []AlertConditionTerm{
-								{
-									Duration:     resource.MustParse("30"),
-									Operator:     "above",
-									Priority:     "critical",
-									Threshold:    resource.MustParse("5"),
-									TimeFunction: "all",
+						Spec: ConditionSpec{
+							GenericConditionSpec{
+								Terms: []AlertConditionTerm{
+									{
+										Duration:     "30",
+										Operator:     "above",
+										Priority:     "critical",
+										Threshold:    "5",
+										TimeFunction: "all",
+									},
 								},
+								Type:       "NRQL",
+								Name:       "NRQL Condition",
+								RunbookURL: "http://test.com/runbook",
+								Enabled:    true,
 							},
-							Nrql: NrqlQuery{
-								Query:      "SELECT 1 FROM MyEvents",
-								SinceValue: "5",
+							NrqlSpecificSpec{
+								Nrql: NrqlQuery{
+									Query:      "SELECT 1 FROM MyEvents",
+									SinceValue: "5",
+								},
+								ValueFunction:       "max",
+								ViolationCloseTimer: 60,
+								ExpectedGroups:      2,
+								IgnoreOverlap:       true,
 							},
-							Type:                "NRQL",
-							Name:                "NRQL Condition",
-							RunbookURL:          "http://test.com/runbook",
-							ValueFunction:       "max",
-							ViolationCloseTimer: 60,
-							ExpectedGroups:      2,
-							IgnoreOverlap:       true,
-							Enabled:             true,
+							APMSpecificSpec{},
 						},
 					},
 				},

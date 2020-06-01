@@ -7,7 +7,9 @@ require (
 	github.com/Azure/go-autorest/autorest/azure/auth v0.4.2 // indirect
 	github.com/Azure/go-autorest/autorest/to v0.3.0 // indirect
 	github.com/Azure/go-autorest/autorest/validation v0.2.0 // indirect
+	github.com/apex/log v1.1.4
 	github.com/davecgh/go-spew v1.1.1
+	github.com/git-chglog/git-chglog v0.0.0-20200414013904-db796966b373
 	github.com/go-logr/logr v0.1.0
 	github.com/golang/groupcache v0.0.0-20200121045136-8c9f03a8e57e // indirect
 	github.com/golang/protobuf v1.4.2 // indirect

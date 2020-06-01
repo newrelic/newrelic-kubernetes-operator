@@ -9,7 +9,6 @@ import (
 	"strconv"
 	"testing"
 
-	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/kubernetes/scheme"
@@ -71,27 +70,34 @@ func TestIntegrationAlertsPolicyController(t *testing.T) {
 	}
 
 	conditionSpec := &nrv1.NrqlAlertConditionSpec{
-		Terms: []nrv1.AlertConditionTerm{
-			{
-				Duration:     resource.MustParse("30"),
-				Operator:     "above",
-				Priority:     "critical",
-				Threshold:    resource.MustParse("5"),
-				TimeFunction: "all",
+		GenericConditionSpec: nrv1.GenericConditionSpec{
+			Terms: []nrv1.AlertConditionTerm{
+				{
+					Duration:     "30",
+					Operator:     "above",
+					Priority:     "critical",
+					Threshold:    "5",
+					TimeFunction: "all",
+				},
+			},
+			Type:       "NRQL",
+			Name:       "NRQL Condition",
+			RunbookURL: "http://test.com/runbook",
+			ID:         777,
+
+			Enabled:          true,
+			ExistingPolicyID: 42,
+		},
+		NrqlSpecificSpec: nrv1.NrqlSpecificSpec{
+			ViolationCloseTimer: 60,
+			ExpectedGroups:      2,
+			IgnoreOverlap:       true,
+			ValueFunction:       "max",
+			Nrql: nrv1.NrqlQuery{
+				Query:      "SELECT 1 FROM MyEvents",
+				SinceValue: "5",
 			},
 		},
-		Nrql: nrv1.NrqlQuery{
-			Query:      "SELECT 1 FROM MyEvents",
-			SinceValue: "5",
-		},
-		Type:                "NRQL",
-		Name:                "NRQL Condition",
-		RunbookURL:          "http://test.com/runbook",
-		ValueFunction:       "max",
-		ViolationCloseTimer: 60,
-		ExpectedGroups:      2,
-		IgnoreOverlap:       true,
-		Enabled:             true,
 	}
 
 	policy := &nrv1.AlertsPolicy{
