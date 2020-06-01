@@ -43,6 +43,7 @@ webhooks:
     - UPDATE
     resources:
     - nrqlalertconditions
+  sideEffects: None
 - clientConfig:
     caBundle: Cg==
     service:
@@ -107,6 +108,7 @@ webhooks:
     - UPDATE
     resources:
     - nrqlalertconditions
+  sideEffects: None
 - clientConfig:
     caBundle: Cg==
     service:
