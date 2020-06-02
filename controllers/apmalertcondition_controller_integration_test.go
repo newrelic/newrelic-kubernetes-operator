@@ -23,6 +23,14 @@ import (
 )
 
 var _ = Describe("ApmCondition reconciliation", func() {
+	BeforeEach(func() {
+		err := ignoreAlreadyExists(k8sClient.Create(context.Background(), &v1.Namespace{
+			ObjectMeta: metav1.ObjectMeta{
+				Name: "my-namespace",
+			},
+		}))
+		Expect(err).ToNot(HaveOccurred())
+	})
 	var (
 		ctx            context.Context
 		r              *ApmAlertConditionReconciler
@@ -183,7 +191,7 @@ var _ = Describe("ApmCondition reconciliation", func() {
 							"my-api-key": []byte("data_here"),
 						},
 					}
-					k8sClient.Create(ctx, secret)
+					Expect(ignoreAlreadyExists(k8sClient.Create(ctx, secret))).To(Succeed())
 				})
 				It("should create that condition via the AlertClient", func() {
 

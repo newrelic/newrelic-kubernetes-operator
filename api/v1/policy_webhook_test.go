@@ -18,6 +18,14 @@ import (
 )
 
 var _ = Describe("Policy_webhooks", func() {
+	BeforeEach(func() {
+		err := ignoreAlreadyExists(testk8sClient.Create(context.Background(), &v1.Namespace{
+			ObjectMeta: metav1.ObjectMeta{
+				Name: "my-namespace",
+			},
+		}))
+		Expect(err).ToNot(HaveOccurred())
+	})
 	Describe("validateCreate", func() {
 		var (
 			r            Policy
@@ -84,7 +92,7 @@ var _ = Describe("Policy_webhooks", func() {
 						"my-api-key": []byte("data_here"),
 					},
 				}
-				k8Client.Create(ctx, secret)
+				Expect(ignoreAlreadyExists(k8Client.Create(ctx, secret))).To(Succeed())
 				err := r.ValidateCreate()
 				Expect(err).ToNot(HaveOccurred())
 			})

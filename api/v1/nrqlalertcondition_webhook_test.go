@@ -28,6 +28,15 @@ var _ = Describe("ValidateCreate", func() {
 	)
 
 	BeforeEach(func() {
+		err := ignoreAlreadyExists(testk8sClient.Create(context.Background(), &v1.Namespace{
+			ObjectMeta: metav1.ObjectMeta{
+				Name: "my-namespace",
+			},
+		}))
+		Expect(err).ToNot(HaveOccurred())
+	})
+
+	BeforeEach(func() {
 		k8Client = testk8sClient
 		ctx = context.Background()
 		alertsClient = &interfacesfakes.FakeNewRelicAlertsClient{}
@@ -111,7 +120,7 @@ var _ = Describe("ValidateCreate", func() {
 						"my-api-key": []byte("data_here"),
 					},
 				}
-				k8Client.Create(ctx, secret)
+				Expect(ignoreAlreadyExists(k8Client.Create(ctx, secret))).To(Succeed())
 				err := r.ValidateCreate()
 				Expect(err).ToNot(HaveOccurred())
 			})
