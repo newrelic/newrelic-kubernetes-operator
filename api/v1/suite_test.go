@@ -60,6 +60,8 @@ var _ = AfterSuite(func() {
 	Expect(err).ToNot(HaveOccurred())
 })
 
+// this is used, but only with -tags=integration
+// nolint
 func ignoreAlreadyExists(err error) error {
 	if apierrors.IsAlreadyExists(err) {
 		return nil
