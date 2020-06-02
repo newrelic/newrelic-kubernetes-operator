@@ -3,7 +3,7 @@
 # `kubectl apply -f examples/example_secret.yaml`
 
 apiVersion: nr.k8s.newrelic.com/v1
-kind: Policy
+kind: AlertsPolicy
 metadata:
   name: my-policy
 spec:

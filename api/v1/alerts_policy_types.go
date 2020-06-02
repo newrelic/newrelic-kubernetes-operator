@@ -29,7 +29,7 @@ import (
 
 // AlertsPolicySpec defines the desired state of AlertsPolicy
 type AlertsPolicySpec struct {
-	IncidentPreference string                  `json:"incident_preference,omitempty"`
+	IncidentPreference string                  `json:"incidentPreference,omitempty"`
 	Name               string                  `json:"name"`
 	Region             string                  `json:"region"`
 	Conditions         []AlertsPolicyCondition `json:"conditions,omitempty"`

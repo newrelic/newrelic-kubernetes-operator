@@ -129,7 +129,7 @@ spec:
                 - namespace
                 type: object
               type: array
-            incident_preference:
+            incidentPreference:
               type: string
             name:
               type: string
@@ -244,7 +244,7 @@ spec:
                     - namespace
                     type: object
                   type: array
-                incident_preference:
+                incidentPreference:
                   type: string
                 name:
                   type: string

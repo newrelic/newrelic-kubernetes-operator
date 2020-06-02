@@ -49,16 +49,10 @@ type AlertsNrqlConditionReconciler struct {
 // +kubebuilder:rbac:groups=nr.k8s.newrelic.com,resources=alertsnrqlconditions,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=nr.k8s.newrelic.com,resources=alertsnrqlconditions/status,verbs=get;update;patch
 
+// Reconcile is responsible for reconciling the spec and state of the AlertsNrqlCondition.
 func (r *AlertsNrqlConditionReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) { //nolint: gocyclo
 	ctx := context.Background()
 	_ = r.Log.WithValues("nrqlalertcondition", req.NamespacedName)
-
-	// the testing code
-	//key := types.NamespacedName{Namespace: "default", Name: "newrelic"}
-	//var thing v1.Secret
-	//getErr := r.Client.Get(ctx, key, &thing)
-	//
-	//r.Log.Info("secret", "secret", thing, "error", getErr)
 
 	r.Log.Info("starting reconcile action")
 	var condition nrv1.AlertsNrqlCondition
@@ -77,7 +71,7 @@ func (r *AlertsNrqlConditionReconciler) Reconcile(req ctrl.Request) (ctrl.Result
 	if r.apiKey == "" {
 		return ctrl.Result{}, errors.New("api key is blank")
 	}
-	//initial alertsClient
+
 	alertsClient, errAlertsClient := r.AlertClientFunc(r.apiKey, condition.Spec.Region)
 	if errAlertsClient != nil {
 		r.Log.Error(errAlertsClient, "Error thrown")
@@ -87,13 +81,13 @@ func (r *AlertsNrqlConditionReconciler) Reconcile(req ctrl.Request) (ctrl.Result
 
 	deleteFinalizer := "nrqlalertconditions.finalizers.nr.k8s.newrelic.com"
 
-	//examine DeletionTimestamp to determine if object is under deletion
+	// examine DeletionTimestamp to determine if object is under deletion
 	if condition.DeletionTimestamp.IsZero() {
 		if !containsString(condition.Finalizers, deleteFinalizer) {
 			condition.Finalizers = append(condition.Finalizers, deleteFinalizer)
 		}
 	} else {
-		// The object is being deleted
+		// the object is being deleted
 		if containsString(condition.Finalizers, deleteFinalizer) {
 			// catch invalid state
 			if condition.Status.ConditionID == "" {
@@ -134,7 +128,7 @@ func (r *AlertsNrqlConditionReconciler) Reconcile(req ctrl.Request) (ctrl.Result
 			}
 		}
 
-		// Stop reconciliation as the item is being deleted
+		// stop reconciliation as the item is being deleted
 		r.Log.Info("All done with condition deletion", "conditionName", condition.Spec.Name)
 
 		return ctrl.Result{}, nil
@@ -168,6 +162,7 @@ func (r *AlertsNrqlConditionReconciler) Reconcile(req ctrl.Request) (ctrl.Result
 	} else {
 		r.Log.Info("Creating condition", "ConditionName", condition.Name, "API fields", updateInput)
 		createdCondition, err := alertsClient.CreateNrqlConditionStaticMutation(condition.Spec.AccountID, condition.Spec.ExistingPolicyID, updateInput)
+
 		if err != nil {
 			r.Log.Error(err, "failed to create condition",
 				"conditionId", condition.Status.ConditionID,

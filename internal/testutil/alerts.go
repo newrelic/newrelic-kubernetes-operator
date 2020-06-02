@@ -35,6 +35,7 @@ func AlertsPolicyTestSetup(t *testing.T) client.Client {
 	// +kubebuilder:scaffold:scheme
 
 	k8sClient, err := client.New(cfg, client.Options{Scheme: scheme.Scheme})
+
 	require.NoError(t, err)
 	require.NotNil(t, k8sClient)
 
@@ -53,7 +54,7 @@ func NewTestAlertsPolicy(t *testing.T) *nrv1.AlertsPolicy {
 			Namespace: "default",
 		},
 		Spec: nrv1.AlertsPolicySpec{
-			APIKey:             os.Getenv("NEW_RELIC_API_KEY"),
+			APIKey:             "112233",
 			AccountID:          accountID,
 			IncidentPreference: "PER_POLICY",
 			Name:               policyName,
@@ -86,7 +87,7 @@ func NewTestAlertsNrqlCondition(t *testing.T) *nrv1.AlertsNrqlCondition {
 
 		// TODO make use of NewTestAlertsNrqlConditionSpec()
 		Spec: nrv1.AlertsNrqlConditionSpec{
-			APIKey:    os.Getenv("NEW_RELIC_API_KEY"),
+			APIKey:    "nraa-key",
 			AccountID: accountID,
 			Terms: []nrv1.AlertsNrqlConditionTerm{
 				{

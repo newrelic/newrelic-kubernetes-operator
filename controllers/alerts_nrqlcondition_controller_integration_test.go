@@ -11,7 +11,6 @@ import (
 	. "github.com/onsi/gomega"
 
 	"github.com/newrelic/newrelic-client-go/pkg/alerts"
-	"github.com/newrelic/newrelic-client-go/pkg/testhelpers"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
@@ -27,45 +26,64 @@ import (
 
 var _ = Describe("AlertsNrqlCondition reconciliation", func() {
 	var (
-		ctx context.Context
-		// events         chan string
-		r              *AlertsNrqlConditionReconciler
-		t              *testing.T
-		condition      *nrv1.AlertsNrqlCondition
-		request        ctrl.Request
-		namespacedName types.NamespacedName
-		// expectedEvents []string
-		secret *v1.Secret
-		// fakeAlertFunc  func(string, string) (interfaces.NewRelicAlertsClient, error)
-		conditionName string
+		ctx                  context.Context
+		r                    *AlertsNrqlConditionReconciler
+		t                    *testing.T
+		condition            *nrv1.AlertsNrqlCondition
+		request              ctrl.Request
+		namespacedName       types.NamespacedName
+		secret               *v1.Secret
+		mockAlertsClientFunc func(string, string) (interfaces.NewRelicAlertsClient, error)
+		conditionName        string
 
 		k8sClient        client.Client
-		mockAlertsClient interfacesfakes.FakeNewRelicAlertsClient
-		realAlertsClient alerts.Alerts
+		mockAlertsClient *interfacesfakes.FakeNewRelicAlertsClient
 	)
+
 	BeforeEach(func() {
 		ctx = context.Background()
 		t = &testing.T{}
-		realAlertsClient = alerts.New(testhelpers.NewIntegrationTestConfig(t))
-		mockAlertsClient = interfacesfakes.FakeNewRelicAlertsClient{}
+		k8sClient = testutil.AlertsPolicyTestSetup(t)
+		mockAlertsClient = &interfacesfakes.FakeNewRelicAlertsClient{}
 
-		// Create a policy to use as the existing policy
-		policy := testutil.NewTestAlertsPolicy(t)
-		p := alerts.AlertsPolicyInput{}
-		p.IncidentPreference = alerts.AlertsIncidentPreference(policy.Spec.IncidentPreference)
-		p.Name = policy.Spec.Name
+		mockAlertsClient.CreateNrqlConditionStaticMutationStub = func(accountID int, policyID string, a alerts.NrqlConditionInput) (*alerts.NrqlAlertCondition, error) {
+			condition := &alerts.NrqlAlertCondition{
+				ID: "111",
+			}
+			return condition, nil
+		}
 
-		policyCreateResult, _ := realAlertsClient.CreatePolicyMutation(policy.Spec.AccountID, p)
+		mockAlertsClient.UpdateNrqlConditionStaticMutationStub = func(accountID int, conditionID string, a alerts.NrqlConditionInput) (*alerts.NrqlAlertCondition, error) {
+			condition := &alerts.NrqlAlertCondition{
+				ID: "112",
+			}
+			return condition, nil
+		}
+
+		mockAlertsClient.SearchNrqlConditionsQueryStub = func(accountID int, searchCriteria alerts.NrqlConditionsSearchCriteria) ([]*alerts.NrqlAlertCondition, error) {
+			var a []*alerts.NrqlAlertCondition
+			condition := &alerts.NrqlAlertCondition{
+				ID: "112",
+			}
+			condition.Name = "NRQL Condition matches"
+			a = append(a, condition)
+			return a, nil
+		}
+
+		mockAlertsClient.DeleteConditionMutationStub = func(accountID int, conditionID string) (string, error) {
+			return "", nil
+		}
+
+		mockAlertsClientFunc = func(string, string) (interfaces.NewRelicAlertsClient, error) {
+			return mockAlertsClient, nil
+		}
 
 		condition = testutil.NewTestAlertsNrqlCondition(t)
-		condition.Spec.ExistingPolicyID = policyCreateResult.ID
-
-		// Must come before calling reconciler.Reconcile()
-		k8sClient = testutil.AlertsPolicyTestSetup(t)
+		conditionName = condition.Name
 
 		namespacedName = types.NamespacedName{
 			Namespace: "default",
-			Name:      condition.Name,
+			Name:      conditionName,
 		}
 
 		request = ctrl.Request{NamespacedName: namespacedName}
@@ -73,43 +91,27 @@ var _ = Describe("AlertsNrqlCondition reconciliation", func() {
 		r = &AlertsNrqlConditionReconciler{
 			Client:          k8sClient,
 			Log:             logf.Log,
-			AlertClientFunc: interfaces.InitializeAlertsClient,
+			AlertClientFunc: mockAlertsClientFunc,
 		}
 	})
 
 	Context("when starting with no conditions", func() {
-
 		Context("and given a new AlertsNrqlCondition", func() {
 			Context("with a valid condition", func() {
 				It("should create the condition", func() {
 					err := k8sClient.Create(ctx, condition)
 					Expect(err).To(BeNil())
 
-					// call reconcile
 					_, err = r.Reconcile(request)
-					Expect(err).To(BeNil())
-
-					conditionNameType := types.NamespacedName{
-						Name:      condition.Name,
-						Namespace: condition.Namespace,
-					}
-
-					var endStateCondition nrv1.AlertsNrqlCondition
-					err = k8sClient.Get(ctx, conditionNameType, &endStateCondition)
-					Expect(err).To(BeNil())
-
-					// Use the alertsClient to query for the result of the reconcile.
-					getResult, err := realAlertsClient.GetNrqlConditionQuery(condition.Spec.AccountID, endStateCondition.Status.ConditionID)
-					Expect(err).To(BeNil())
-
-					Expect(endStateCondition.Status.ConditionID).To(Equal(getResult.ID))
+					Expect(err).ToNot(HaveOccurred())
+					Expect(mockAlertsClient.CreateNrqlConditionStaticMutationCallCount()).To(Equal(1))
+					Expect(mockAlertsClient.UpdateNrqlConditionStaticMutationCallCount()).To(Equal(0))
 				})
 
 				It("has the expected AppliedSpec", func() {
 					err := k8sClient.Create(ctx, condition)
 					Expect(err).ToNot(HaveOccurred())
 
-					// call reconcile
 					_, err = r.Reconcile(request)
 					Expect(err).ToNot(HaveOccurred())
 
@@ -140,44 +142,41 @@ var _ = Describe("AlertsNrqlCondition reconciliation", func() {
 							"my-api-key": []byte("data_here"),
 						},
 					}
+
 					k8sClient.Create(ctx, secret)
 				})
-				It("should create that condition via the AlertClient", func() {
 
+				It("should create that condition via the AlertClient", func() {
 					err := k8sClient.Create(ctx, condition)
 					Expect(err).ToNot(HaveOccurred())
 
-					// call reconcile
 					_, err = r.Reconcile(request)
 					Expect(err).ToNot(HaveOccurred())
-
 					Expect(mockAlertsClient.CreateNrqlConditionStaticMutationCallCount()).To(Equal(1))
 					Expect(mockAlertsClient.UpdateNrqlConditionStaticMutationCallCount()).To(Equal(0))
 				})
+
 				AfterEach(func() {
 					//k8sClient.Delete(ctx, secret)
-
 				})
 
 				It("updates the ConditionID on the kubernetes object", func() {
 					err := k8sClient.Create(ctx, condition)
 					Expect(err).ToNot(HaveOccurred())
 
-					// call reconcile
 					_, err = r.Reconcile(request)
 					Expect(err).ToNot(HaveOccurred())
 
 					var endStateCondition nrv1.AlertsNrqlCondition
 					err = k8sClient.Get(ctx, namespacedName, &endStateCondition)
 					Expect(err).To(BeNil())
-					Expect(endStateCondition.Status.ConditionID).To(Equal(111))
+					Expect(endStateCondition.Status.ConditionID).To(Equal("111"))
 				})
 
 				It("updates the AppliedSpec on the kubernetes object for later comparison", func() {
 					err := k8sClient.Create(ctx, condition)
 					Expect(err).ToNot(HaveOccurred())
 
-					// call reconcile
 					_, err = r.Reconcile(request)
 					Expect(err).ToNot(HaveOccurred())
 
@@ -230,15 +229,12 @@ var _ = Describe("AlertsNrqlCondition reconciliation", func() {
 			})
 
 			Context("with a valid condition", func() {
-
 				It("does not create a new condition", func() {
 					err := k8sClient.Create(ctx, condition)
 					Expect(err).ToNot(HaveOccurred())
 
-					// call reconcile
 					_, err = r.Reconcile(request)
 					Expect(err).ToNot(HaveOccurred())
-
 					Expect(mockAlertsClient.CreateNrqlConditionStaticMutationCallCount()).To(Equal(0))
 				})
 
@@ -246,21 +242,19 @@ var _ = Describe("AlertsNrqlCondition reconciliation", func() {
 					err := k8sClient.Create(ctx, condition)
 					Expect(err).ToNot(HaveOccurred())
 
-					// call reconcile
 					_, err = r.Reconcile(request)
 					Expect(err).ToNot(HaveOccurred())
 
 					var endStateCondition nrv1.AlertsNrqlCondition
 					err = k8sClient.Get(ctx, namespacedName, &endStateCondition)
 					Expect(err).To(BeNil())
-					Expect(endStateCondition.Status.ConditionID).To(Equal(112))
+					Expect(endStateCondition.Status.ConditionID).To(Equal("112"))
 				})
 
 				It("updates the AppliedSpec on the kubernetes object for later comparison", func() {
 					err := k8sClient.Create(ctx, condition)
 					Expect(err).ToNot(HaveOccurred())
 
-					// call reconcile
 					_, err = r.Reconcile(request)
 					Expect(err).ToNot(HaveOccurred())
 
@@ -269,7 +263,6 @@ var _ = Describe("AlertsNrqlCondition reconciliation", func() {
 					Expect(err).To(BeNil())
 					Expect(endStateCondition.Status.AppliedSpec).To(Equal(&condition.Spec))
 				})
-
 			})
 		})
 
@@ -278,14 +271,11 @@ var _ = Describe("AlertsNrqlCondition reconciliation", func() {
 				err := k8sClient.Create(ctx, condition)
 				Expect(err).ToNot(HaveOccurred())
 
-				// call reconcile
 				_, err = r.Reconcile(request)
 				Expect(err).ToNot(HaveOccurred())
-
 				Expect(mockAlertsClient.CreateNrqlConditionStaticMutationCallCount()).To(Equal(1))
 				Expect(mockAlertsClient.UpdateNrqlConditionStaticMutationCallCount()).To(Equal(0))
 
-				// change the event after creation via reconciliation
 				err = k8sClient.Get(ctx, namespacedName, condition)
 				Expect(err).ToNot(HaveOccurred())
 			})
@@ -300,34 +290,29 @@ var _ = Describe("AlertsNrqlCondition reconciliation", func() {
 					err := k8sClient.Update(ctx, condition)
 					Expect(err).ToNot(HaveOccurred())
 
-					// call reconcile
 					_, err = r.Reconcile(request)
 					Expect(err).ToNot(HaveOccurred())
-
-					// Only call count for Update is changed from second reconciliation run
-					Expect(mockAlertsClient.CreateNrqlConditionCallCount()).To(Equal(1))
-					Expect(mockAlertsClient.UpdateNrqlConditionCallCount()).To(Equal(1))
+					Expect(mockAlertsClient.CreateNrqlConditionStaticMutationCallCount()).To(Equal(1))
+					Expect(mockAlertsClient.UpdateNrqlConditionStaticMutationCallCount()).To(Equal(1))
 				})
 
 				It("allows the API to change the ConditionID on the kubernetes object", func() {
 					err := k8sClient.Update(ctx, condition)
 					Expect(err).ToNot(HaveOccurred())
 
-					// call reconcile
 					_, err = r.Reconcile(request)
 					Expect(err).ToNot(HaveOccurred())
 
 					var endStateCondition nrv1.AlertsNrqlCondition
 					err = k8sClient.Get(ctx, namespacedName, &endStateCondition)
 					Expect(err).To(BeNil())
-					Expect(endStateCondition.Status.ConditionID).To(Equal(112))
+					Expect(endStateCondition.Status.ConditionID).To(Equal("112"))
 				})
 
 				It("updates the AppliedSpec on the kubernetes object for later comparison", func() {
 					err := k8sClient.Update(ctx, condition)
 					Expect(err).ToNot(HaveOccurred())
 
-					// call reconcile
 					_, err = r.Reconcile(request)
 					Expect(err).ToNot(HaveOccurred())
 
@@ -343,12 +328,10 @@ var _ = Describe("AlertsNrqlCondition reconciliation", func() {
 					err := k8sClient.Update(ctx, condition)
 					Expect(err).ToNot(HaveOccurred())
 
-					// call reconcile
 					_, err = r.Reconcile(request)
 					Expect(err).ToNot(HaveOccurred())
-
-					Expect(mockAlertsClient.CreateNrqlConditionCallCount()).To(Equal(1))
-					Expect(mockAlertsClient.UpdateNrqlConditionCallCount()).To(Equal(0))
+					Expect(mockAlertsClient.CreateNrqlConditionStaticMutationCallCount()).To(Equal(1))
+					Expect(mockAlertsClient.UpdateNrqlConditionStaticMutationCallCount()).To(Equal(0))
 				})
 			})
 		})
@@ -365,40 +348,34 @@ var _ = Describe("AlertsNrqlCondition reconciliation", func() {
 	})
 
 	Context("When starting with an existing condition", func() {
-
 		Context("and deleting a AlertsNrqlCondition", func() {
 			BeforeEach(func() {
 				err := k8sClient.Create(ctx, condition)
 				Expect(err).ToNot(HaveOccurred())
 
-				// call reconcile
 				_, err = r.Reconcile(request)
 				Expect(err).ToNot(HaveOccurred())
 
-				// change the event after creation via reconciliation
 				err = k8sClient.Get(ctx, namespacedName, condition)
 				Expect(err).ToNot(HaveOccurred())
-
 			})
+
 			Context("with a valid condition", func() {
 				It("should delete that condition via the AlertClient", func() {
 					err := k8sClient.Delete(ctx, condition)
 					Expect(err).ToNot(HaveOccurred())
 
-					// call reconcile
 					_, err = r.Reconcile(request)
 					Expect(err).ToNot(HaveOccurred())
-
-					Expect(mockAlertsClient.CreateNrqlConditionCallCount()).To(Equal(1)) //This is 1 because the create occurring in the
-					Expect(mockAlertsClient.UpdateNrqlConditionCallCount()).To(Equal(0))
-					Expect(mockAlertsClient.DeleteNrqlConditionCallCount()).To(Equal(1))
+					Expect(mockAlertsClient.CreateNrqlConditionStaticMutationCallCount()).To(Equal(1))
+					Expect(mockAlertsClient.UpdateNrqlConditionStaticMutationCallCount()).To(Equal(0))
+					Expect(mockAlertsClient.DeleteConditionMutationCallCount()).To(Equal(1))
 				})
 
 				It("should return an error when getting the object", func() {
 					err := k8sClient.Delete(ctx, condition)
 					Expect(err).ToNot(HaveOccurred())
 
-					// call reconcile
 					_, err = r.Reconcile(request)
 					Expect(err).ToNot(HaveOccurred())
 
@@ -406,26 +383,23 @@ var _ = Describe("AlertsNrqlCondition reconciliation", func() {
 					err = k8sClient.Get(ctx, namespacedName, &endStateCondition)
 					Expect(err).To(HaveOccurred())
 				})
-
 			})
-			Context("with a condition with no condition ID", func() {
 
+			Context("with a condition with no condition ID", func() {
 				BeforeEach(func() {
 					condition.Status.ConditionID = "0"
 					err := k8sClient.Update(ctx, condition)
 					Expect(err).ToNot(HaveOccurred())
-
 				})
+
 				It("should just remove the finalizer and delete", func() {
 					err := k8sClient.Delete(ctx, condition)
 					Expect(err).ToNot(HaveOccurred())
 
-					// call reconcile
 					_, err = r.Reconcile(request)
 					Expect(err).ToNot(HaveOccurred())
-
-					Expect(mockAlertsClient.CreateNrqlConditionCallCount()).To(Equal(1)) //This is 1 because the create occurring in the
-					Expect(mockAlertsClient.UpdateNrqlConditionCallCount()).To(Equal(0))
+					Expect(mockAlertsClient.CreateNrqlConditionStaticMutationCallCount()).To(Equal(1))
+					Expect(mockAlertsClient.UpdateNrqlConditionStaticMutationCallCount()).To(Equal(0))
 					Expect(mockAlertsClient.DeleteNrqlConditionCallCount()).To(Equal(0))
 
 					var endStateCondition nrv1.AlertsNrqlCondition
@@ -433,28 +407,24 @@ var _ = Describe("AlertsNrqlCondition reconciliation", func() {
 					Expect(err).To(HaveOccurred())
 					Expect(endStateCondition.Name).To(Equal(""))
 				})
-
 			})
 
 			Context("when the Alerts API reports no condition found ", func() {
-
 				BeforeEach(func() {
 					mockAlertsClient.DeleteNrqlConditionStub = func(int) (*alerts.NrqlCondition, error) {
 						return &alerts.NrqlCondition{}, errors.New("resource not found")
 					}
-
 				})
+
 				It("should just remove the finalizer and delete", func() {
 					err := k8sClient.Delete(ctx, condition)
 					Expect(err).ToNot(HaveOccurred())
 
-					// call reconcile
 					_, err = r.Reconcile(request)
 					Expect(err).ToNot(HaveOccurred())
-
-					Expect(mockAlertsClient.CreateNrqlConditionCallCount()).To(Equal(1)) //This is 1 because the create occurring in the
-					Expect(mockAlertsClient.UpdateNrqlConditionCallCount()).To(Equal(0))
-					Expect(mockAlertsClient.DeleteNrqlConditionCallCount()).To(Equal(1))
+					Expect(mockAlertsClient.CreateNrqlConditionStaticMutationCallCount()).To(Equal(1))
+					Expect(mockAlertsClient.UpdateNrqlConditionStaticMutationCallCount()).To(Equal(0))
+					Expect(mockAlertsClient.DeleteConditionMutationCallCount()).To(Equal(1))
 
 					var endStateCondition nrv1.AlertsNrqlCondition
 					err = k8sClient.Get(ctx, namespacedName, &endStateCondition)
@@ -481,8 +451,6 @@ var _ = Describe("AlertsNrqlCondition reconciliation", func() {
 
 			Expect(err).ToNot(HaveOccurred())
 			_, err = r.Reconcile(request)
-
-			Expect("this").To(Equal("that"))
 		})
 	})
 })

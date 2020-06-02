@@ -3,7 +3,7 @@
 # `kubectl apply -f examples/example_secret.yaml`
 
 apiVersion: nr.k8s.newrelic.com/v1
-kind: NrqlAlertCondition
+kind: AlertsNrqlCondition
 metadata:
   name: alert-1029266
 spec:
