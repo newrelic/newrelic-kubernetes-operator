@@ -206,7 +206,7 @@ kustomize build github.com/newrelic/newrelic-kubernetes-operator/configs/default
 This section should get you set up properly for doing development on the operator.
 
 #### Requirements
-- [Go](https://golang.org/) v1.13+
+- [Go](https://golang.org/) v1.14+
 - [Docker](https://www.docker.com/get-started) (with Kubernetes enabled)
 - [kubectl](https://kubernetes.io/docs/tasks/tools/install-kubectl/)
 - [kustomize](https://kustomize.io/)

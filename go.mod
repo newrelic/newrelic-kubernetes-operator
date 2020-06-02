@@ -1,6 +1,6 @@
 module github.com/newrelic/newrelic-kubernetes-operator
 
-go 1.13
+go 1.14
 
 require (
 	github.com/Azure/go-autorest v14.0.1+incompatible
