@@ -3,6 +3,8 @@
 package v1
 
 import (
+	"context"
+
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
@@ -21,10 +23,12 @@ var _ = Describe("Policy_webhooks", func() {
 			r            Policy
 			alertsClient *interfacesfakes.FakeNewRelicAlertsClient
 			secret       *v1.Secret
+			ctx          context.Context
 		)
 
 		BeforeEach(func() {
 			k8Client = testk8sClient
+			ctx = context.Background()
 			alertsClient = &interfacesfakes.FakeNewRelicAlertsClient{}
 			fakeAlertFunc := func(string, string) (interfaces.NewRelicAlertsClient, error) {
 				return alertsClient, nil

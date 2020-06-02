@@ -38,7 +38,6 @@ var (
 func (r *NrqlAlertCondition) SetupWebhookWithManager(mgr ctrl.Manager) error {
 	alertClientFunc = interfaces.InitializeAlertsClient
 	k8Client = mgr.GetClient()
-	ctx = context.Background()
 	return ctrl.NewWebhookManagedBy(mgr).
 		For(r).
 		Complete()
@@ -106,6 +105,7 @@ func (r *NrqlAlertCondition) ValidateDelete() error {
 
 func (r *NrqlAlertCondition) CheckExistingPolicyID() error {
 	log.Info("Checking existing", "policyId", r.Spec.ExistingPolicyID)
+	ctx := context.Background()
 	var apiKey string
 	if r.Spec.APIKey == "" {
 		key := types.NamespacedName{Namespace: r.Spec.APIKeySecret.Namespace, Name: r.Spec.APIKeySecret.Name}

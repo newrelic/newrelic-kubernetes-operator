@@ -37,7 +37,6 @@ var (
 	apmalertconditionlog = logf.Log.WithName("apmalertcondition-resource")
 	alertClientFunc      func(string, string) (interfaces.NewRelicAlertsClient, error)
 	k8Client             client.Client
-	ctx                  context.Context
 )
 
 type invalidAttribute struct {
@@ -58,7 +57,6 @@ func (i InvalidAttributeSlice) errorString() string {
 func (r *ApmAlertCondition) SetupWebhookWithManager(mgr ctrl.Manager) error {
 	alertClientFunc = interfaces.InitializeAlertsClient
 	k8Client = mgr.GetClient()
-	ctx = context.Background()
 	return ctrl.NewWebhookManagedBy(mgr).
 		For(r).
 		Complete()
@@ -257,6 +255,7 @@ func (r *ApmAlertCondition) ValidateUserDefinedValueFunction() InvalidAttributeS
 
 func (r *ApmAlertCondition) CheckExistingPolicyID() error {
 	log.Info("Checking existing", "policyId", r.Spec.ExistingPolicyID)
+	ctx := context.Background()
 	var apiKey string
 	if r.Spec.APIKey == "" {
 		key := types.NamespacedName{Namespace: r.Spec.APIKeySecret.Namespace, Name: r.Spec.APIKeySecret.Name}

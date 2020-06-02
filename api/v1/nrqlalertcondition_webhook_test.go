@@ -3,6 +3,7 @@
 package v1
 
 import (
+	"context"
 	"errors"
 	"time"
 
@@ -23,10 +24,12 @@ var _ = Describe("ValidateCreate", func() {
 		r            NrqlAlertCondition
 		alertsClient *interfacesfakes.FakeNewRelicAlertsClient
 		secret       *v1.Secret
+		ctx          context.Context
 	)
 
 	BeforeEach(func() {
 		k8Client = testk8sClient
+		ctx = context.Background()
 		alertsClient = &interfacesfakes.FakeNewRelicAlertsClient{}
 		fakeAlertFunc := func(string, string) (interfaces.NewRelicAlertsClient, error) {
 			return alertsClient, nil
