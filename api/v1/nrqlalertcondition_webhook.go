@@ -38,7 +38,6 @@ var (
 func (r *NrqlAlertCondition) SetupWebhookWithManager(mgr ctrl.Manager) error {
 	alertClientFunc = interfaces.InitializeAlertsClient
 	k8Client = mgr.GetClient()
-	ctx = context.Background()
 	return ctrl.NewWebhookManagedBy(mgr).
 		For(r).
 		Complete()
@@ -46,7 +45,7 @@ func (r *NrqlAlertCondition) SetupWebhookWithManager(mgr ctrl.Manager) error {
 
 // EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
 
-// +kubebuilder:webhook:path=/mutate-nr-k8s-newrelic-com-v1-nrqlalertcondition,mutating=true,failurePolicy=fail,groups=nr.k8s.newrelic.com,resources=nrqlalertconditions,verbs=create;update,versions=v1,name=mnrqlalertcondition.kb.io
+// +kubebuilder:webhook:path=/mutate-nr-k8s-newrelic-com-v1-nrqlalertcondition,mutating=true,failurePolicy=fail,groups=nr.k8s.newrelic.com,resources=nrqlalertconditions,verbs=create;update,versions=v1,name=mnrqlalertcondition.kb.io,sideEffects=None
 
 var _ webhook.Defaulter = &NrqlAlertCondition{}
 
@@ -61,7 +60,7 @@ func (r *NrqlAlertCondition) Default() {
 	log.Info("r.Status.AppliedSpec after", "r.Status.AppliedSpec", r.Status.AppliedSpec)
 }
 
-// +kubebuilder:webhook:verbs=create;update,path=/validate-nr-k8s-newrelic-com-v1-nrqlalertcondition,mutating=false,failurePolicy=fail,groups=nr.k8s.newrelic.com,resources=nrqlalertconditions,versions=v1,name=vnrqlalertcondition.kb.io
+// +kubebuilder:webhook:verbs=create;update,path=/validate-nr-k8s-newrelic-com-v1-nrqlalertcondition,mutating=false,failurePolicy=fail,groups=nr.k8s.newrelic.com,resources=nrqlalertconditions,versions=v1,name=vnrqlalertcondition.kb.io,sideEffects=None
 
 var _ webhook.Validator = &NrqlAlertCondition{}
 
@@ -106,6 +105,7 @@ func (r *NrqlAlertCondition) ValidateDelete() error {
 
 func (r *NrqlAlertCondition) CheckExistingPolicyID() error {
 	log.Info("Checking existing", "policyId", r.Spec.ExistingPolicyID)
+	ctx := context.Background()
 	var apiKey string
 	if r.Spec.APIKey == "" {
 		key := types.NamespacedName{Namespace: r.Spec.APIKeySecret.Namespace, Name: r.Spec.APIKeySecret.Name}

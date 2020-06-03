@@ -4,7 +4,7 @@ apiVersion: apiextensions.k8s.io/v1beta1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    controller-gen.kubebuilder.io/version: v0.2.8
+    controller-gen.kubebuilder.io/version: v0.3.0
   creationTimestamp: null
   name: policies.nr.k8s.newrelic.com
 spec:
@@ -20,14 +20,10 @@ spec:
       description: Policy is the Schema for the policies API
       properties:
         apiVersion:
-          description: 'APIVersion defines the versioned schema of this representation
-            of an object. Servers should convert recognized schemas to the latest
-            internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+          description: 'APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
           type: string
         kind:
-          description: 'Kind is a string value representing the REST resource this
-            object represents. Servers may infer this from the endpoint the client
-            submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+          description: 'Kind is a string value representing the REST resource this object represents. Servers may infer this from the endpoint the client submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
           type: string
         metadata:
           type: object
@@ -47,8 +43,7 @@ spec:
               type: object
             conditions:
               items:
-                description: PolicyCondition defined the conditions contained within
-                  a a policy
+                description: PolicyCondition defined the conditions contained within a a policy
                 properties:
                   name:
                     type: string
@@ -91,8 +86,7 @@ spec:
                       name:
                         type: string
                       nrql:
-                        description: NrqlQuery represents a NRQL query to use with
-                          a NRQL alert condition
+                        description: NrqlQuery represents a NRQL query to use with a NRQL alert condition
                         properties:
                           query:
                             type: string
@@ -105,8 +99,7 @@ spec:
                         type: string
                       terms:
                         items:
-                          description: AlertConditionTerm represents the terms of
-                            a New Relic alert condition.
+                          description: AlertConditionTerm represents the terms of a New Relic alert condition.
                           properties:
                             duration:
                               type: string
@@ -127,14 +120,12 @@ spec:
                       type:
                         type: string
                       user_defined:
-                        description: ConditionUserDefined represents user defined
-                          metrics for the New Relic alert condition.
+                        description: ConditionUserDefined represents user defined metrics for the New Relic alert condition.
                         properties:
                           metric:
                             type: string
                           value_function:
-                            description: ValueFunctionType specifies the value function
-                              to be used for returning custom metric data.
+                            description: ValueFunctionType specifies the value function to be used for returning custom metric data.
                             type: string
                         type: object
                       value_function:
@@ -180,16 +171,14 @@ spec:
                   type: object
                 conditions:
                   items:
-                    description: PolicyCondition defined the conditions contained
-                      within a a policy
+                    description: PolicyCondition defined the conditions contained within a a policy
                     properties:
                       name:
                         type: string
                       namespace:
                         type: string
                       spec:
-                        description: ConditionSpec - Merged superset of Condition
-                          types
+                        description: ConditionSpec - Merged superset of Condition types
                         properties:
                           api_key:
                             type: string
@@ -225,8 +214,7 @@ spec:
                           name:
                             type: string
                           nrql:
-                            description: NrqlQuery represents a NRQL query to use
-                              with a NRQL alert condition
+                            description: NrqlQuery represents a NRQL query to use with a NRQL alert condition
                             properties:
                               query:
                                 type: string
@@ -239,8 +227,7 @@ spec:
                             type: string
                           terms:
                             items:
-                              description: AlertConditionTerm represents the terms
-                                of a New Relic alert condition.
+                              description: AlertConditionTerm represents the terms of a New Relic alert condition.
                               properties:
                                 duration:
                                   type: string
@@ -261,15 +248,12 @@ spec:
                           type:
                             type: string
                           user_defined:
-                            description: ConditionUserDefined represents user defined
-                              metrics for the New Relic alert condition.
+                            description: ConditionUserDefined represents user defined metrics for the New Relic alert condition.
                             properties:
                               metric:
                                 type: string
                               value_function:
-                                description: ValueFunctionType specifies the value
-                                  function to be used for returning custom metric
-                                  data.
+                                description: ValueFunctionType specifies the value function to be used for returning custom metric data.
                                 type: string
                             type: object
                           value_function:

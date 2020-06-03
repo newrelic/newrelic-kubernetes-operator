@@ -3,6 +3,7 @@
 package v1
 
 import (
+	"context"
 	"errors"
 	"time"
 
@@ -23,10 +24,21 @@ var _ = Describe("ValidateCreate", func() {
 		r            NrqlAlertCondition
 		alertsClient *interfacesfakes.FakeNewRelicAlertsClient
 		secret       *v1.Secret
+		ctx          context.Context
 	)
 
 	BeforeEach(func() {
+		err := ignoreAlreadyExists(testk8sClient.Create(context.Background(), &v1.Namespace{
+			ObjectMeta: metav1.ObjectMeta{
+				Name: "my-namespace",
+			},
+		}))
+		Expect(err).ToNot(HaveOccurred())
+	})
+
+	BeforeEach(func() {
 		k8Client = testk8sClient
+		ctx = context.Background()
 		alertsClient = &interfacesfakes.FakeNewRelicAlertsClient{}
 		fakeAlertFunc := func(string, string) (interfaces.NewRelicAlertsClient, error) {
 			return alertsClient, nil
@@ -108,7 +120,7 @@ var _ = Describe("ValidateCreate", func() {
 						"my-api-key": []byte("data_here"),
 					},
 				}
-				k8Client.Create(ctx, secret)
+				Expect(ignoreAlreadyExists(k8Client.Create(ctx, secret))).To(Succeed())
 				err := r.ValidateCreate()
 				Expect(err).ToNot(HaveOccurred())
 			})
