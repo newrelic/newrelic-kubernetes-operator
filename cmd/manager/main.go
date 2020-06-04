@@ -67,6 +67,7 @@ func main() {
 		Scheme:             scheme,
 		MetricsBindAddress: metricsAddr,
 		LeaderElection:     enableLeaderElection,
+		LeaderElectionID:   "newrelic-kubernetes-operator",
 		Port:               9443,
 	}
 
