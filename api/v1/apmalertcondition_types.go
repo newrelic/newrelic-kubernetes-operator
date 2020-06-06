@@ -42,7 +42,7 @@ type ApmAlertCondition struct {
 
 // +kubebuilder:object:root=true
 
-// NrqlAlertConditionList contains a list of NrqlAlertCondition
+// ApmAlertConditionList contains a list of ApmAlertCondition
 type ApmAlertConditionList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`
@@ -57,5 +57,6 @@ func (in ApmAlertConditionSpec) APICondition() alerts.Condition {
 	jsonString, _ := json.Marshal(in)
 	var APICondition alerts.Condition
 	json.Unmarshal(jsonString, &APICondition) //nolint
+
 	return APICondition
 }

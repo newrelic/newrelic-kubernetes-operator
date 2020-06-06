@@ -17,34 +17,35 @@ var _ = Describe("Equals", func() {
 	)
 
 	BeforeEach(func() {
+		spec := AlertsPolicyConditionSpec{}
+		spec.Terms = []AlertsNrqlConditionTerm{
+			{
+				Operator:             alerts.NrqlConditionOperators.Above,
+				Priority:             alerts.NrqlConditionPriorities.Critical,
+				Threshold:            "5",
+				ThresholdDuration:    60,
+				ThresholdOccurrences: alerts.ThresholdOccurrences.AtLeastOnce,
+			},
+		}
+		spec.Nrql = alerts.NrqlConditionQuery{
+			Query:            "SELECT 1 FROM MyEvents",
+			EvaluationOffset: 5,
+		}
+		spec.Type = "NRQL"
+		spec.Name = "NRQL Condition"
+		spec.RunbookURL = "http://test.com/runbook"
+		spec.ValueFunction = &alerts.NrqlConditionValueFunctions.SingleValue
+		spec.ID = 777
+		spec.ViolationTimeLimit = alerts.NrqlConditionViolationTimeLimits.OneHour
+		spec.ExpectedGroups = 2
+		spec.IgnoreOverlap = true
+		spec.Enabled = true
+		spec.ExistingPolicyID = "42"
+
 		condition = AlertsPolicyCondition{
 			Name:      "policy-name",
 			Namespace: "default",
-			Spec: AlertsNrqlConditionSpec{
-				Terms: []AlertsNrqlConditionTerm{
-					{
-						Operator:             alerts.NrqlConditionOperators.Above,
-						Priority:             alerts.NrqlConditionPriorities.Critical,
-						Threshold:            "5",
-						ThresholdDuration:    60,
-						ThresholdOccurrences: alerts.ThresholdOccurrences.AtLeastOnce,
-					},
-				},
-				Nrql: alerts.NrqlConditionQuery{
-					Query:            "SELECT 1 FROM MyEvents",
-					EvaluationOffset: 5,
-				},
-				Type:               "NRQL",
-				Name:               "NRQL Condition",
-				RunbookURL:         "http://test.com/runbook",
-				ValueFunction:      &alerts.NrqlConditionValueFunctions.SingleValue,
-				ID:                 777,
-				ViolationTimeLimit: alerts.NrqlConditionViolationTimeLimits.OneHour,
-				ExpectedGroups:     2,
-				IgnoreOverlap:      true,
-				Enabled:            true,
-				ExistingPolicyID:   "42",
-			},
+			Spec:      spec,
 		}
 
 		p = AlertsPolicySpec{
@@ -90,35 +91,37 @@ var _ = Describe("Equals", func() {
 
 	Context("When condition hash matches but k8s condition name doesn't", func() {
 		It("should return true", func() {
+			spec := AlertsPolicyConditionSpec{}
+
+			spec.Terms = []AlertsNrqlConditionTerm{
+				{
+					Operator:             alerts.NrqlConditionOperators.Above,
+					Priority:             alerts.NrqlConditionPriorities.Critical,
+					Threshold:            "5",
+					ThresholdDuration:    60,
+					ThresholdOccurrences: alerts.ThresholdOccurrences.AtLeastOnce,
+				},
+			}
+			spec.Nrql = alerts.NrqlConditionQuery{
+				Query:            "SELECT 1 FROM MyEvents",
+				EvaluationOffset: 5,
+			}
+			spec.Type = "NRQL"
+			spec.Name = "NRQL Condition"
+			spec.RunbookURL = "http://test.com/runbook"
+			spec.ValueFunction = &alerts.NrqlConditionValueFunctions.SingleValue
+			spec.ID = 777
+			spec.ViolationTimeLimit = alerts.NrqlConditionViolationTimeLimits.OneHour
+			spec.ExpectedGroups = 2
+			spec.IgnoreOverlap = true
+			spec.Enabled = true
+			spec.ExistingPolicyID = "42"
+
 			p.Conditions = []AlertsPolicyCondition{
 				{
 					Name:      "",
 					Namespace: "",
-					Spec: AlertsNrqlConditionSpec{
-						Terms: []AlertsNrqlConditionTerm{
-							{
-								Operator:             alerts.NrqlConditionOperators.Above,
-								Priority:             alerts.NrqlConditionPriorities.Critical,
-								Threshold:            "5",
-								ThresholdDuration:    60,
-								ThresholdOccurrences: alerts.ThresholdOccurrences.AtLeastOnce,
-							},
-						},
-						Nrql: alerts.NrqlConditionQuery{
-							Query:            "SELECT 1 FROM MyEvents",
-							EvaluationOffset: 5,
-						},
-						Type:               "NRQL",
-						Name:               "NRQL Condition",
-						RunbookURL:         "http://test.com/runbook",
-						ValueFunction:      &alerts.NrqlConditionValueFunctions.SingleValue,
-						ID:                 777,
-						ViolationTimeLimit: alerts.NrqlConditionViolationTimeLimits.OneHour,
-						ExpectedGroups:     2,
-						IgnoreOverlap:      true,
-						Enabled:            true,
-						ExistingPolicyID:   "42",
-					},
+					Spec:      spec,
 				},
 			}
 			output = p.Equals(policyToCompare)
@@ -128,15 +131,17 @@ var _ = Describe("Equals", func() {
 
 	Context("When condition hash doesn't match matches but name does", func() {
 		It("should return false", func() {
+			spec := AlertsPolicyConditionSpec{}
+			spec.Name = "test condition 222"
+
 			p.Conditions = []AlertsPolicyCondition{
 				{
 					Name:      "policy-name",
 					Namespace: "default",
-					Spec: AlertsNrqlConditionSpec{
-						Name: "test condition 222",
-					},
+					Spec:      spec,
 				},
 			}
+
 			output = p.Equals(policyToCompare)
 			Expect(output).ToNot(BeTrue())
 		})
@@ -144,28 +149,29 @@ var _ = Describe("Equals", func() {
 
 	Context("When one condition hash doesn't match but the other does", func() {
 		It("should return false", func() {
+			spec1 := AlertsPolicyConditionSpec{}
+			spec1.Name = "test condition"
+
+			spec2 := AlertsPolicyConditionSpec{}
+			spec2.Name = "test condition 2"
+
+			spec3 := AlertsPolicyConditionSpec{}
+			spec3.Name = "test condition is awesome"
+
 			p.Conditions = []AlertsPolicyCondition{
 				{
-					Spec: AlertsNrqlConditionSpec{
-						Name: "test condition",
-					},
+					Spec: spec1,
 				},
 				{
-					Spec: AlertsNrqlConditionSpec{
-						Name: "test condition 2",
-					},
+					Spec: spec2,
 				},
 			}
 			policyToCompare.Conditions = []AlertsPolicyCondition{
 				{
-					Spec: AlertsNrqlConditionSpec{
-						Name: "test condition",
-					},
+					Spec: spec1,
 				},
 				{
-					Spec: AlertsNrqlConditionSpec{
-						Name: "test condition is awesome",
-					},
+					Spec: spec3,
 				},
 			}
 			output = p.Equals(policyToCompare)
@@ -175,16 +181,18 @@ var _ = Describe("Equals", func() {
 
 	Context("When different number of conditions exist", func() {
 		It("should return false", func() {
+			spec1 := AlertsPolicyConditionSpec{}
+			spec1.Name = "test condition"
+
+			spec2 := AlertsPolicyConditionSpec{}
+			spec2.Name = "test condition 2"
+
 			p.Conditions = []AlertsPolicyCondition{
 				{
-					Spec: AlertsNrqlConditionSpec{
-						Name: "test condition",
-					},
+					Spec: spec1,
 				},
 				{
-					Spec: AlertsNrqlConditionSpec{
-						Name: "test condition 2",
-					},
+					Spec: spec2,
 				},
 			}
 			output = p.Equals(policyToCompare)

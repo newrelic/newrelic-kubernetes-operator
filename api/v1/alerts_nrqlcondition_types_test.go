@@ -17,31 +17,30 @@ var _ = Describe("AlertsNrqlConditionSpec", func() {
 
 	BeforeEach(func() {
 
-		condition = AlertsNrqlConditionSpec{
-			Terms: []AlertsNrqlConditionTerm{
-				{
-					Operator:             alerts.NrqlConditionOperators.Above,
-					Priority:             alerts.NrqlConditionPriorities.Critical,
-					Threshold:            "5",
-					ThresholdDuration:    60,
-					ThresholdOccurrences: alerts.ThresholdOccurrences.AtLeastOnce,
-				},
+		condition = AlertsNrqlConditionSpec{}
+		condition.Enabled = true
+		condition.ExistingPolicyID = "42"
+		condition.Terms = []AlertsNrqlConditionTerm{
+			{
+				Operator:             alerts.NrqlConditionOperators.Above,
+				Priority:             alerts.NrqlConditionPriorities.Critical,
+				Threshold:            "5",
+				ThresholdDuration:    60,
+				ThresholdOccurrences: alerts.ThresholdOccurrences.AtLeastOnce,
 			},
-			Nrql: alerts.NrqlConditionQuery{
-				Query:            "SELECT 1 FROM MyEvents",
-				EvaluationOffset: 5,
-			},
-			Type:               "NRQL",
-			Name:               "NRQL Condition",
-			RunbookURL:         "http://test.com/runbook",
-			ValueFunction:      &alerts.NrqlConditionValueFunctions.SingleValue,
-			ViolationTimeLimit: alerts.NrqlConditionViolationTimeLimits.OneHour,
-			ID:                 777,
-			ExpectedGroups:     2,
-			IgnoreOverlap:      true,
-			Enabled:            true,
-			ExistingPolicyID:   "42",
 		}
+		condition.Nrql = alerts.NrqlConditionQuery{
+			Query:            "SELECT 1 FROM MyEvents",
+			EvaluationOffset: 5,
+		}
+		condition.Type = "NRQL"
+		condition.Name = "NRQL Condition"
+		condition.RunbookURL = "http://test.com/runbook"
+		condition.ValueFunction = &alerts.NrqlConditionValueFunctions.SingleValue
+		condition.ViolationTimeLimit = alerts.NrqlConditionViolationTimeLimits.OneHour
+		condition.ID = 777
+		condition.ExpectedGroups = 2
+		condition.IgnoreOverlap = true
 	})
 
 	Describe("ToNrqlConditionInput", func() {
@@ -64,7 +63,7 @@ var _ = Describe("AlertsNrqlConditionSpec", func() {
 
 			apiTerm := conditionInput.Terms[0]
 
-			Expect(fmt.Sprint(reflect.TypeOf(apiTerm))).To(Equal("alerts.NrqlConditionTerms"))
+			Expect(fmt.Sprint(reflect.TypeOf(apiTerm))).To(Equal("alerts.NrqlConditionTerm"))
 
 			//Expect(apiTerm.Duration).To(Equal(30))
 			Expect(apiTerm.Operator).To(Equal(alerts.NrqlConditionOperators.Above))

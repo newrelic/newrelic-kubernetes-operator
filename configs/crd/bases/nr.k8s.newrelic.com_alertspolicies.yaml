@@ -52,7 +52,6 @@ spec:
                   namespace:
                     type: string
                   spec:
-                    description: AlertsNrqlConditionSpec defines the desired state of AlertsNrqlCondition
                     properties:
                       account_id:
                         type: integer
@@ -67,18 +66,48 @@ spec:
                           namespace:
                             type: string
                         type: object
+                      apm_terms:
+                        items:
+                          description: AlertConditionTerm represents the terms of a New Relic alert condition.
+                          properties:
+                            duration:
+                              type: string
+                            operator:
+                              type: string
+                            priority:
+                              type: string
+                            threshold:
+                              type: string
+                            time_function:
+                              type: string
+                            violation_close_timer:
+                              type: integer
+                          required:
+                          - threshold
+                          type: object
+                        type: array
+                      condition_scope:
+                        type: string
                       description:
                         type: string
                       enabled:
                         type: boolean
+                      entities:
+                        items:
+                          type: string
+                        type: array
                       existing_policy_id:
                         type: string
                       expected_groups:
                         type: integer
+                      gc_metric:
+                        type: string
                       id:
                         type: integer
                       ignore_overlap:
                         type: boolean
+                      metric:
+                        type: string
                       name:
                         type: string
                       nrql:
@@ -91,7 +120,7 @@ spec:
                         type: object
                       region:
                         type: string
-                      runbookUrl:
+                      runbook_url:
                         type: string
                       terms:
                         items:
@@ -115,9 +144,20 @@ spec:
                       type:
                         description: NrqlConditionType specifies the type of NRQL alert condition.
                         type: string
+                      user_defined:
+                        description: ConditionUserDefined represents user defined metrics for the New Relic alert condition.
+                        properties:
+                          metric:
+                            type: string
+                          value_function:
+                            description: ValueFunctionType specifies the value function to be used for returning custom metric data.
+                            type: string
+                        type: object
                       valueFunction:
                         description: NrqlConditionValueFunction specifies the value function of NRQL alert condition.
                         type: string
+                      violation_close_timer:
+                        type: integer
                       violationTimeLimit:
                         description: NrqlConditionViolationTimeLimit specifies the value function of NRQL alert condition.
                         type: string
@@ -167,7 +207,6 @@ spec:
                       namespace:
                         type: string
                       spec:
-                        description: AlertsNrqlConditionSpec defines the desired state of AlertsNrqlCondition
                         properties:
                           account_id:
                             type: integer
@@ -182,18 +221,48 @@ spec:
                               namespace:
                                 type: string
                             type: object
+                          apm_terms:
+                            items:
+                              description: AlertConditionTerm represents the terms of a New Relic alert condition.
+                              properties:
+                                duration:
+                                  type: string
+                                operator:
+                                  type: string
+                                priority:
+                                  type: string
+                                threshold:
+                                  type: string
+                                time_function:
+                                  type: string
+                                violation_close_timer:
+                                  type: integer
+                              required:
+                              - threshold
+                              type: object
+                            type: array
+                          condition_scope:
+                            type: string
                           description:
                             type: string
                           enabled:
                             type: boolean
+                          entities:
+                            items:
+                              type: string
+                            type: array
                           existing_policy_id:
                             type: string
                           expected_groups:
                             type: integer
+                          gc_metric:
+                            type: string
                           id:
                             type: integer
                           ignore_overlap:
                             type: boolean
+                          metric:
+                            type: string
                           name:
                             type: string
                           nrql:
@@ -206,7 +275,7 @@ spec:
                             type: object
                           region:
                             type: string
-                          runbookUrl:
+                          runbook_url:
                             type: string
                           terms:
                             items:
@@ -230,9 +299,20 @@ spec:
                           type:
                             description: NrqlConditionType specifies the type of NRQL alert condition.
                             type: string
+                          user_defined:
+                            description: ConditionUserDefined represents user defined metrics for the New Relic alert condition.
+                            properties:
+                              metric:
+                                type: string
+                              value_function:
+                                description: ValueFunctionType specifies the value function to be used for returning custom metric data.
+                                type: string
+                            type: object
                           valueFunction:
                             description: NrqlConditionValueFunction specifies the value function of NRQL alert condition.
                             type: string
+                          violation_close_timer:
+                            type: integer
                           violationTimeLimit:
                             description: NrqlConditionViolationTimeLimit specifies the value function of NRQL alert condition.
                             type: string

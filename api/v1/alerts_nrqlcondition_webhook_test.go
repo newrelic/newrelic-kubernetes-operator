@@ -3,6 +3,7 @@
 package v1
 
 import (
+	"context"
 	"errors"
 
 	v1 "k8s.io/api/core/v1"
@@ -32,35 +33,43 @@ var _ = Describe("ValidateCreate", func() {
 		}
 		alertClientFunc = fakeAlertFunc
 
-		r = AlertsNrqlCondition{
-			Spec: AlertsNrqlConditionSpec{
-				Terms: []AlertsNrqlConditionTerm{
-					{
-						Operator:             alerts.NrqlConditionOperators.Above,
-						Priority:             alerts.NrqlConditionPriorities.Critical,
-						Threshold:            "5",
-						ThresholdDuration:    60,
-						ThresholdOccurrences: alerts.ThresholdOccurrences.AtLeastOnce,
-					},
-				},
-				Nrql: alerts.NrqlConditionQuery{
-					Query:            "SELECT 1 FROM MyEvents",
-					EvaluationOffset: 5,
-				},
-				Type:               "NRQL",
-				Name:               "NRQL Condition",
-				RunbookURL:         "http://test.com/runbook",
-				ValueFunction:      &alerts.NrqlConditionValueFunctions.SingleValue,
-				ViolationTimeLimit: alerts.NrqlConditionViolationTimeLimits.OneHour,
-				ID:                 777,
-				ExpectedGroups:     2,
-				IgnoreOverlap:      true,
-				Enabled:            true,
-				ExistingPolicyID:   "42",
-				APIKey:             "api-key",
-				Region:             "us",
+		spec := AlertsNrqlConditionSpec{}
+		spec.Terms = []AlertsNrqlConditionTerm{
+			{
+				Operator:             alerts.NrqlConditionOperators.Above,
+				Priority:             alerts.NrqlConditionPriorities.Critical,
+				Threshold:            "5",
+				ThresholdDuration:    60,
+				ThresholdOccurrences: alerts.ThresholdOccurrences.AtLeastOnce,
 			},
 		}
+		spec.Nrql = alerts.NrqlConditionQuery{
+			Query:            "SELECT 1 FROM MyEvents",
+			EvaluationOffset: 5,
+		}
+		spec.Type = "NRQL"
+		spec.Name = "NRQL Condition"
+		spec.RunbookURL = "http://test.com/runbook"
+		spec.ValueFunction = &alerts.NrqlConditionValueFunctions.SingleValue
+		spec.ViolationTimeLimit = alerts.NrqlConditionViolationTimeLimits.OneHour
+		spec.ID = 777
+		spec.ExpectedGroups = 2
+		spec.IgnoreOverlap = true
+		spec.Enabled = true
+		spec.ExistingPolicyID = "42"
+		spec.APIKey = "api-key"
+		spec.Region = "us"
+
+		r = AlertsNrqlCondition{
+			Spec: spec,
+		}
+
+		err := ignoreAlreadyExists(testk8sClient.Create(context.Background(), &v1.Namespace{
+			ObjectMeta: metav1.ObjectMeta{
+				Name: "my-namespace",
+			},
+		}))
+		Expect(err).ToNot(HaveOccurred())
 
 		// TODO: Make this a true integration test if possible
 		alertsClient.GetPolicyStub = func(int) (*alerts.Policy, error) {
@@ -102,13 +111,15 @@ var _ = Describe("ValidateCreate", func() {
 					"my-api-key": []byte("data_here"),
 				},
 			}
-			k8Client.Create(ctx, secret)
-			err := r.ValidateCreate()
+			err := k8Client.Create(context.Background(), secret)
+			Expect(err).ToNot(HaveOccurred())
+
+			err = r.ValidateCreate()
 			Expect(err).ToNot(HaveOccurred())
 		})
 
 		AfterEach(func() {
-			k8Client.Delete(ctx, secret)
+			k8Client.Delete(context.Background(), secret)
 		})
 	})
 

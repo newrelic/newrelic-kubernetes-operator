@@ -13,7 +13,7 @@ type AlertsNrqlConditionSpec struct {
 	AlertsNrqlSpecificSpec     `json:",inline"`
 }
 
-// AlertsNrqlConditionSpec defines the desired state of AlertsNrqlCondition
+// AlertsGenericConditionSpec defines the desired state of AlertsNrqlCondition
 type AlertsGenericConditionSpec struct {
 	Enabled          bool                      `json:"enabled"`
 	APIKey           string                    `json:"api_key,omitempty"`
@@ -24,8 +24,9 @@ type AlertsGenericConditionSpec struct {
 	Name             string                    `json:"name,omitempty"`
 	PolicyID         int                       `json:"-"`
 	Region           string                    `json:"region,omitempty"`
-	RunbookURL       string                    `json:"runbookUrl,omitempty"`
+	RunbookURL       string                    `json:"runbook_url,omitempty"`
 	Terms            []AlertsNrqlConditionTerm `json:"terms,omitempty"`
+	APMTerms         []AlertConditionTerm      `json:"apm_terms,omitempty"`
 	Type             alerts.NrqlConditionType  `json:"type,omitempty"`
 }
 

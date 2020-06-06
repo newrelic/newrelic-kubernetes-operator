@@ -88,6 +88,13 @@ var _ = Describe("AlertsNrqlCondition reconciliation", func() {
 
 		request = ctrl.Request{NamespacedName: namespacedName}
 
+		err := ignoreAlreadyExists(k8sClient.Create(context.Background(), &v1.Namespace{
+			ObjectMeta: metav1.ObjectMeta{
+				Name: "my-namespace",
+			},
+		}))
+		Expect(err).ToNot(HaveOccurred())
+
 		r = &AlertsNrqlConditionReconciler{
 			Client:          k8sClient,
 			Log:             logf.Log,
@@ -143,7 +150,8 @@ var _ = Describe("AlertsNrqlCondition reconciliation", func() {
 						},
 					}
 
-					k8sClient.Create(ctx, secret)
+					err := k8sClient.Create(ctx, secret)
+					Expect(err).ToNot(HaveOccurred())
 				})
 
 				It("should create that condition via the AlertClient", func() {
@@ -190,42 +198,44 @@ var _ = Describe("AlertsNrqlCondition reconciliation", func() {
 
 		Context("and given a AlertsNrqlCondition that exists in New Relic", func() {
 			JustBeforeEach(func() {
+				spec := nrv1.AlertsNrqlConditionSpec{}
+				spec.ValueFunction = &alerts.NrqlConditionValueFunctions.SingleValue
+				spec.ViolationTimeLimit = alerts.NrqlConditionViolationTimeLimits.OneHour
+				spec.ExpectedGroups = 2
+				spec.IgnoreOverlap = true
+				spec.Enabled = true
+				spec.ExistingPolicyID = "42"
+				spec.APIKey = "nraa-key"
+				spec.Terms = []nrv1.AlertsNrqlConditionTerm{
+					{
+						Operator:             alerts.NrqlConditionOperators.Above,
+						Priority:             alerts.NrqlConditionPriorities.Critical,
+						Threshold:            "5",
+						ThresholdDuration:    60,
+						ThresholdOccurrences: alerts.ThresholdOccurrences.AtLeastOnce,
+					},
+				}
+				spec.Nrql = alerts.NrqlConditionQuery{
+					Query:            "SELECT 1 FROM MyEvents",
+					EvaluationOffset: 5,
+				}
+				spec.Type = "NRQL"
+				spec.Name = "NRQL Condition matches"
+				spec.RunbookURL = "http://test.com/runbook"
+				spec.ID = 777
+
 				condition = &nrv1.AlertsNrqlCondition{
 					ObjectMeta: metav1.ObjectMeta{
 						Name:      conditionName,
 						Namespace: "default",
 					},
-					Spec: nrv1.AlertsNrqlConditionSpec{
-						Terms: []nrv1.AlertsNrqlConditionTerm{
-							{
-								Operator:             alerts.NrqlConditionOperators.Above,
-								Priority:             alerts.NrqlConditionPriorities.Critical,
-								Threshold:            "5",
-								ThresholdDuration:    60,
-								ThresholdOccurrences: alerts.ThresholdOccurrences.AtLeastOnce,
-							},
-						},
-						Nrql: alerts.NrqlConditionQuery{
-							Query:            "SELECT 1 FROM MyEvents",
-							EvaluationOffset: 5,
-						},
-						Type:               "NRQL",
-						Name:               "NRQL Condition matches",
-						RunbookURL:         "http://test.com/runbook",
-						ID:                 777,
-						ValueFunction:      &alerts.NrqlConditionValueFunctions.SingleValue,
-						ViolationTimeLimit: alerts.NrqlConditionViolationTimeLimits.OneHour,
-						ExpectedGroups:     2,
-						IgnoreOverlap:      true,
-						Enabled:            true,
-						ExistingPolicyID:   "42",
-						APIKey:             "nraa-key",
-					},
+					Spec: spec,
 					Status: nrv1.AlertsNrqlConditionStatus{
 						AppliedSpec: &nrv1.AlertsNrqlConditionSpec{},
 						ConditionID: "0",
 					},
 				}
+
 			})
 
 			Context("with a valid condition", func() {

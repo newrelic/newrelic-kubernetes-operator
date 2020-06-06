@@ -6,7 +6,7 @@ metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.3.0
   creationTimestamp: null
-  name: alertsnrqlconditions.nr.k8s.newrelic.com
+  name: alertsapmconditions.nr.k8s.newrelic.com
 spec:
   additionalPrinterColumns:
   - JSONPath: .status.created
@@ -14,15 +14,15 @@ spec:
     type: boolean
   group: nr.k8s.newrelic.com
   names:
-    kind: AlertsNrqlCondition
-    listKind: AlertsNrqlConditionList
-    plural: alertsnrqlconditions
-    singular: alertsnrqlcondition
+    kind: AlertsAPMCondition
+    listKind: AlertsAPMConditionList
+    plural: alertsapmconditions
+    singular: alertsapmcondition
   scope: Namespaced
   subresources: {}
   validation:
     openAPIV3Schema:
-      description: AlertsNrqlCondition is the Schema for the alertsnrqlconditions API
+      description: AlertsAPMCondition is the Schema for the alertsapmconditions API
       properties:
         apiVersion:
           description: 'APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
@@ -33,7 +33,7 @@ spec:
         metadata:
           type: object
         spec:
-          description: AlertsNrqlConditionSpec defines the desired state of AlertsNrqlCondition
+          description: AlertsAPMConditionSpec defines the desired state of AlertsAPMCondition
           properties:
             account_id:
               type: integer
@@ -68,28 +68,24 @@ spec:
                 - threshold
                 type: object
               type: array
-            description:
+            condition_scope:
               type: string
             enabled:
               type: boolean
+            entities:
+              items:
+                type: string
+              type: array
             existing_policy_id:
               type: string
-            expected_groups:
-              type: integer
+            gc_metric:
+              type: string
             id:
               type: integer
-            ignore_overlap:
-              type: boolean
+            metric:
+              type: string
             name:
               type: string
-            nrql:
-              description: NrqlConditionQuery represents the NRQL query object returned in a NerdGraph response object.
-              properties:
-                evaluationOffset:
-                  type: integer
-                query:
-                  type: string
-              type: object
             region:
               type: string
             runbook_url:
@@ -116,20 +112,25 @@ spec:
             type:
               description: NrqlConditionType specifies the type of NRQL alert condition.
               type: string
-            valueFunction:
-              description: NrqlConditionValueFunction specifies the value function of NRQL alert condition.
-              type: string
-            violationTimeLimit:
-              description: NrqlConditionViolationTimeLimit specifies the value function of NRQL alert condition.
-              type: string
+            user_defined:
+              description: ConditionUserDefined represents user defined metrics for the New Relic alert condition.
+              properties:
+                metric:
+                  type: string
+                value_function:
+                  description: ValueFunctionType specifies the value function to be used for returning custom metric data.
+                  type: string
+              type: object
+            violation_close_timer:
+              type: integer
           required:
           - enabled
           type: object
         status:
-          description: AlertsNrqlConditionStatus defines the observed state of AlertsNrqlCondition
+          description: AlertsAPMConditionStatus defines the observed state of AlertsAPMCondition
           properties:
             applied_spec:
-              description: AlertsNrqlConditionSpec defines the desired state of AlertsNrqlCondition
+              description: AlertsAPMConditionSpec defines the desired state of AlertsAPMCondition
               properties:
                 account_id:
                   type: integer
@@ -164,28 +165,24 @@ spec:
                     - threshold
                     type: object
                   type: array
-                description:
+                condition_scope:
                   type: string
                 enabled:
                   type: boolean
+                entities:
+                  items:
+                    type: string
+                  type: array
                 existing_policy_id:
                   type: string
-                expected_groups:
-                  type: integer
+                gc_metric:
+                  type: string
                 id:
                   type: integer
-                ignore_overlap:
-                  type: boolean
+                metric:
+                  type: string
                 name:
                   type: string
-                nrql:
-                  description: NrqlConditionQuery represents the NRQL query object returned in a NerdGraph response object.
-                  properties:
-                    evaluationOffset:
-                      type: integer
-                    query:
-                      type: string
-                  type: object
                 region:
                   type: string
                 runbook_url:
@@ -212,17 +209,22 @@ spec:
                 type:
                   description: NrqlConditionType specifies the type of NRQL alert condition.
                   type: string
-                valueFunction:
-                  description: NrqlConditionValueFunction specifies the value function of NRQL alert condition.
-                  type: string
-                violationTimeLimit:
-                  description: NrqlConditionViolationTimeLimit specifies the value function of NRQL alert condition.
-                  type: string
+                user_defined:
+                  description: ConditionUserDefined represents user defined metrics for the New Relic alert condition.
+                  properties:
+                    metric:
+                      type: string
+                    value_function:
+                      description: ValueFunctionType specifies the value function to be used for returning custom metric data.
+                      type: string
+                  type: object
+                violation_close_timer:
+                  type: integer
               required:
               - enabled
               type: object
             condition_id:
-              type: string
+              type: integer
           required:
           - applied_spec
           - condition_id

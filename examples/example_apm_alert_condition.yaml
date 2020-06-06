@@ -3,7 +3,7 @@
 # `kubectl apply -f examples/example_secret.yaml`
 
 apiVersion: nr.k8s.newrelic.com/v1
-kind: ApmAlertCondition
+kind: AlertsApmCondition
 metadata:
   name: alert-1029267
 spec:

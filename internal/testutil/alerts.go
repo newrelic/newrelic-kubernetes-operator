@@ -59,15 +59,9 @@ func NewTestAlertsPolicy(t *testing.T) *nrv1.AlertsPolicy {
 			IncidentPreference: "PER_POLICY",
 			Name:               policyName,
 			Region:             "US",
-			// Conditions: []nrv1.AlertsPolicyCondition{
-			// 	{
-			// 		Spec: *conditionSpec,
-			// 	},
-			// },
 		},
 		Status: nrv1.AlertsPolicyStatus{
 			AppliedSpec: &nrv1.AlertsPolicySpec{},
-			// PolicyID:    0,
 		},
 	}
 
@@ -75,40 +69,10 @@ func NewTestAlertsPolicy(t *testing.T) *nrv1.AlertsPolicy {
 
 func NewTestAlertsNrqlCondition(t *testing.T) *nrv1.AlertsNrqlCondition {
 	conditionName := fmt.Sprintf("test-condition-%s", testhelpers.RandSeq(5))
+	conditionSpec := NewTestAlertsPolicyConditionSpec(t)
 
-	accountID, err := strconv.Atoi(os.Getenv("NEW_RELIC_ACCOUNT_ID"))
-	assert.NoError(t, err)
-	conditionSpec = nrv1.AlertsNrqlConditionSpec{
-		APIKey:    "nraa-key",
-		AccountID: accountID,
-		GenericConditionSpec: nrv1.GenericConditionSpec{
-			Terms: []nrv1.AlertConditionTerm{
-				{
-					Duration:     "30",
-					Operator:     "above",
-					Priority:     "critical",
-					Threshold:    "5",
-					TimeFunction: "all",
-				},
-			},
-			Type:       "NRQL",
-			Name:       "NRQL Condition",
-			RunbookURL: "http://test.com/runbook",
-			ID:         777,
-
-			Enabled:          true,
-			ExistingPolicyID: 42,
-		},
-		NrqlSpecificSpec: nrv1.NrqlSpecificSpec{
-			ViolationCloseTimer: 60,
-			ExpectedGroups:      2,
-			IgnoreOverlap:       true,
-			ValueFunction:       "max",
-			Nrql: nrv1.NrqlQuery{
-				Query:      "SELECT 1 FROM MyEvents",
-				SinceValue: "5",
-			},
-		},
+	policyCondition := nrv1.AlertsPolicyCondition{
+		Spec: *conditionSpec,
 	}
 
 	return &nrv1.AlertsNrqlCondition{
@@ -117,38 +81,47 @@ func NewTestAlertsNrqlCondition(t *testing.T) *nrv1.AlertsNrqlCondition {
 			Namespace: "default",
 		},
 
-		Spec: conditionSpec,
+		Spec: policyCondition.ReturnNrqlConditionSpec(),
 		Status: nrv1.AlertsNrqlConditionStatus{
 			AppliedSpec: &nrv1.AlertsNrqlConditionSpec{},
 		},
 	}
 }
 
-func NewTestAlertsNrqlConditionSpec(t *testing.T) *nrv1.AlertsNrqlConditionSpec {
-	return &nrv1.AlertsNrqlConditionSpec{
-		Terms: []nrv1.AlertsNrqlConditionTerm{
-			{
-				Operator:             alerts.NrqlConditionOperators.Above,
-				Priority:             alerts.NrqlConditionPriorities.Critical,
-				Threshold:            "5",
-				ThresholdDuration:    60,
-				ThresholdOccurrences: alerts.ThresholdOccurrences.AtLeastOnce,
+func NewTestAlertsPolicyConditionSpec(t *testing.T) *nrv1.AlertsPolicyConditionSpec {
+	accountID, err := strconv.Atoi(os.Getenv("NEW_RELIC_ACCOUNT_ID"))
+	assert.NoError(t, err)
+
+	return &nrv1.AlertsPolicyConditionSpec{
+		AlertsGenericConditionSpec: nrv1.AlertsGenericConditionSpec{
+			APIKey:    "nraa-key",
+			AccountID: accountID,
+			Terms: []nrv1.AlertsNrqlConditionTerm{
+				{
+					Operator:             alerts.NrqlConditionOperators.Above,
+					Priority:             alerts.NrqlConditionPriorities.Critical,
+					Threshold:            "5",
+					ThresholdDuration:    60,
+					ThresholdOccurrences: alerts.ThresholdOccurrences.AtLeastOnce,
+				},
+			},
+			Type:             "NRQL",
+			Name:             "NRQL Condition",
+			RunbookURL:       "http://test.com/runbook",
+			ID:               777,
+			Enabled:          true,
+			ExistingPolicyID: "42",
+		},
+		AlertsNrqlSpecificSpec: nrv1.AlertsNrqlSpecificSpec{
+			ViolationTimeLimit: "60",
+			ExpectedGroups:     2,
+			IgnoreOverlap:      true,
+			ValueFunction:      &alerts.NrqlConditionValueFunctions.SingleValue,
+			Nrql: alerts.NrqlConditionQuery{
+				Query:            "SELECT 1 FROM MyEvents",
+				EvaluationOffset: 5,
 			},
 		},
-		Nrql: alerts.NrqlConditionQuery{
-			Query:            "SELECT 1 FROM MyEvents",
-			EvaluationOffset: 5,
-		},
-		Type:               "NRQL",
-		Name:               "NRQL Condition",
-		RunbookURL:         "http://test.com/runbook",
-		ValueFunction:      &alerts.NrqlConditionValueFunctions.SingleValue,
-		ViolationTimeLimit: alerts.NrqlConditionViolationTimeLimits.OneHour,
-		ExpectedGroups:     2,
-		IgnoreOverlap:      true,
-		Enabled:            true,
-		// ExistingPolicyID:   integrationPolicy.ID,
-		// APIKey:             integrationAlertsConfig.PersonalAPIKey,
-		// AccountID:          accountID,
+		AlertsAPMSpecificSpec: nrv1.AlertsAPMSpecificSpec{},
 	}
 }

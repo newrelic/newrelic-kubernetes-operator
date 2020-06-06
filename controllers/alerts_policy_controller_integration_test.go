@@ -5,139 +5,44 @@ package controllers
 import (
 	"context"
 	"errors"
-	"os"
-	"testing"
 
-	"github.com/stretchr/testify/assert"
-	"k8s.io/apimachinery/pkg/types"
+	"github.com/newrelic/newrelic-client-go/pkg/alerts"
 	ctrl "sigs.k8s.io/controller-runtime"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 
-	"github.com/newrelic/newrelic-client-go/pkg/alerts"
-
 	nrv1 "github.com/newrelic/newrelic-kubernetes-operator/api/v1"
 	"github.com/newrelic/newrelic-kubernetes-operator/interfaces"
 	"github.com/newrelic/newrelic-kubernetes-operator/interfaces/interfacesfakes"
-	"github.com/newrelic/newrelic-kubernetes-operator/internal/testutil"
 
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 
-	"sigs.k8s.io/controller-runtime/pkg/client"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 )
 
-func TestIntegrationAlertsPolicyController_Basic(t *testing.T) {
-	t.Parallel()
-
-	policy := testutil.NewTestAlertsPolicy(t)
-	policy.Spec.APIKey = os.Getenv("NEW_RELIC_API_KEY")
-
-	// Must come before calling reconciler.Reconcile()
-	k8sClient := testutil.AlertsPolicyTestSetup(t)
-	err := k8sClient.Create(context.Background(), policy)
-	Expect(err).ToNot(HaveOccurred())
-
-	namespacedName := types.NamespacedName{
-		Namespace: "default",
-		Name:      policy.Name,
-	}
-
-	request := ctrl.Request{
-		NamespacedName: namespacedName,
-	}
-
-	reconciler := &AlertsPolicyReconciler{
-		Client:          k8sClient,
-		Log:             logf.Log,
-		AlertClientFunc: interfaces.InitializeAlertsClient,
-	}
-
-	// TODO
-	// otherAlertsClient := alerts.New(testhelpers.NewIntegrationTestConfig(t))
-
-	_, err = reconciler.Reconcile(request)
-	assert.NoError(t, err)
-
-	// TODO implement checking that the policy exists.  Where do I get the ID?
-
-	err = k8sClient.Delete(context.Background(), policy)
-	assert.NoError(t, err)
-
-	_, err = reconciler.Reconcile(request)
-	assert.NoError(t, err)
-
-	// TODO implement checking that the policy has been deleted
-}
-
-func TestIntegrationAlertsPolicyController_WithCondition(t *testing.T) {
-	t.Parallel()
-
-	policy := testutil.NewTestAlertsPolicy(t)
-	policy.Spec.APIKey = os.Getenv("NEW_RELIC_API_KEY")
-	conditionSpec := testutil.NewTestAlertsNrqlConditionSpec(t)
-	policy.Spec.Conditions = append(policy.Spec.Conditions, nrv1.AlertsPolicyCondition{Spec: *conditionSpec})
-	k8sClient := testutil.AlertsPolicyTestSetup(t)
-
-	err := k8sClient.Create(context.Background(), policy)
-	Expect(err).ToNot(HaveOccurred())
-
-	namespacedName := types.NamespacedName{
-		Namespace: "default",
-		Name:      policy.Name,
-	}
-
-	request := ctrl.Request{
-		NamespacedName: namespacedName,
-	}
-
-	reconciler := &AlertsPolicyReconciler{
-		Client:          k8sClient,
-		Log:             logf.Log,
-		AlertClientFunc: interfaces.InitializeAlertsClient,
-	}
-
-	_, err = reconciler.Reconcile(request)
-	assert.NoError(t, err)
-
-	// TODO
-	// assert the policy exists
-
-	err = k8sClient.Delete(context.Background(), policy)
-	assert.NoError(t, err)
-
-	// TODO
-	// assert the policy does not exist
-
-	_, err = reconciler.Reconcile(request)
-	assert.NoError(t, err)
-}
-
-var _ = Describe("policy reconciliation", func() {
+var _ = Describe("alertspolicy reconciliation", func() {
 	var (
 		ctx                       context.Context
 		r                         *AlertsPolicyReconciler
-		t                         *testing.T
-		policy                    *nrv1.AlertsPolicy
-		conditionSpec             *nrv1.AlertsNrqlConditionSpec
+		alertspolicy              *nrv1.AlertsPolicy
+		conditionSpec             *nrv1.AlertsPolicyConditionSpec
 		request                   ctrl.Request
 		namespacedName            types.NamespacedName
 		conditionName             types.NamespacedName
-		mockAlertsClientFunc      func(string, string) (interfaces.NewRelicAlertsClient, error)
+		fakeAlertFunc             func(string, string) (interfaces.NewRelicAlertsClient, error)
 		deletedConditionNamespace types.NamespacedName
-		k8sClient                 client.Client
-		mockAlertsClient          *interfacesfakes.FakeNewRelicAlertsClient
+		mockAlertsClient          interfacesfakes.FakeNewRelicAlertsClient
 	)
 
 	BeforeEach(func() {
 		ctx = context.Background()
-		t = &testing.T{}
-		k8sClient = testutil.AlertsPolicyTestSetup(t)
-		mockAlertsClient = &interfacesfakes.FakeNewRelicAlertsClient{}
 
-		mockAlertsClientFunc = func(string, string) (interfaces.NewRelicAlertsClient, error) {
-			return mockAlertsClient, nil
+		mockAlertsClient = interfacesfakes.FakeNewRelicAlertsClient{}
+
+		fakeAlertFunc = func(string, string) (interfaces.NewRelicAlertsClient, error) {
+			return &mockAlertsClient, nil
 		}
 
 		mockAlertsClient.CreatePolicyMutationStub = func(accountID int, a alerts.AlertsPolicyInput) (*alerts.AlertsPolicy, error) {
@@ -146,104 +51,189 @@ var _ = Describe("policy reconciliation", func() {
 			}, nil
 		}
 
-		mockAlertsClient.UpdatePolicyMutationStub = func(accountID int, policyID string, a alerts.AlertsPolicyUpdateInput) (*alerts.AlertsPolicy, error) {
+		mockAlertsClient.UpdatePolicyMutationStub = func(int, string, alerts.AlertsPolicyUpdateInput) (*alerts.AlertsPolicy, error) {
 			return &alerts.AlertsPolicy{
 				ID: "222",
 			}, nil
 		}
 
-		policy = testutil.NewTestAlertsPolicy(t)
-
-		// Add a condition to the policy
-		conditionSpec = testutil.NewTestAlertsNrqlConditionSpec(t)
-		policy.Spec.Conditions = append(policy.Spec.Conditions, nrv1.AlertsPolicyCondition{Spec: *conditionSpec})
-
-		namespacedName = types.NamespacedName{
-			Namespace: "default",
-			Name:      policy.Name,
-		}
-
-		request = ctrl.Request{
-			NamespacedName: namespacedName,
-		}
-
 		r = &AlertsPolicyReconciler{
 			Client:          k8sClient,
 			Log:             logf.Log,
-			AlertClientFunc: mockAlertsClientFunc,
+			AlertClientFunc: fakeAlertFunc,
 		}
+
+		namespacedName = types.NamespacedName{
+			Namespace: "default",
+			Name:      "test-alertspolicy",
+		}
+		request = ctrl.Request{NamespacedName: namespacedName}
+
 	})
 
 	Context("When starting with no policies", func() {
-		Context("when creating a valid policy", func() {
-			It("should create that policy", func() {
-				err := k8sClient.Create(ctx, policy)
-				Expect(err).To(BeNil())
+		BeforeEach(func() {
+			ctx = context.Background()
 
-				_, err = r.Reconcile(request)
-				Expect(err).To(BeNil())
-			})
+			mockAlertsClient = interfacesfakes.FakeNewRelicAlertsClient{}
 
-			It("updates the policyID on the AlertsPolicy resource", func() {
+			fakeAlertFunc = func(string, string) (interfaces.NewRelicAlertsClient, error) {
+				return &mockAlertsClient, nil
+			}
 
-				err := k8sClient.Create(ctx, policy)
-				Expect(err).To(BeNil())
+			mockAlertsClient.CreatePolicyMutationStub = func(accountID int, a alerts.AlertsPolicyInput) (*alerts.AlertsPolicy, error) {
+				return &alerts.AlertsPolicy{
+					ID: "333",
+				}, nil
+			}
 
-				_, err = r.Reconcile(request)
-				Expect(err).To(BeNil())
+			mockAlertsClient.UpdatePolicyMutationStub = func(int, string, alerts.AlertsPolicyUpdateInput) (*alerts.AlertsPolicy, error) {
+				return &alerts.AlertsPolicy{
+					ID: "222",
+				}, nil
+			}
 
-				var endStatePolicy nrv1.AlertsPolicy
-				err = k8sClient.Get(ctx, namespacedName, &endStatePolicy)
-				Expect(err).To(BeNil())
-				Expect(endStatePolicy.Status.PolicyID).To(Equal("333"))
-			})
+			r = &AlertsPolicyReconciler{
+				Client:          k8sClient,
+				Log:             logf.Log,
+				AlertClientFunc: fakeAlertFunc,
+			}
 
-			It("creates the condition with attributes from the AlertsPolicy", func() {
-				err := k8sClient.Create(ctx, policy)
-				Expect(err).To(BeNil())
+			conditionSpec = &nrv1.AlertsPolicyConditionSpec{
+				nrv1.AlertsGenericConditionSpec{
+					Terms: []nrv1.AlertsNrqlConditionTerm{
+						{
+							ThresholdDuration:    30,
+							Operator:             "above",
+							Priority:             "critical",
+							Threshold:            "5",
+							ThresholdOccurrences: alerts.ThresholdOccurrences.All,
+						},
+					},
+					Type:       "NRQL",
+					Name:       "NRQL Condition",
+					RunbookURL: "http://test.com/runbook",
+					Enabled:    true,
+				},
+				nrv1.AlertsNrqlSpecificSpec{
+					Nrql: alerts.NrqlConditionQuery{
+						Query:            "SELECT 1 FROM MyEvents",
+						EvaluationOffset: 5,
+					},
+					ValueFunction:      &alerts.NrqlConditionValueFunctions.SingleValue,
+					ViolationTimeLimit: "60",
+					ExpectedGroups:     2,
+					IgnoreOverlap:      true,
+				},
+				nrv1.AlertsAPMSpecificSpec{},
+			}
 
-				_, err = r.Reconcile(request)
-				Expect(err).To(BeNil())
+			alertspolicy = &nrv1.AlertsPolicy{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "test-alertspolicy",
+					Namespace: "default",
+				},
+				Spec: nrv1.AlertsPolicySpec{
+					Name:               "test alertspolicy",
+					APIKey:             "112233",
+					IncidentPreference: "PER_POLICY",
+					Region:             "us",
+					Conditions: []nrv1.AlertsPolicyCondition{
+						{
+							Spec: *conditionSpec,
+						},
+					},
+				},
+				Status: nrv1.AlertsPolicyStatus{
+					AppliedSpec: &nrv1.AlertsPolicySpec{},
+					PolicyID:    "",
+				},
+			}
 
-				var endStatePolicy nrv1.AlertsPolicy
-				err = k8sClient.Get(ctx, namespacedName, &endStatePolicy)
-				Expect(err).To(BeNil())
+			namespacedName = types.NamespacedName{
+				Namespace: "default",
+				Name:      "test-alertspolicy",
+			}
+			request = ctrl.Request{NamespacedName: namespacedName}
 
-				conditionNameType := types.NamespacedName{
-					Name:      endStatePolicy.Spec.Conditions[0].Name,
-					Namespace: endStatePolicy.Spec.Conditions[0].Namespace,
-				}
+		})
+		Context("when creating a valid alertspolicy", func() {
+			It("should create that alertspolicy", func() {
 
-				var endStateCondition nrv1.AlertsNrqlCondition
-				err = k8sClient.Get(ctx, conditionNameType, &endStateCondition)
-				Expect(err).To(BeNil())
-			})
-
-			It("creates the condition with inherited attributes from the Policy resource", func() {
-
-				err := k8sClient.Create(ctx, policy)
+				err := k8sClient.Create(ctx, alertspolicy)
 				Expect(err).ToNot(HaveOccurred())
 
+				// call reconcile
 				_, err = r.Reconcile(request)
 				Expect(err).ToNot(HaveOccurred())
 
-				var endStatePolicy nrv1.AlertsPolicy
-				var endStateCondition nrv1.AlertsNrqlCondition
-				err = k8sClient.Get(ctx, namespacedName, &endStatePolicy)
-				Expect(err).To(BeNil())
+			})
 
+			It("updates the Policy resource", func() {
+
+				err := k8sClient.Create(ctx, alertspolicy)
+				Expect(err).ToNot(HaveOccurred())
+
+				// call reconcile
+				_, err = r.Reconcile(request)
+				Expect(err).ToNot(HaveOccurred())
+
+				var endStateAlertsPolicy nrv1.AlertsPolicy
+				err = k8sClient.Get(ctx, namespacedName, &endStateAlertsPolicy)
+				Expect(err).To(BeNil())
+				Expect(endStateAlertsPolicy.Status.PolicyID).To(Equal("333"))
+
+			})
+			It("creates the NRQL condition with attributes from the AlertsPolicy", func() {
+				err := k8sClient.Create(ctx, alertspolicy)
+				Expect(err).ToNot(HaveOccurred())
+
+				// call reconcile
+				_, err = r.Reconcile(request)
+				Expect(err).ToNot(HaveOccurred())
+
+				var endStateAlertsPolicy nrv1.AlertsPolicy
+				var endStateCondition nrv1.AlertsNrqlCondition
+				err = k8sClient.Get(ctx, namespacedName, &endStateAlertsPolicy)
+				Expect(err).To(BeNil())
 				conditionNameType := types.NamespacedName{
-					Name:      endStatePolicy.Spec.Conditions[0].Name,
-					Namespace: endStatePolicy.Spec.Conditions[0].Namespace,
+					Name:      endStateAlertsPolicy.Spec.Conditions[0].Name,
+					Namespace: endStateAlertsPolicy.Spec.Conditions[0].Namespace,
 				}
 				err = k8sClient.Get(ctx, conditionNameType, &endStateCondition)
 				Expect(err).To(BeNil())
+				Expect(endStateCondition.Spec.Nrql.Query).To(Equal("SELECT 1 FROM MyEvents"))
+				Expect(string(endStateCondition.Spec.Terms[0].Priority)).To(Equal("critical"))
+				Expect(endStateCondition.Spec.Enabled).To(BeTrue())
+
+			})
+
+			It("creates the NRQL condition with inherited attributes from the AlertsPolicy resource", func() {
+
+				err := k8sClient.Create(ctx, alertspolicy)
+				Expect(err).ToNot(HaveOccurred())
+
+				// call reconcile
+				_, err = r.Reconcile(request)
+				Expect(err).ToNot(HaveOccurred())
+
+				var endStateAlertsPolicy nrv1.AlertsPolicy
+				var endStateCondition nrv1.AlertsNrqlCondition
+				err = k8sClient.Get(ctx, namespacedName, &endStateAlertsPolicy)
+				Expect(err).To(BeNil())
+				conditionNameType := types.NamespacedName{
+					Name:      endStateAlertsPolicy.Spec.Conditions[0].Name,
+					Namespace: endStateAlertsPolicy.Spec.Conditions[0].Namespace,
+				}
+				err = k8sClient.Get(ctx, conditionNameType, &endStateCondition)
+				Expect(err).To(BeNil())
+
 				Expect(endStateCondition.Spec.ExistingPolicyID).To(Equal("333"))
-				Expect(endStateCondition.Spec.Region).To(Equal(policy.Spec.Region))
-				Expect(endStateCondition.Spec.APIKey).To(Equal(policy.Spec.APIKey))
+				Expect(endStateCondition.Spec.Region).To(Equal(alertspolicy.Spec.Region))
+				Expect(endStateCondition.Spec.APIKey).To(Equal(alertspolicy.Spec.APIKey))
+
 			})
 		})
-
 		Context("when the New Relic API returns an error", func() {
 			BeforeEach(func() {
 				mockAlertsClient.CreatePolicyMutationStub = func(int, alerts.AlertsPolicyInput) (*alerts.AlertsPolicy, error) {
@@ -251,62 +241,98 @@ var _ = Describe("policy reconciliation", func() {
 				}
 			})
 
-			It("should not update the PolicyID", func() {
-				createErr := k8sClient.Create(ctx, policy)
+			It("should not update the AlertsPolicyID", func() {
+				createErr := k8sClient.Create(ctx, alertspolicy)
 				Expect(createErr).ToNot(HaveOccurred())
 
+				// call reconcile
 				_, reconcileErr := r.Reconcile(request)
 				Expect(reconcileErr).To(HaveOccurred())
 				Expect(reconcileErr.Error()).To(Equal("Any Error Goes Here"))
 
-				var endStatePolicy nrv1.AlertsPolicy
-				getErr := k8sClient.Get(ctx, namespacedName, &endStatePolicy)
+				var endStateAlertsPolicy nrv1.AlertsPolicy
+				getErr := k8sClient.Get(ctx, namespacedName, &endStateAlertsPolicy)
 				Expect(getErr).ToNot(HaveOccurred())
-				Expect(endStatePolicy.Status.PolicyID).To(Equal(""))
+				Expect(endStateAlertsPolicy.Status.PolicyID).To(Equal(""))
 			})
 		})
 
-		Context("when creating a valid policy with conditions", func() {
+		Context("when creating a valid alertspolicy with apm conditions", func() {
 			It("should create the conditions", func() {
-				err := k8sClient.Create(ctx, policy)
+				conditionSpec = &nrv1.AlertsPolicyConditionSpec{
+					AlertsGenericConditionSpec: nrv1.AlertsGenericConditionSpec{
+						Terms: []nrv1.AlertsNrqlConditionTerm{
+							{
+								ThresholdDuration:    30,
+								Operator:             "above",
+								Priority:             "critical",
+								Threshold:            "1.5",
+								ThresholdOccurrences: alerts.ThresholdOccurrences.All,
+							},
+						},
+						Type:       "apm_app_metric",
+						Name:       "APM Condition",
+						RunbookURL: "http://test.com/runbook",
+						Enabled:    true,
+					},
+					AlertsNrqlSpecificSpec: nrv1.AlertsNrqlSpecificSpec{},
+					AlertsAPMSpecificSpec: nrv1.AlertsAPMSpecificSpec{
+						Metric:              "Custom/foo",
+						UserDefined:         alerts.ConditionUserDefined{},
+						Scope:               "application",
+						Entities:            []string{"333"},
+						GCMetric:            "",
+						ViolationCloseTimer: 60,
+					},
+				}
+				alertspolicy.Spec.Conditions[0] = nrv1.AlertsPolicyCondition{
+					Spec: *conditionSpec,
+				}
+
+				err := k8sClient.Create(ctx, alertspolicy)
 				Expect(err).ToNot(HaveOccurred())
 
+				// call reconcile
 				_, err = r.Reconcile(request)
 				Expect(err).ToNot(HaveOccurred())
+
 				Expect(mockAlertsClient.CreatePolicyMutationCallCount()).To(Equal(1))
 
-				var endStatePolicy nrv1.AlertsPolicy
-				var endStateCondition nrv1.AlertsNrqlCondition
-				err = k8sClient.Get(ctx, namespacedName, &endStatePolicy)
+				var endStateAlertsPolicy nrv1.AlertsPolicy
+				var endStateCondition nrv1.ApmAlertCondition
+				err = k8sClient.Get(ctx, namespacedName, &endStateAlertsPolicy)
 				Expect(err).To(BeNil())
-
 				conditionNameType := types.NamespacedName{
-					Name:      endStatePolicy.Spec.Conditions[0].Name,
-					Namespace: endStatePolicy.Spec.Conditions[0].Namespace,
+					Name:      endStateAlertsPolicy.Spec.Conditions[0].Name,
+					Namespace: endStateAlertsPolicy.Spec.Conditions[0].Namespace,
 				}
 				err = k8sClient.Get(ctx, conditionNameType, &endStateCondition)
 				Expect(err).To(BeNil())
-				Expect(endStateCondition.Spec.Name).To(Equal("NRQL Condition"))
+				Expect(endStateCondition.Spec.Name).To(Equal("APM Condition"))
+
 			})
 
-			Context("when creating a valid policy with conditions with k8 resource name set", func() {
+			Context("when creating a valid alertspolicy with conditions with k8 resource name set", func() {
 				It("should create the conditions with an auto-generated name ignoring the manual name", func() {
-					policy.Spec.Conditions[0].Name = "my custom name"
-					err := k8sClient.Create(ctx, policy)
+
+					alertspolicy.Spec.Conditions[0].Name = "my custom name"
+
+					err := k8sClient.Create(ctx, alertspolicy)
 					Expect(err).ToNot(HaveOccurred())
 
+					// call reconcile
 					_, err = r.Reconcile(request)
 					Expect(err).ToNot(HaveOccurred())
+
 					Expect(mockAlertsClient.CreatePolicyMutationCallCount()).To(Equal(1))
 
-					var endStatePolicy nrv1.AlertsPolicy
+					var endStateAlertsPolicy nrv1.AlertsPolicy
 					var endStateCondition nrv1.AlertsNrqlCondition
-					err = k8sClient.Get(ctx, namespacedName, &endStatePolicy)
+					err = k8sClient.Get(ctx, namespacedName, &endStateAlertsPolicy)
 					Expect(err).To(BeNil())
-
 					conditionNameType := types.NamespacedName{
-						Name:      endStatePolicy.Spec.Conditions[0].Name,
-						Namespace: endStatePolicy.Spec.Conditions[0].Namespace,
+						Name:      endStateAlertsPolicy.Spec.Conditions[0].Name,
+						Namespace: endStateAlertsPolicy.Spec.Conditions[0].Namespace,
 					}
 					err = k8sClient.Get(ctx, conditionNameType, &endStateCondition)
 					Expect(err).To(BeNil())
@@ -318,256 +344,22 @@ var _ = Describe("policy reconciliation", func() {
 		})
 
 		AfterEach(func() {
-			err := k8sClient.Delete(ctx, policy)
+			// Delete the alertspolicy
+			err := k8sClient.Delete(ctx, alertspolicy)
 			Expect(err).ToNot(HaveOccurred())
 
+			// Need to call reconcile to delete finalizer
 			_, err = r.Reconcile(request)
 			Expect(err).ToNot(HaveOccurred())
 		})
 
 	})
 
-	Context("When starting with an existing policy", func() {
+	Context("When starting with an existing alertspolicy with a NRQL condition", func() {
 		BeforeEach(func() {
-			err := k8sClient.Create(ctx, policy)
-			Expect(err).ToNot(HaveOccurred())
 
-			_, err = r.Reconcile(request)
-			Expect(err).ToNot(HaveOccurred())
-			Expect(mockAlertsClient.CreatePolicyMutationCallCount()).To(Equal(1))
-			Expect(mockAlertsClient.UpdatePolicyMutationCallCount()).To(Equal(0))
-
-			err = k8sClient.Get(ctx, namespacedName, policy)
-			Expect(err).ToNot(HaveOccurred())
-		})
-		Context("and deleting that policy", func() {
-			It("should successfully delete", func() {
-				err := k8sClient.Delete(ctx, policy)
-				Expect(err).ToNot(HaveOccurred())
-
-				_, err = r.Reconcile(request)
-				Expect(err).ToNot(HaveOccurred())
-
-				var endStatePolicy nrv1.AlertsPolicy
-				err = k8sClient.Get(ctx, namespacedName, &endStatePolicy)
-				Expect(err).NotTo(BeNil())
-			})
-
-			It("should delete the condition", func() {
-				err := k8sClient.Delete(ctx, policy)
-				Expect(err).ToNot(HaveOccurred())
-
-				_, err = r.Reconcile(request)
-				Expect(err).ToNot(HaveOccurred())
-
-				var endStateCondition nrv1.AlertsNrqlCondition
-				err = k8sClient.Get(ctx, conditionName, &endStateCondition)
-				Expect(err).To(HaveOccurred())
-				Expect(endStateCondition.Spec.Name).ToNot(Equal(policy.Spec.Conditions[0].Spec.Name))
-			})
-		})
-
-		Context("and New Relic API returns a 404", func() {
-			BeforeEach(func() {
-				mockAlertsClient.DeletePolicyMutationStub = func(int, string) (*alerts.AlertsPolicy, error) {
-					return &alerts.AlertsPolicy{}, errors.New("Imaginary 404 Failure")
-				}
-			})
-
-			It("should succeed as if a previous reconcile already deleted the policy", func() {
-			})
-
-			AfterEach(func() {
-				mockAlertsClient.DeletePolicyMutationStub = func(int, string) (*alerts.AlertsPolicy, error) {
-					return &alerts.AlertsPolicy{}, nil
-				}
-
-				err := k8sClient.Delete(ctx, policy)
-				Expect(err).ToNot(HaveOccurred())
-
-				_, err = r.Reconcile(request)
-				Expect(err).ToNot(HaveOccurred())
-			})
-		})
-	})
-
-	Context("When starting with an existing policy", func() {
-		BeforeEach(func() {
-			err := k8sClient.Create(ctx, policy)
-			Expect(err).ToNot(HaveOccurred())
-
-			_, err = r.Reconcile(request)
-			Expect(err).ToNot(HaveOccurred())
-			Expect(mockAlertsClient.CreatePolicyMutationCallCount()).To(Equal(1))
-			Expect(mockAlertsClient.UpdatePolicyMutationCallCount()).To(Equal(0))
-
-			err = k8sClient.Get(ctx, namespacedName, policy)
-			Expect(err).ToNot(HaveOccurred())
-		})
-
-		Context("and making no changes", func() {
-			It("should not try to update or create new conditions", func() {
-				initialConditionName := policy.Spec.Conditions[0].Name
-				policy.Spec.Conditions[0].Name = ""
-				policy.Spec.Conditions[0].Namespace = ""
-
-				err := k8sClient.Update(ctx, policy)
-				Expect(err).ToNot(HaveOccurred())
-
-				_, err = r.Reconcile(request)
-				Expect(err).ToNot(HaveOccurred())
-				Expect(mockAlertsClient.UpdatePolicyMutationCallCount()).To(Equal(0))
-
-				var endStatePolicy nrv1.AlertsPolicy
-				var endStateCondition nrv1.AlertsNrqlCondition
-				err = k8sClient.Get(ctx, namespacedName, &endStatePolicy)
-				Expect(err).To(BeNil())
-				Expect(endStatePolicy.Status.AppliedSpec.Conditions[0].Name).To(Equal(initialConditionName))
-
-				conditionNameType := types.NamespacedName{
-					Name:      endStatePolicy.Status.AppliedSpec.Conditions[0].Name,
-					Namespace: endStatePolicy.Status.AppliedSpec.Conditions[0].Namespace,
-				}
-				err = k8sClient.Get(ctx, conditionNameType, &endStateCondition)
-				Expect(err).To(BeNil())
-				Expect(endStateCondition.Name).To(Equal(initialConditionName))
-			})
-		})
-
-		Context("and updating that policy", func() {
-			BeforeEach(func() {
-				policy.Spec.IncidentPreference = "PER_CONDITION_AND_TARGET"
-			})
-
-			It("should successfully update", func() {
-				err := k8sClient.Update(ctx, policy)
-				Expect(err).ToNot(HaveOccurred())
-
-				_, err = r.Reconcile(request)
-				Expect(err).ToNot(HaveOccurred())
-
-				var endStatePolicy nrv1.AlertsPolicy
-				err = k8sClient.Get(ctx, namespacedName, &endStatePolicy)
-				Expect(err).To(BeNil())
-				Expect(mockAlertsClient.UpdatePolicyMutationCallCount()).To(Equal(1))
-			})
-		})
-
-		Context("and updating a condition name", func() {
-			BeforeEach(func() {
-				//clear out the Name and Namespace since those aren't stored in yaml so are blank when applying yaml
-				policy.Spec.Conditions[0].Name = ""
-				policy.Spec.Conditions[0].Namespace = ""
-				policy.Spec.Conditions[0].Spec.Name = "New conditionName"
-			})
-
-			It("should create a new condition with the new name", func() {
-				originalConditionName := policy.Status.AppliedSpec.Conditions[0].Name
-
-				err := k8sClient.Update(ctx, policy)
-				Expect(err).ToNot(HaveOccurred())
-
-				_, err = r.Reconcile(request)
-				Expect(err).ToNot(HaveOccurred())
-
-				var endStatePolicy nrv1.AlertsPolicy
-				var endStateCondition nrv1.AlertsNrqlCondition
-				err = k8sClient.Get(ctx, namespacedName, &endStatePolicy)
-				Expect(err).To(BeNil())
-
-				conditionNameType := types.NamespacedName{
-					Name:      endStatePolicy.Spec.Conditions[0].Name,
-					Namespace: endStatePolicy.Spec.Conditions[0].Namespace,
-				}
-				err = k8sClient.Get(ctx, conditionNameType, &endStateCondition)
-				Expect(err).To(BeNil())
-				Expect(endStateCondition.Spec.Name).To(Equal("New conditionName"))
-				Expect(endStateCondition.Name).ToNot(Equal(originalConditionName))
-			})
-
-			It("should delete the old condition", func() {
-				originalConditionName := policy.Status.AppliedSpec.Conditions[0].Name
-				err := k8sClient.Update(ctx, policy)
-				Expect(err).ToNot(HaveOccurred())
-
-				_, err = r.Reconcile(request)
-				Expect(err).ToNot(HaveOccurred())
-
-				var endStatePolicy nrv1.AlertsPolicy
-				err = k8sClient.Get(ctx, namespacedName, &endStatePolicy)
-				Expect(err).To(BeNil())
-
-				var originalCondition nrv1.AlertsNrqlCondition
-				originalConditionNamespaceType := types.NamespacedName{
-					Name:      originalConditionName,
-					Namespace: endStatePolicy.Spec.Conditions[0].Namespace,
-				}
-				err = k8sClient.Get(ctx, originalConditionNamespaceType, &originalCondition)
-				Expect(err).ToNot(BeNil())
-				Expect(originalCondition.Spec.Name).To(Equal(""))
-			})
-		})
-
-		Context("and updating a condition", func() {
-			BeforeEach(func() {
-				//clear out the Name and Namespace since those aren't stored in yaml so are blank when appling yaml
-				policy.Spec.Conditions[0].Name = ""
-				policy.Spec.Conditions[0].Namespace = ""
-				policy.Spec.Conditions[0].Spec.Nrql.Query = "SELECT count(*) FROM MyEvent"
-			})
-
-			It("should update the existing AlertsNrqlCondition with the updated spec", func() {
-				originalConditionName := policy.Status.AppliedSpec.Conditions[0].Name
-				err := k8sClient.Update(ctx, policy)
-				Expect(err).ToNot(HaveOccurred())
-
-				_, err = r.Reconcile(request)
-				Expect(err).ToNot(HaveOccurred())
-
-				var endStatePolicy nrv1.AlertsPolicy
-				var endStateCondition nrv1.AlertsNrqlCondition
-				err = k8sClient.Get(ctx, namespacedName, &endStatePolicy)
-				Expect(err).To(BeNil())
-
-				conditionNameType := types.NamespacedName{
-					Name:      endStatePolicy.Spec.Conditions[0].Name,
-					Namespace: endStatePolicy.Spec.Conditions[0].Namespace,
-				}
-				err = k8sClient.Get(ctx, conditionNameType, &endStateCondition)
-				Expect(err).To(BeNil())
-				Expect(endStateCondition.Spec.Nrql.Query).To(Equal("SELECT count(*) FROM MyEvent"))
-				Expect(endStateCondition.Name).To(Equal(originalConditionName))
-			})
-
-			It("should set the inherited values on the updated condition", func() {
-				originalConditionName := policy.Status.AppliedSpec.Conditions[0].Name
-				err := k8sClient.Update(ctx, policy)
-				Expect(err).ToNot(HaveOccurred())
-
-				_, err = r.Reconcile(request)
-				Expect(err).ToNot(HaveOccurred())
-
-				var endStatePolicy nrv1.AlertsPolicy
-				var endStateCondition nrv1.AlertsNrqlCondition
-				err = k8sClient.Get(ctx, namespacedName, &endStatePolicy)
-				Expect(err).To(BeNil())
-
-				conditionNameType := types.NamespacedName{
-					Name:      endStatePolicy.Spec.Conditions[0].Name,
-					Namespace: endStatePolicy.Spec.Conditions[0].Namespace,
-				}
-				err = k8sClient.Get(ctx, conditionNameType, &endStateCondition)
-				Expect(err).To(BeNil())
-				Expect(endStateCondition.Spec.Nrql.Query).To(Equal("SELECT count(*) FROM MyEvent"))
-				Expect(endStateCondition.Name).To(Equal(originalConditionName))
-				Expect(endStateCondition.Spec.Region).To(Equal("US"))
-				Expect(endStateCondition.Spec.APIKey).To(Equal("112233"))
-			})
-		})
-
-		Context("and adding another condition", func() {
-			BeforeEach(func() {
-				secondConditionSpec := nrv1.AlertsNrqlConditionSpec{
+			conditionSpec = &nrv1.AlertsPolicyConditionSpec{
+				nrv1.AlertsGenericConditionSpec{
 					Terms: []nrv1.AlertsNrqlConditionTerm{
 						{
 							ThresholdDuration:    30,
@@ -577,38 +369,410 @@ var _ = Describe("policy reconciliation", func() {
 							ThresholdOccurrences: alerts.ThresholdOccurrences.All,
 						},
 					},
-					Nrql:    alerts.NrqlConditionQuery{},
-					Type:    "",
-					Name:    "second alert condition",
-					Enabled: true,
+					Type:       "NRQL",
+					Name:       "NRQL Condition",
+					RunbookURL: "http://test.com/runbook",
+					Enabled:    true,
+				},
+				nrv1.AlertsNrqlSpecificSpec{
+					Nrql: alerts.NrqlConditionQuery{
+						Query:            "SELECT 1 FROM MyEvents",
+						EvaluationOffset: 5,
+					},
+					ValueFunction:      &alerts.NrqlConditionValueFunctions.SingleValue,
+					ViolationTimeLimit: "60",
+					ExpectedGroups:     2,
+					IgnoreOverlap:      true,
+				},
+				nrv1.AlertsAPMSpecificSpec{},
+			}
+
+			alertspolicy = &nrv1.AlertsPolicy{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "test-alertspolicy",
+					Namespace: "default",
+				},
+				Spec: nrv1.AlertsPolicySpec{
+					Name:               "test alertspolicy",
+					APIKey:             "112233",
+					IncidentPreference: "PER_POLICY",
+					Region:             "us",
+					Conditions: []nrv1.AlertsPolicyCondition{
+						{
+							Spec: *conditionSpec,
+						},
+					},
+				},
+				Status: nrv1.AlertsPolicyStatus{
+					AppliedSpec: &nrv1.AlertsPolicySpec{},
+					PolicyID:    "",
+				},
+			}
+
+			err := k8sClient.Create(ctx, alertspolicy)
+			Expect(err).ToNot(HaveOccurred())
+			// call reconcile
+			_, err = r.Reconcile(request)
+			Expect(err).ToNot(HaveOccurred())
+
+			Expect(mockAlertsClient.CreatePolicyMutationCallCount()).To(Equal(1))
+			Expect(mockAlertsClient.UpdatePolicyMutationCallCount()).To(Equal(0))
+
+			// change the event after creation via reconciliation
+			err = k8sClient.Get(ctx, namespacedName, alertspolicy)
+			Expect(err).ToNot(HaveOccurred())
+		})
+		Context("and deleting that alertspolicy", func() {
+			It("should successfully delete", func() {
+				err := k8sClient.Delete(ctx, alertspolicy)
+				Expect(err).ToNot(HaveOccurred())
+
+				// Need to call reconcile to delete finalizer
+				_, err = r.Reconcile(request)
+				Expect(err).ToNot(HaveOccurred())
+
+				var endStateAlertsPolicy nrv1.AlertsPolicy
+				err = k8sClient.Get(ctx, namespacedName, &endStateAlertsPolicy)
+				Expect(err).NotTo(BeNil())
+
+			})
+			It("should delete the condition", func() {
+				err := k8sClient.Delete(ctx, alertspolicy)
+				Expect(err).ToNot(HaveOccurred())
+
+				// Need to call reconcile to delete finalizer
+				_, err = r.Reconcile(request)
+				Expect(err).ToNot(HaveOccurred())
+
+				var endStateCondition nrv1.AlertsNrqlCondition
+				err = k8sClient.Get(ctx, conditionName, &endStateCondition)
+
+				Expect(err).To(HaveOccurred())
+				Expect(endStateCondition.Spec.Name).ToNot(Equal(alertspolicy.Spec.Conditions[0].Spec.Name))
+
+			})
+		})
+		Context("and New Relic API returns a 404", func() {
+			BeforeEach(func() {
+				mockAlertsClient.DeletePolicyMutationStub = func(int, string) (*alerts.AlertsPolicy, error) {
+					return &alerts.AlertsPolicy{}, errors.New("Imaginary 404 Failure")
+				}
+			})
+			It("should succeed as if a previous reconcile already deleted the alertspolicy", func() {
+			})
+			AfterEach(func() {
+				mockAlertsClient.DeletePolicyMutationStub = func(int, string) (*alerts.AlertsPolicy, error) {
+					return &alerts.AlertsPolicy{}, nil
+				}
+				// Delete the alertspolicy
+				err := k8sClient.Delete(ctx, alertspolicy)
+				Expect(err).ToNot(HaveOccurred())
+
+				// Need to call reconcile to delete finalizer
+				_, err = r.Reconcile(request)
+				Expect(err).ToNot(HaveOccurred())
+			})
+		})
+	})
+
+	Context("When starting with an existing alertspolicy with a NRQL condition", func() {
+		BeforeEach(func() {
+			conditionSpec = &nrv1.AlertsPolicyConditionSpec{
+				nrv1.AlertsGenericConditionSpec{
+					Terms: []nrv1.AlertsNrqlConditionTerm{
+						{
+							ThresholdDuration:    30,
+							Operator:             "above",
+							Priority:             "critical",
+							Threshold:            "5",
+							ThresholdOccurrences: alerts.ThresholdOccurrences.All,
+						},
+					},
+					Type:       "NRQL",
+					Name:       "NRQL Condition",
+					RunbookURL: "http://test.com/runbook",
+					Enabled:    true,
+				},
+				nrv1.AlertsNrqlSpecificSpec{
+					Nrql: alerts.NrqlConditionQuery{
+						Query:            "SELECT 1 FROM MyEvents",
+						EvaluationOffset: 5,
+					},
+					ValueFunction:      &alerts.NrqlConditionValueFunctions.SingleValue,
+					ViolationTimeLimit: "60",
+					ExpectedGroups:     2,
+					IgnoreOverlap:      true,
+				},
+				nrv1.AlertsAPMSpecificSpec{},
+			}
+
+			alertspolicy = &nrv1.AlertsPolicy{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "test-alertspolicy",
+					Namespace: "default",
+				},
+				Spec: nrv1.AlertsPolicySpec{
+					Name:               "test alertspolicy",
+					APIKey:             "112233",
+					IncidentPreference: "PER_POLICY",
+					Region:             "us",
+					Conditions: []nrv1.AlertsPolicyCondition{
+						{
+							Spec: *conditionSpec,
+						},
+					},
+				},
+				Status: nrv1.AlertsPolicyStatus{
+					AppliedSpec: &nrv1.AlertsPolicySpec{},
+					PolicyID:    "",
+				},
+			}
+
+			err := k8sClient.Create(ctx, alertspolicy)
+			Expect(err).ToNot(HaveOccurred())
+			// call reconcile
+			_, err = r.Reconcile(request)
+			Expect(err).ToNot(HaveOccurred())
+
+			Expect(mockAlertsClient.CreatePolicyMutationCallCount()).To(Equal(1))
+			Expect(mockAlertsClient.UpdatePolicyMutationCallCount()).To(Equal(0))
+
+			// change the event after creation via reconciliation
+			err = k8sClient.Get(ctx, namespacedName, alertspolicy)
+			Expect(err).ToNot(HaveOccurred())
+		})
+
+		Context("and making no changes ", func() {
+			It("should not try to update or create new conditions", func() {
+				initialConditionName := alertspolicy.Spec.Conditions[0].Name
+				alertspolicy.Spec.Conditions[0].Name = ""
+				alertspolicy.Spec.Conditions[0].Namespace = ""
+
+				err := k8sClient.Update(ctx, alertspolicy)
+				Expect(err).ToNot(HaveOccurred())
+
+				// Need to call reconcile twice to be fully settled
+				_, err = r.Reconcile(request)
+				Expect(err).ToNot(HaveOccurred())
+
+				Expect(mockAlertsClient.UpdatePolicyMutationCallCount()).To(Equal(0))
+
+				var endStateAlertsPolicy nrv1.AlertsPolicy
+				var endStateCondition nrv1.AlertsNrqlCondition
+				err = k8sClient.Get(ctx, namespacedName, &endStateAlertsPolicy)
+				Expect(err).To(BeNil())
+
+				Expect(endStateAlertsPolicy.Status.AppliedSpec.Conditions[0].Name).To(Equal(initialConditionName))
+				conditionNameType := types.NamespacedName{
+					Name:      endStateAlertsPolicy.Status.AppliedSpec.Conditions[0].Name,
+					Namespace: endStateAlertsPolicy.Status.AppliedSpec.Conditions[0].Namespace,
+				}
+				err = k8sClient.Get(ctx, conditionNameType, &endStateCondition)
+				Expect(err).To(BeNil())
+				Expect(endStateCondition.Name).To(Equal(initialConditionName))
+			})
+
+		})
+
+		Context("and updating that alertspolicy", func() {
+			BeforeEach(func() {
+				alertspolicy.Spec.IncidentPreference = "PER_CONDITION_AND_TARGET"
+			})
+
+			It("should successfully update", func() {
+				err := k8sClient.Update(ctx, alertspolicy)
+				Expect(err).ToNot(HaveOccurred())
+
+				// Need to call reconcile to update the condition
+				_, err = r.Reconcile(request)
+				Expect(err).ToNot(HaveOccurred())
+
+				var endStateAlertsPolicy nrv1.AlertsPolicy
+				err = k8sClient.Get(ctx, namespacedName, &endStateAlertsPolicy)
+				Expect(err).To(BeNil())
+				Expect(mockAlertsClient.UpdatePolicyMutationCallCount()).To(Equal(1))
+
+			})
+
+		})
+
+		Context("and updating a condition name", func() {
+			BeforeEach(func() {
+				//clear out the Name and Namespace since those aren't stored in yaml so are blank when applying yaml
+				alertspolicy.Spec.Conditions[0].Name = ""
+				alertspolicy.Spec.Conditions[0].Namespace = ""
+				alertspolicy.Spec.Conditions[0].Spec.Name = "New conditionName"
+			})
+
+			It("should create a new condition with the new name", func() {
+				originalConditionName := alertspolicy.Status.AppliedSpec.Conditions[0].Name
+
+				err := k8sClient.Update(ctx, alertspolicy)
+				Expect(err).ToNot(HaveOccurred())
+
+				// Need to call reconcile to update the condition
+				_, err = r.Reconcile(request)
+				Expect(err).ToNot(HaveOccurred())
+
+				var endStateAlertsPolicy nrv1.AlertsPolicy
+				var endStateCondition nrv1.AlertsNrqlCondition
+				err = k8sClient.Get(ctx, namespacedName, &endStateAlertsPolicy)
+				Expect(err).To(BeNil())
+				conditionNameType := types.NamespacedName{
+					Name:      endStateAlertsPolicy.Spec.Conditions[0].Name,
+					Namespace: endStateAlertsPolicy.Spec.Conditions[0].Namespace,
+				}
+				err = k8sClient.Get(ctx, conditionNameType, &endStateCondition)
+				Expect(err).To(BeNil())
+				Expect(endStateCondition.Spec.Name).To(Equal("New conditionName"))
+				Expect(endStateCondition.Name).ToNot(Equal(originalConditionName))
+			})
+
+			It("should delete the old condition ", func() {
+				originalConditionName := alertspolicy.Status.AppliedSpec.Conditions[0].Name
+
+				err := k8sClient.Update(ctx, alertspolicy)
+				Expect(err).ToNot(HaveOccurred())
+
+				// Need to call reconcile to update the condition
+				_, err = r.Reconcile(request)
+				Expect(err).ToNot(HaveOccurred())
+
+				var endStateAlertsPolicy nrv1.AlertsPolicy
+				err = k8sClient.Get(ctx, namespacedName, &endStateAlertsPolicy)
+				Expect(err).To(BeNil())
+
+				var originalCondition nrv1.AlertsNrqlCondition
+				originalConditionNamespaceType := types.NamespacedName{
+					Name:      originalConditionName,
+					Namespace: endStateAlertsPolicy.Spec.Conditions[0].Namespace,
+				}
+				err = k8sClient.Get(ctx, originalConditionNamespaceType, &originalCondition)
+				Expect(err).ToNot(BeNil())
+				Expect(originalCondition.Spec.Name).To(Equal(""))
+			})
+
+		})
+
+		Context("and updating a condition ", func() {
+			BeforeEach(func() {
+				//clear out the Name and Namespace since those aren't stored in yaml so are blank when appling yaml
+				alertspolicy.Spec.Conditions[0].Name = ""
+				alertspolicy.Spec.Conditions[0].Namespace = ""
+				alertspolicy.Spec.Conditions[0].Spec.Nrql.Query = "SELECT count(*) FROM MyEvent"
+			})
+
+			It("should update the existing AlertsNrqlCondition with the updated spec", func() {
+				originalConditionName := alertspolicy.Status.AppliedSpec.Conditions[0].Name
+
+				err := k8sClient.Update(ctx, alertspolicy)
+				Expect(err).ToNot(HaveOccurred())
+
+				// Need to call reconcile to update the condition
+				_, err = r.Reconcile(request)
+				Expect(err).ToNot(HaveOccurred())
+
+				var endStateAlertsPolicy nrv1.AlertsPolicy
+				var endStateCondition nrv1.AlertsNrqlCondition
+				err = k8sClient.Get(ctx, namespacedName, &endStateAlertsPolicy)
+				Expect(err).To(BeNil())
+				conditionNameType := types.NamespacedName{
+					Name:      endStateAlertsPolicy.Spec.Conditions[0].Name,
+					Namespace: endStateAlertsPolicy.Spec.Conditions[0].Namespace,
+				}
+				err = k8sClient.Get(ctx, conditionNameType, &endStateCondition)
+				Expect(err).To(BeNil())
+				Expect(endStateCondition.Spec.Nrql.Query).To(Equal("SELECT count(*) FROM MyEvent"))
+				Expect(endStateCondition.Name).To(Equal(originalConditionName))
+
+			})
+
+			It("should set the inherited values on the updated condition", func() {
+				originalConditionName := alertspolicy.Status.AppliedSpec.Conditions[0].Name
+
+				err := k8sClient.Update(ctx, alertspolicy)
+				Expect(err).ToNot(HaveOccurred())
+
+				// Need to call reconcile to update the condition
+				_, err = r.Reconcile(request)
+				Expect(err).ToNot(HaveOccurred())
+
+				var endStateAlertsPolicy nrv1.AlertsPolicy
+				var endStateCondition nrv1.AlertsNrqlCondition
+				err = k8sClient.Get(ctx, namespacedName, &endStateAlertsPolicy)
+				Expect(err).To(BeNil())
+				conditionNameType := types.NamespacedName{
+					Name:      endStateAlertsPolicy.Spec.Conditions[0].Name,
+					Namespace: endStateAlertsPolicy.Spec.Conditions[0].Namespace,
+				}
+				err = k8sClient.Get(ctx, conditionNameType, &endStateCondition)
+				Expect(err).To(BeNil())
+				Expect(endStateCondition.Spec.Nrql.Query).To(Equal("SELECT count(*) FROM MyEvent"))
+				Expect(endStateCondition.Name).To(Equal(originalConditionName))
+				Expect(endStateCondition.Spec.Region).To(Equal("us"))
+				Expect(endStateCondition.Spec.APIKey).To(Equal("112233"))
+
+			})
+
+		})
+
+		Context("and adding another condition ", func() {
+			BeforeEach(func() {
+				secondConditionSpec := nrv1.AlertsPolicyConditionSpec{
+					nrv1.AlertsGenericConditionSpec{
+						Terms: []nrv1.AlertsNrqlConditionTerm{
+							{
+								ThresholdDuration:    30,
+								Operator:             "above",
+								Priority:             "critical",
+								Threshold:            "5",
+								ThresholdOccurrences: alerts.ThresholdOccurrences.All,
+							},
+						},
+						Type:       "NRQL",
+						Name:       "second alert condition",
+						RunbookURL: "http://test.com/runbook",
+						Enabled:    true,
+					},
+					nrv1.AlertsNrqlSpecificSpec{
+						Nrql: alerts.NrqlConditionQuery{
+							Query:            "SELECT 1 FROM MyEvents",
+							EvaluationOffset: 5,
+						},
+						ValueFunction:      &alerts.NrqlConditionValueFunctions.SingleValue,
+						ViolationTimeLimit: "60",
+						ExpectedGroups:     2,
+						IgnoreOverlap:      true,
+					},
+					nrv1.AlertsAPMSpecificSpec{},
 				}
 				secondCondition := nrv1.AlertsPolicyCondition{
 					Spec: secondConditionSpec,
 				}
 
-				policy.Spec.Conditions = append(policy.Spec.Conditions, secondCondition)
+				alertspolicy.Spec.Conditions = append(alertspolicy.Spec.Conditions, secondCondition)
 			})
 
-			It("should add second condition", func() {
-				err := k8sClient.Update(ctx, policy)
+			It("should add second condition ", func() {
+				err := k8sClient.Update(ctx, alertspolicy)
 				Expect(err).ToNot(HaveOccurred())
 
+				// Need to call reconcile to update the condition
 				_, err = r.Reconcile(request)
 				Expect(err).ToNot(HaveOccurred())
 
-				var endStatePolicy nrv1.AlertsPolicy
+				var endStateAlertsPolicy nrv1.AlertsPolicy //test-alertspolicy1942898816
 				var endStateCondition nrv1.AlertsNrqlCondition
-				err = k8sClient.Get(ctx, namespacedName, &endStatePolicy)
+				err = k8sClient.Get(ctx, namespacedName, &endStateAlertsPolicy) //1942898816
 				Expect(err).To(BeNil())
-
 				conditionNameType := types.NamespacedName{
-					Name:      endStatePolicy.Spec.Conditions[1].Name,
-					Namespace: endStatePolicy.Spec.Conditions[1].Namespace,
+					Name:      endStateAlertsPolicy.Spec.Conditions[1].Name,
+					Namespace: endStateAlertsPolicy.Spec.Conditions[1].Namespace,
 				}
 				err = k8sClient.Get(ctx, conditionNameType, &endStateCondition)
 				Expect(err).To(BeNil())
 				Expect(endStateCondition.Spec.Name).To(Equal("second alert condition"))
-				Expect(endStateCondition.Spec.Region).To(Equal("US"))
+				Expect(endStateCondition.Spec.Region).To(Equal("us"))
 				Expect(endStateCondition.Spec.APIKey).To(Equal("112233"))
 			})
 
@@ -619,139 +783,327 @@ var _ = Describe("policy reconciliation", func() {
 				mockAlertsClient.UpdatePolicyMutationStub = func(int, string, alerts.AlertsPolicyUpdateInput) (*alerts.AlertsPolicy, error) {
 					return &alerts.AlertsPolicy{}, errors.New("oh no")
 				}
-				policy.Spec.IncidentPreference = "PER_CONDITION_AND_TARGET"
+				alertspolicy.Spec.IncidentPreference = "PER_CONDITION_AND_TARGET"
 			})
-
 			It("should return an error", func() {
-				err := k8sClient.Update(ctx, policy)
+				err := k8sClient.Update(ctx, alertspolicy)
 				Expect(err).ToNot(HaveOccurred())
 
+				// Need to call reconcile to update the condition
 				_, err = r.Reconcile(request)
 				Expect(err).To(HaveOccurred())
 			})
 		})
 
 		AfterEach(func() {
-			err := k8sClient.Delete(ctx, policy)
+			err := k8sClient.Delete(ctx, alertspolicy)
 			Expect(err).ToNot(HaveOccurred())
 
+			// Need to call reconcile to delete finalizer
 			_, err = r.Reconcile(request)
 			Expect(err).ToNot(HaveOccurred())
 		})
+
 	})
 
-	Context("When starting with an existing policy with two conditions", func() {
+	Context("When starting with an existing alertspolicy with an APM condition", func() {
 		BeforeEach(func() {
-			secondConditionSpec := nrv1.AlertsNrqlConditionSpec{
-				Terms: []nrv1.AlertsNrqlConditionTerm{
-					{
-						ThresholdDuration:    30,
-						Operator:             "above",
-						Priority:             "critical",
-						Threshold:            "5",
-						ThresholdOccurrences: alerts.ThresholdOccurrences.All,
+			conditionSpec = &nrv1.AlertsPolicyConditionSpec{
+				AlertsGenericConditionSpec: nrv1.AlertsGenericConditionSpec{
+					Terms: []nrv1.AlertsNrqlConditionTerm{
+						{
+							ThresholdDuration:    30,
+							Operator:             "above",
+							Priority:             "critical",
+							Threshold:            "1.5",
+							ThresholdOccurrences: alerts.ThresholdOccurrences.All,
+						},
+					},
+					Type:       "apm_app_metric",
+					Name:       "APM Condition",
+					RunbookURL: "http://test.com/runbook",
+					Enabled:    true,
+				},
+				AlertsNrqlSpecificSpec: nrv1.AlertsNrqlSpecificSpec{},
+				AlertsAPMSpecificSpec: nrv1.AlertsAPMSpecificSpec{
+					Metric:              "Custom/foo",
+					UserDefined:         alerts.ConditionUserDefined{},
+					Scope:               "application",
+					Entities:            []string{"333"},
+					GCMetric:            "",
+					ViolationCloseTimer: 60,
+				},
+			}
+
+			alertspolicy = &nrv1.AlertsPolicy{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "test-alertspolicy",
+					Namespace: "default",
+				},
+				Spec: nrv1.AlertsPolicySpec{
+					Name:               "test alertspolicy",
+					APIKey:             "112233",
+					IncidentPreference: "PER_POLICY",
+					Region:             "us",
+					Conditions: []nrv1.AlertsPolicyCondition{
+						{
+							Spec: *conditionSpec,
+						},
 					},
 				},
-				Nrql:    alerts.NrqlConditionQuery{},
-				Type:    "",
-				Name:    "second alert condition",
-				Enabled: true,
-			}
-			secondCondition := nrv1.AlertsPolicyCondition{
-				Spec: secondConditionSpec,
+				Status: nrv1.AlertsPolicyStatus{
+					AppliedSpec: &nrv1.AlertsPolicySpec{},
+					PolicyID:    "",
+				},
 			}
 
-			policy.Spec.Conditions = append(policy.Spec.Conditions, secondCondition)
-
-			err := k8sClient.Create(ctx, policy)
+			err := k8sClient.Create(ctx, alertspolicy)
 			Expect(err).ToNot(HaveOccurred())
-
+			// call reconcile
 			_, err = r.Reconcile(request)
 			Expect(err).ToNot(HaveOccurred())
+
 			Expect(mockAlertsClient.CreatePolicyMutationCallCount()).To(Equal(1))
 			Expect(mockAlertsClient.UpdatePolicyMutationCallCount()).To(Equal(0))
 
-			err = k8sClient.Get(ctx, namespacedName, policy)
+			// change the event after creation via reconciliation
+			err = k8sClient.Get(ctx, namespacedName, alertspolicy)
 			Expect(err).ToNot(HaveOccurred())
-
-			deletedConditionNamespace = types.NamespacedName{
-				Namespace: policy.Spec.Conditions[1].Namespace,
-				Name:      policy.Spec.Conditions[1].Name,
-			}
 		})
 
-		Context("and removing the second condition", func() {
-			BeforeEach(func() {
-				policy.Spec.Conditions = []nrv1.AlertsPolicyCondition{policy.Spec.Conditions[0]}
-			})
+		Context("and making no changes ", func() {
 
-			It("should remove second condition", func() {
-				policy.Spec.Conditions[0].Name = ""
-				policy.Spec.Conditions[0].Namespace = ""
+			It("should not try to update or create new conditions", func() {
+				initialConditionName := alertspolicy.Spec.Conditions[0].Name
+				alertspolicy.Spec.Conditions[0].Name = ""
+				alertspolicy.Spec.Conditions[0].Namespace = ""
 
-				err := k8sClient.Update(ctx, policy)
+				err := k8sClient.Update(ctx, alertspolicy)
 				Expect(err).ToNot(HaveOccurred())
 
+				// Need to call reconcile twice to be fully settled
 				_, err = r.Reconcile(request)
 				Expect(err).ToNot(HaveOccurred())
 
-				var endStatePolicy nrv1.AlertsPolicy
-				var endStateCondition nrv1.AlertsNrqlCondition
-				err = k8sClient.Get(ctx, namespacedName, &endStatePolicy)
-				Expect(err).To(BeNil())
-
-				conditionNameType := types.NamespacedName{
-					Name:      endStatePolicy.Spec.Conditions[0].Name,
-					Namespace: endStatePolicy.Spec.Conditions[0].Namespace,
-				}
-				err = k8sClient.Get(ctx, conditionNameType, &endStateCondition)
-				Expect(err).To(BeNil())
-				Expect(endStateCondition.Spec.Name).To(Equal("NRQL Condition"))
-				Expect(len(endStatePolicy.Spec.Conditions)).To(Equal(1))
-
-				var deletedCondition nrv1.AlertsNrqlCondition
-				Expect(deletedConditionNamespace.Name).ToNot(Equal(endStateCondition.Name))
-
-				err = k8sClient.Get(ctx, deletedConditionNamespace, &deletedCondition)
-				Expect(err).ToNot(BeNil())
-				Expect(deletedCondition.Name).To(Equal(""))
-			})
-
-			It("should not call the alerts API", func() {
-				err := k8sClient.Update(ctx, policy)
-				Expect(err).ToNot(HaveOccurred())
-
-				_, err = r.Reconcile(request)
-				Expect(err).ToNot(HaveOccurred())
 				Expect(mockAlertsClient.UpdatePolicyMutationCallCount()).To(Equal(0))
-			})
-		})
 
-		Context("and removing the first condition", func() {
-			BeforeEach(func() {
-				policy.Spec.Conditions = []nrv1.AlertsPolicyCondition{policy.Spec.Conditions[1]}
-			})
-
-			It("should remove first condition", func() {
-				err := k8sClient.Update(ctx, policy)
-				Expect(err).ToNot(HaveOccurred())
-
-				_, err = r.Reconcile(request)
-				Expect(err).ToNot(HaveOccurred())
-
-				var endStatePolicy nrv1.AlertsPolicy
-				var endStateCondition nrv1.AlertsNrqlCondition
-				err = k8sClient.Get(ctx, namespacedName, &endStatePolicy)
+				var endStateAlertsPolicy nrv1.AlertsPolicy
+				var endStateCondition nrv1.ApmAlertCondition
+				err = k8sClient.Get(ctx, namespacedName, &endStateAlertsPolicy)
 				Expect(err).To(BeNil())
 
+				Expect(endStateAlertsPolicy.Status.AppliedSpec.Conditions[0].Name).To(Equal(initialConditionName))
 				conditionNameType := types.NamespacedName{
-					Name:      endStatePolicy.Spec.Conditions[0].Name,
-					Namespace: endStatePolicy.Spec.Conditions[0].Namespace,
+					Name:      endStateAlertsPolicy.Status.AppliedSpec.Conditions[0].Name,
+					Namespace: endStateAlertsPolicy.Status.AppliedSpec.Conditions[0].Namespace,
 				}
 				err = k8sClient.Get(ctx, conditionNameType, &endStateCondition)
 				Expect(err).To(BeNil())
-				Expect(endStateCondition.Spec.Name).To(Equal("second alert condition"))
+				Expect(endStateCondition.Name).To(Equal(initialConditionName))
+				Expect(endStateCondition.Spec.Name).To(Equal("APM Condition"))
 			})
+
+		})
+
+		Context("and updating that alertspolicy", func() {
+			BeforeEach(func() {
+				alertspolicy.Spec.IncidentPreference = "PER_CONDITION_AND_TARGET"
+			})
+
+			It("should successfully update", func() {
+				err := k8sClient.Update(ctx, alertspolicy)
+				Expect(err).ToNot(HaveOccurred())
+
+				// Need to call reconcile to update the condition
+				_, err = r.Reconcile(request)
+				Expect(err).ToNot(HaveOccurred())
+
+				var endStateAlertsPolicy nrv1.AlertsPolicy
+				err = k8sClient.Get(ctx, namespacedName, &endStateAlertsPolicy)
+				Expect(err).To(BeNil())
+				Expect(mockAlertsClient.UpdatePolicyMutationCallCount()).To(Equal(1))
+
+			})
+
+		})
+
+		Context("and updating a condition name", func() {
+			BeforeEach(func() {
+				//clear out the Name and Namespace since those aren't stored in yaml so are blank when applying yaml
+				alertspolicy.Spec.Conditions[0].Name = ""
+				alertspolicy.Spec.Conditions[0].Namespace = ""
+				alertspolicy.Spec.Conditions[0].Spec.Name = "New conditionName"
+			})
+
+			It("should create a new apm condition with the new name", func() {
+				originalConditionName := alertspolicy.Status.AppliedSpec.Conditions[0].Name
+
+				err := k8sClient.Update(ctx, alertspolicy)
+				Expect(err).ToNot(HaveOccurred())
+
+				// Need to call reconcile to update the condition
+				_, err = r.Reconcile(request)
+				Expect(err).ToNot(HaveOccurred())
+
+				var endStateAlertsPolicy nrv1.AlertsPolicy
+				var endStateCondition nrv1.ApmAlertCondition
+				err = k8sClient.Get(ctx, namespacedName, &endStateAlertsPolicy)
+				Expect(err).To(BeNil())
+				conditionNameType := types.NamespacedName{
+					Name:      endStateAlertsPolicy.Spec.Conditions[0].Name,
+					Namespace: endStateAlertsPolicy.Spec.Conditions[0].Namespace,
+				}
+				err = k8sClient.Get(ctx, conditionNameType, &endStateCondition)
+				Expect(err).To(BeNil())
+				Expect(endStateCondition.Spec.Name).To(Equal("New conditionName"))
+				Expect(endStateCondition.Name).ToNot(Equal(originalConditionName))
+			})
+
+			It("should delete the old condition ", func() {
+				originalConditionName := alertspolicy.Status.AppliedSpec.Conditions[0].Name
+
+				err := k8sClient.Update(ctx, alertspolicy)
+				Expect(err).ToNot(HaveOccurred())
+
+				// Need to call reconcile to update the condition
+				_, err = r.Reconcile(request)
+				Expect(err).ToNot(HaveOccurred())
+
+				var endStateAlertsPolicy nrv1.AlertsPolicy
+				err = k8sClient.Get(ctx, namespacedName, &endStateAlertsPolicy)
+				Expect(err).To(BeNil())
+
+				var originalCondition nrv1.ApmAlertCondition
+				originalConditionNamespaceType := types.NamespacedName{
+					Name:      originalConditionName,
+					Namespace: endStateAlertsPolicy.Spec.Conditions[0].Namespace,
+				}
+				err = k8sClient.Get(ctx, originalConditionNamespaceType, &originalCondition)
+				Expect(err).ToNot(BeNil())
+				Expect(originalCondition.Spec.Name).To(Equal(""))
+			})
+
+		})
+
+		Context("and updating a condition ", func() {
+			BeforeEach(func() {
+				//clear out the Name and Namespace since those aren't stored in yaml so are blank when appling yaml
+				alertspolicy.Spec.Conditions[0].Name = ""
+				alertspolicy.Spec.Conditions[0].Namespace = ""
+				alertspolicy.Spec.Conditions[0].Spec.Metric = "Custom/bar"
+			})
+
+			It("should update the existing ApmAlertCondition with the updated spec", func() {
+				originalConditionName := alertspolicy.Status.AppliedSpec.Conditions[0].Name
+
+				err := k8sClient.Update(ctx, alertspolicy)
+				Expect(err).ToNot(HaveOccurred())
+
+				// Need to call reconcile to update the condition
+				_, err = r.Reconcile(request)
+				Expect(err).ToNot(HaveOccurred())
+
+				var endStateAlertsPolicy nrv1.AlertsPolicy
+				var endStateCondition nrv1.ApmAlertCondition
+				err = k8sClient.Get(ctx, namespacedName, &endStateAlertsPolicy)
+				Expect(err).To(BeNil())
+				conditionNameType := types.NamespacedName{
+					Name:      endStateAlertsPolicy.Spec.Conditions[0].Name,
+					Namespace: endStateAlertsPolicy.Spec.Conditions[0].Namespace,
+				}
+				err = k8sClient.Get(ctx, conditionNameType, &endStateCondition)
+				Expect(err).To(BeNil())
+				Expect(endStateCondition.Spec.Metric).To(Equal("Custom/bar"))
+				Expect(endStateCondition.Name).To(Equal(originalConditionName))
+
+			})
+
+			It("should set the inherited values on the updated condition", func() {
+				originalConditionName := alertspolicy.Status.AppliedSpec.Conditions[0].Name
+
+				err := k8sClient.Update(ctx, alertspolicy)
+				Expect(err).ToNot(HaveOccurred())
+
+				// Need to call reconcile to update the condition
+				_, err = r.Reconcile(request)
+				Expect(err).ToNot(HaveOccurred())
+
+				var endStateAlertsPolicy nrv1.AlertsPolicy
+				var endStateCondition nrv1.ApmAlertCondition
+				err = k8sClient.Get(ctx, namespacedName, &endStateAlertsPolicy)
+				Expect(err).To(BeNil())
+				conditionNameType := types.NamespacedName{
+					Name:      endStateAlertsPolicy.Spec.Conditions[0].Name,
+					Namespace: endStateAlertsPolicy.Spec.Conditions[0].Namespace,
+				}
+				err = k8sClient.Get(ctx, conditionNameType, &endStateCondition)
+				Expect(err).To(BeNil())
+				Expect(endStateCondition.Name).To(Equal(originalConditionName))
+				Expect(endStateCondition.Spec.Region).To(Equal("us"))
+				Expect(endStateCondition.Spec.APIKey).To(Equal("112233"))
+
+			})
+
+		})
+
+		Context("and adding another apm condition ", func() {
+			BeforeEach(func() {
+				secondConditionSpec := nrv1.AlertsPolicyConditionSpec{
+					AlertsGenericConditionSpec: nrv1.AlertsGenericConditionSpec{
+						Terms: []nrv1.AlertsNrqlConditionTerm{
+							{
+								ThresholdDuration:    30,
+								Operator:             "above",
+								Priority:             "critical",
+								Threshold:            "1.5",
+								ThresholdOccurrences: alerts.ThresholdOccurrences.All,
+							},
+						},
+						Type:       "apm_app_metric",
+						Name:       "Second APM Condition",
+						RunbookURL: "http://test.com/runbook",
+						Enabled:    true,
+					},
+					AlertsNrqlSpecificSpec: nrv1.AlertsNrqlSpecificSpec{},
+					AlertsAPMSpecificSpec: nrv1.AlertsAPMSpecificSpec{
+						Metric:              "Custom/foo",
+						UserDefined:         alerts.ConditionUserDefined{},
+						Scope:               "application",
+						Entities:            []string{"333"},
+						GCMetric:            "",
+						ViolationCloseTimer: 60,
+					},
+				}
+				secondCondition := nrv1.AlertsPolicyCondition{
+					Spec: secondConditionSpec,
+				}
+
+				alertspolicy.Spec.Conditions = append(alertspolicy.Spec.Conditions, secondCondition)
+			})
+
+			It("should add second condition ", func() {
+				err := k8sClient.Update(ctx, alertspolicy)
+				Expect(err).ToNot(HaveOccurred())
+
+				// Need to call reconcile to update the condition
+				_, err = r.Reconcile(request)
+				Expect(err).ToNot(HaveOccurred())
+
+				var endStateAlertsPolicy nrv1.AlertsPolicy //test-alertspolicy1942898816
+				var endStateCondition nrv1.ApmAlertCondition
+				err = k8sClient.Get(ctx, namespacedName, &endStateAlertsPolicy) //1942898816
+				Expect(err).To(BeNil())
+				conditionNameType := types.NamespacedName{
+					Name:      endStateAlertsPolicy.Spec.Conditions[1].Name,
+					Namespace: endStateAlertsPolicy.Spec.Conditions[1].Namespace,
+				}
+				err = k8sClient.Get(ctx, conditionNameType, &endStateCondition)
+				Expect(err).To(BeNil())
+				Expect(endStateCondition.Spec.Name).To(Equal("Second APM Condition"))
+				Expect(endStateCondition.Spec.Region).To(Equal("us"))
+				Expect(endStateCondition.Spec.APIKey).To(Equal("112233"))
+			})
+
 		})
 
 		Context("and when the alerts client returns an error", func() {
@@ -759,23 +1111,240 @@ var _ = Describe("policy reconciliation", func() {
 				mockAlertsClient.UpdatePolicyMutationStub = func(int, string, alerts.AlertsPolicyUpdateInput) (*alerts.AlertsPolicy, error) {
 					return &alerts.AlertsPolicy{}, errors.New("oh no")
 				}
-				policy.Spec.IncidentPreference = "PER_CONDITION_AND_TARGET"
+				alertspolicy.Spec.IncidentPreference = "PER_CONDITION_AND_TARGET"
 			})
 			It("should return an error", func() {
-				err := k8sClient.Update(ctx, policy)
+				err := k8sClient.Update(ctx, alertspolicy)
 				Expect(err).ToNot(HaveOccurred())
 
+				// Need to call reconcile to update the condition
 				_, err = r.Reconcile(request)
 				Expect(err).To(HaveOccurred())
 			})
 		})
 
 		AfterEach(func() {
-			err := k8sClient.Delete(ctx, policy)
+			err := k8sClient.Delete(ctx, alertspolicy)
 			Expect(err).ToNot(HaveOccurred())
 
+			// Need to call reconcile to delete finalizer
 			_, err = r.Reconcile(request)
 			Expect(err).ToNot(HaveOccurred())
 		})
+
 	})
+
+	Context("When starting with an existing alertspolicy with two NRQL conditions", func() {
+		BeforeEach(func() {
+			conditionSpec = &nrv1.AlertsPolicyConditionSpec{
+				nrv1.AlertsGenericConditionSpec{
+					Terms: []nrv1.AlertsNrqlConditionTerm{
+						{
+							ThresholdDuration:    30,
+							Operator:             "above",
+							Priority:             "critical",
+							Threshold:            "5",
+							ThresholdOccurrences: alerts.ThresholdOccurrences.All,
+						},
+					},
+					Type:       "NRQL",
+					Name:       "NRQL Condition",
+					RunbookURL: "http://test.com/runbook",
+					Enabled:    true,
+				},
+				nrv1.AlertsNrqlSpecificSpec{
+					Nrql: alerts.NrqlConditionQuery{
+						Query:            "SELECT 1 FROM MyEvents",
+						EvaluationOffset: 5,
+					},
+					ValueFunction:      &alerts.NrqlConditionValueFunctions.SingleValue,
+					ViolationTimeLimit: "60",
+					ExpectedGroups:     2,
+					IgnoreOverlap:      true,
+				},
+				nrv1.AlertsAPMSpecificSpec{},
+			}
+
+			alertspolicy = &nrv1.AlertsPolicy{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "test-alertspolicy",
+					Namespace: "default",
+				},
+				Spec: nrv1.AlertsPolicySpec{
+					Name:               "test alertspolicy",
+					APIKey:             "112233",
+					IncidentPreference: "PER_POLICY",
+					Region:             "us",
+					Conditions: []nrv1.AlertsPolicyCondition{
+						{
+							Spec: *conditionSpec,
+						},
+					},
+				},
+				Status: nrv1.AlertsPolicyStatus{
+					AppliedSpec: &nrv1.AlertsPolicySpec{},
+					PolicyID:    "",
+				},
+			}
+
+			secondConditionSpec := nrv1.AlertsPolicyConditionSpec{
+				nrv1.AlertsGenericConditionSpec{
+					Terms: []nrv1.AlertsNrqlConditionTerm{
+						{
+							ThresholdDuration:    30,
+							Operator:             "above",
+							Priority:             "critical",
+							Threshold:            "5",
+							ThresholdOccurrences: alerts.ThresholdOccurrences.All,
+						},
+					},
+					Type:       "NRQL",
+					Name:       "second alert condition",
+					RunbookURL: "http://test.com/runbook",
+					Enabled:    true,
+				},
+				nrv1.AlertsNrqlSpecificSpec{
+					Nrql: alerts.NrqlConditionQuery{
+						Query:            "SELECT 1 FROM MyEvents",
+						EvaluationOffset: 5,
+					},
+					ValueFunction:      &alerts.NrqlConditionValueFunctions.SingleValue,
+					ViolationTimeLimit: "60",
+					ExpectedGroups:     2,
+					IgnoreOverlap:      true,
+				},
+				nrv1.AlertsAPMSpecificSpec{},
+			}
+			secondCondition := nrv1.AlertsPolicyCondition{
+				Spec: secondConditionSpec,
+			}
+
+			alertspolicy.Spec.Conditions = append(alertspolicy.Spec.Conditions, secondCondition)
+
+			err := k8sClient.Create(ctx, alertspolicy)
+			Expect(err).ToNot(HaveOccurred())
+			// call reconcile
+			_, err = r.Reconcile(request)
+			Expect(err).ToNot(HaveOccurred())
+
+			Expect(mockAlertsClient.CreatePolicyMutationCallCount()).To(Equal(1))
+			Expect(mockAlertsClient.UpdatePolicyMutationCallCount()).To(Equal(0))
+
+			// change the event after creation via reconciliation
+			err = k8sClient.Get(ctx, namespacedName, alertspolicy)
+			Expect(err).ToNot(HaveOccurred())
+
+			deletedConditionNamespace = types.NamespacedName{
+				Namespace: alertspolicy.Spec.Conditions[1].Namespace,
+				Name:      alertspolicy.Spec.Conditions[1].Name,
+			}
+		})
+
+		Context("and removing the second condition ", func() {
+			BeforeEach(func() {
+
+				alertspolicy.Spec.Conditions = []nrv1.AlertsPolicyCondition{alertspolicy.Spec.Conditions[0]}
+
+			})
+
+			It("should remove second condition ", func() {
+				alertspolicy.Spec.Conditions[0].Name = ""
+				alertspolicy.Spec.Conditions[0].Namespace = ""
+
+				err := k8sClient.Update(ctx, alertspolicy)
+				Expect(err).ToNot(HaveOccurred())
+
+				// Need to call reconcile to update the condition
+				_, err = r.Reconcile(request)
+				Expect(err).ToNot(HaveOccurred())
+
+				var endStateAlertsPolicy nrv1.AlertsPolicy
+				var endStateCondition nrv1.AlertsNrqlCondition
+				err = k8sClient.Get(ctx, namespacedName, &endStateAlertsPolicy)
+				Expect(err).To(BeNil())
+				conditionNameType := types.NamespacedName{
+					Name:      endStateAlertsPolicy.Spec.Conditions[0].Name,
+					Namespace: endStateAlertsPolicy.Spec.Conditions[0].Namespace,
+				}
+				err = k8sClient.Get(ctx, conditionNameType, &endStateCondition)
+				Expect(err).To(BeNil())
+				Expect(endStateCondition.Spec.Name).To(Equal("NRQL Condition"))
+				Expect(len(endStateAlertsPolicy.Spec.Conditions)).To(Equal(1))
+				var deletedCondition nrv1.AlertsNrqlCondition
+				Expect(deletedConditionNamespace.Name).ToNot(Equal(endStateCondition.Name))
+				err = k8sClient.Get(ctx, deletedConditionNamespace, &deletedCondition)
+				Expect(err).ToNot(BeNil())
+				Expect(deletedCondition.Name).To(Equal(""))
+
+			})
+
+			It("should not call the alerts API ", func() {
+				err := k8sClient.Update(ctx, alertspolicy)
+				Expect(err).ToNot(HaveOccurred())
+
+				// Need to call reconcile to update the condition
+				_, err = r.Reconcile(request)
+				Expect(err).ToNot(HaveOccurred())
+				Expect(mockAlertsClient.UpdatePolicyMutationCallCount()).To(Equal(0))
+			})
+
+		})
+
+		Context("and removing the first condition ", func() {
+			BeforeEach(func() {
+				alertspolicy.Spec.Conditions = []nrv1.AlertsPolicyCondition{alertspolicy.Spec.Conditions[1]}
+
+			})
+
+			It("should remove first condition ", func() {
+				err := k8sClient.Update(ctx, alertspolicy)
+				Expect(err).ToNot(HaveOccurred())
+
+				// Need to call reconcile to update the condition
+				_, err = r.Reconcile(request)
+				Expect(err).ToNot(HaveOccurred())
+
+				var endStateAlertsPolicy nrv1.AlertsPolicy //test-alertspolicy1942898816
+				var endStateCondition nrv1.AlertsNrqlCondition
+				err = k8sClient.Get(ctx, namespacedName, &endStateAlertsPolicy) //1942898816
+				Expect(err).To(BeNil())
+				conditionNameType := types.NamespacedName{
+					Name:      endStateAlertsPolicy.Spec.Conditions[0].Name,
+					Namespace: endStateAlertsPolicy.Spec.Conditions[0].Namespace,
+				}
+				err = k8sClient.Get(ctx, conditionNameType, &endStateCondition)
+				Expect(err).To(BeNil())
+				Expect(endStateCondition.Spec.Name).To(Equal("second alert condition"))
+			})
+
+		})
+
+		Context("and when the alerts client returns an error", func() {
+			BeforeEach(func() {
+				mockAlertsClient.UpdatePolicyMutationStub = func(int, string, alerts.AlertsPolicyUpdateInput) (*alerts.AlertsPolicy, error) {
+					return &alerts.AlertsPolicy{}, errors.New("oh no")
+				}
+				alertspolicy.Spec.IncidentPreference = "PER_CONDITION_AND_TARGET"
+			})
+			It("should return an error", func() {
+				err := k8sClient.Update(ctx, alertspolicy)
+				Expect(err).ToNot(HaveOccurred())
+
+				// Need to call reconcile to update the condition
+				_, err = r.Reconcile(request)
+				Expect(err).To(HaveOccurred())
+			})
+		})
+
+		AfterEach(func() {
+			err := k8sClient.Delete(ctx, alertspolicy)
+			Expect(err).ToNot(HaveOccurred())
+
+			// Need to call reconcile to delete finalizer
+			_, err = r.Reconcile(request)
+			Expect(err).ToNot(HaveOccurred())
+		})
+
+	})
+
 })

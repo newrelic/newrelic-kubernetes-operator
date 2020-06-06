@@ -40,15 +40,15 @@ type AlertsPolicySpec struct {
 
 //AlertsPolicyCondition defined the conditions contained within an AlertsPolicy
 type AlertsPolicyCondition struct {
-	Name      string                  `json:"name"`
-	Namespace string                  `json:"namespace"`
-	Spec      AlertsNrqlConditionSpec `json:"spec,omitempty"`
+	Name      string                    `json:"name"`
+	Namespace string                    `json:"namespace"`
+	Spec      AlertsPolicyConditionSpec `json:"spec,omitempty"`
 }
 
-type AlertsConditionSpec struct {
+type AlertsPolicyConditionSpec struct {
 	AlertsGenericConditionSpec `json:",inline"`
 	AlertsNrqlSpecificSpec     `json:",inline"`
-	APMSpecificSpec            `json:",inline"`
+	AlertsAPMSpecificSpec      `json:",inline"`
 }
 
 // AlertsPolicyStatus defines the observed state of AlertsPolicy

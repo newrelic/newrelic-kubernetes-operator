@@ -361,14 +361,14 @@ func (r *AlertsPolicyReconciler) createNrqlCondition(policy *nrv1.AlertsPolicy, 
 	alertsNrqlCondition.GenerateName = policy.Name + "-condition-"
 	alertsNrqlCondition.Namespace = policy.Namespace
 	alertsNrqlCondition.Labels = policy.Labels
-	alertsNrqlCondition.Spec = condition.Spec
+	alertsNrqlCondition.Spec = condition.ReturnNrqlConditionSpec()
 	alertsNrqlCondition.Spec.Region = policy.Spec.Region
 	alertsNrqlCondition.Spec.ExistingPolicyID = policy.Status.PolicyID
 	alertsNrqlCondition.Spec.APIKey = policy.Spec.APIKey
 	alertsNrqlCondition.Spec.APIKeySecret = policy.Spec.APIKeySecret
 	alertsNrqlCondition.Status.AppliedSpec = &nrv1.AlertsNrqlConditionSpec{}
 
-	r.Log.Info("creating condition", "condition", condition.Name, "conditionName", condition.Spec.Name, "nrqlAlertCondition", alertsNrqlCondition)
+	r.Log.Info("creating condition", "condition", condition.Name, "conditionName", condition.Spec.Name, "alertsNrqlCondition", alertsNrqlCondition)
 
 	errCondition := r.Create(r.ctx, &alertsNrqlCondition)
 	if errCondition != nil {
@@ -379,7 +379,7 @@ func (r *AlertsPolicyReconciler) createNrqlCondition(policy *nrv1.AlertsPolicy, 
 	condition.Name = alertsNrqlCondition.Name
 	condition.Namespace = alertsNrqlCondition.Namespace
 
-	r.Log.Info("created condition", "condition", condition.Name, "conditionName", condition.Spec.Name, "nrqlAlertCondition", alertsNrqlCondition)
+	r.Log.Info("created condition", "condition", condition.Name, "conditionName", condition.Spec.Name, "alertsNrqlCondition", alertsNrqlCondition)
 
 	return nil
 }

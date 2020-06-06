@@ -3,6 +3,8 @@
 package v1
 
 import (
+	"context"
+
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
@@ -80,12 +82,12 @@ var _ = Describe("AlertsPolicy_webhooks", func() {
 						"my-api-key": []byte("data_here"),
 					},
 				}
-				k8Client.Create(ctx, secret)
+				k8Client.Create(context.Background(), secret)
 				err := r.ValidateCreate()
 				Expect(err).ToNot(HaveOccurred())
 			})
 			AfterEach(func() {
-				k8Client.Delete(ctx, secret)
+				k8Client.Delete(context.Background(), secret)
 			})
 		})
 
@@ -100,56 +102,58 @@ var _ = Describe("AlertsPolicy_webhooks", func() {
 
 		Context("when given a policy with duplicate conditions", func() {
 			BeforeEach(func() {
+				spec1 := AlertsPolicyConditionSpec{}
+				spec1.Terms = []AlertsNrqlConditionTerm{
+					{
+						Operator:             alerts.NrqlConditionOperators.Above,
+						Priority:             alerts.NrqlConditionPriorities.Critical,
+						Threshold:            "5",
+						ThresholdDuration:    60,
+						ThresholdOccurrences: alerts.ThresholdOccurrences.AtLeastOnce,
+					},
+				}
+				spec1.Nrql = alerts.NrqlConditionQuery{
+					Query:            "SELECT 1 FROM MyEvents",
+					EvaluationOffset: 5,
+				}
+				spec1.Type = "NRQL"
+				spec1.Name = "NRQL Condition"
+				spec1.RunbookURL = "http://test.com/runbook"
+				spec1.ValueFunction = &alerts.NrqlConditionValueFunctions.SingleValue
+				spec1.ViolationTimeLimit = alerts.NrqlConditionViolationTimeLimits.OneHour
+				spec1.ExpectedGroups = 2
+				spec1.IgnoreOverlap = true
+				spec1.Enabled = true
+
+				spec2 := AlertsPolicyConditionSpec{}
+				spec2.Terms = []AlertsNrqlConditionTerm{
+					{
+						Operator:             alerts.NrqlConditionOperators.Above,
+						Priority:             alerts.NrqlConditionPriorities.Critical,
+						Threshold:            "5",
+						ThresholdDuration:    60,
+						ThresholdOccurrences: alerts.ThresholdOccurrences.AtLeastOnce,
+					},
+				}
+				spec2.Nrql = alerts.NrqlConditionQuery{
+					Query:            "SELECT 1 FROM MyEvents",
+					EvaluationOffset: 5,
+				}
+				spec2.Type = "NRQL"
+				spec2.Name = "NRQL Condition"
+				spec2.RunbookURL = "http://test.com/runbook"
+				spec2.ValueFunction = &alerts.NrqlConditionValueFunctions.SingleValue
+				spec2.ViolationTimeLimit = alerts.NrqlConditionViolationTimeLimits.OneHour
+				spec2.ExpectedGroups = 2
+				spec2.IgnoreOverlap = true
+				spec2.Enabled = true
+
 				r.Spec.Conditions = []AlertsPolicyCondition{
 					{
-						Spec: AlertsNrqlConditionSpec{
-							Terms: []AlertsNrqlConditionTerm{
-								{
-									Operator:             alerts.NrqlConditionOperators.Above,
-									Priority:             alerts.NrqlConditionPriorities.Critical,
-									Threshold:            "5",
-									ThresholdDuration:    60,
-									ThresholdOccurrences: alerts.ThresholdOccurrences.AtLeastOnce,
-								},
-							},
-							Nrql: alerts.NrqlConditionQuery{
-								Query:            "SELECT 1 FROM MyEvents",
-								EvaluationOffset: 5,
-							},
-							Type:               "NRQL",
-							Name:               "NRQL Condition",
-							RunbookURL:         "http://test.com/runbook",
-							ValueFunction:      &alerts.NrqlConditionValueFunctions.SingleValue,
-							ViolationTimeLimit: alerts.NrqlConditionViolationTimeLimits.OneHour,
-							ExpectedGroups:     2,
-							IgnoreOverlap:      true,
-							Enabled:            true,
-						},
+						Spec: spec1,
 					},
 					{
-						Spec: AlertsNrqlConditionSpec{
-							Terms: []AlertsNrqlConditionTerm{
-								{
-									Operator:             alerts.NrqlConditionOperators.Above,
-									Priority:             alerts.NrqlConditionPriorities.Critical,
-									Threshold:            "5",
-									ThresholdDuration:    60,
-									ThresholdOccurrences: alerts.ThresholdOccurrences.AtLeastOnce,
-								},
-							},
-							Nrql: alerts.NrqlConditionQuery{
-								Query:            "SELECT 1 FROM MyEvents",
-								EvaluationOffset: 5,
-							},
-							Type:               "NRQL",
-							Name:               "NRQL Condition",
-							RunbookURL:         "http://test.com/runbook",
-							ValueFunction:      &alerts.NrqlConditionValueFunctions.SingleValue,
-							ViolationTimeLimit: alerts.NrqlConditionViolationTimeLimits.OneHour,
-							ExpectedGroups:     2,
-							IgnoreOverlap:      true,
-							Enabled:            true,
-						},
+						Spec: spec2,
 					},
 				}
 			})
@@ -178,6 +182,29 @@ var _ = Describe("AlertsPolicy_webhooks", func() {
 		var (
 			r AlertsPolicy
 		)
+		conditionSpec := AlertsPolicyConditionSpec{}
+		conditionSpec.Terms = []AlertsNrqlConditionTerm{
+			{
+				Operator:             alerts.NrqlConditionOperators.Above,
+				Priority:             alerts.NrqlConditionPriorities.Critical,
+				Threshold:            "5",
+				ThresholdDuration:    60,
+				ThresholdOccurrences: alerts.ThresholdOccurrences.AtLeastOnce,
+			},
+		}
+		conditionSpec.Nrql = alerts.NrqlConditionQuery{
+			Query:            "SELECT 1 FROM MyEvents",
+			EvaluationOffset: 5,
+		}
+		conditionSpec.Type = "NRQL"
+		conditionSpec.Name = "NRQL Condition"
+		conditionSpec.RunbookURL = "http://test.com/runbook"
+		conditionSpec.ValueFunction = &alerts.NrqlConditionValueFunctions.SingleValue
+		conditionSpec.ViolationTimeLimit = alerts.NrqlConditionViolationTimeLimits.OneHour
+		conditionSpec.ExpectedGroups = 2
+		conditionSpec.IgnoreOverlap = true
+		conditionSpec.Enabled = true
+
 		r = AlertsPolicy{
 			Spec: AlertsPolicySpec{
 				Name:               "Test AlertsPolicy",
@@ -185,29 +212,7 @@ var _ = Describe("AlertsPolicy_webhooks", func() {
 				APIKey:             "api-key",
 				Conditions: []AlertsPolicyCondition{
 					{
-						Spec: AlertsNrqlConditionSpec{
-							Terms: []AlertsNrqlConditionTerm{
-								{
-									Operator:             alerts.NrqlConditionOperators.Above,
-									Priority:             alerts.NrqlConditionPriorities.Critical,
-									Threshold:            "5",
-									ThresholdDuration:    60,
-									ThresholdOccurrences: alerts.ThresholdOccurrences.AtLeastOnce,
-								},
-							},
-							Nrql: alerts.NrqlConditionQuery{
-								Query:            "SELECT 1 FROM MyEvents",
-								EvaluationOffset: 5,
-							},
-							Type:               "NRQL",
-							Name:               "NRQL Condition",
-							RunbookURL:         "http://test.com/runbook",
-							ValueFunction:      &alerts.NrqlConditionValueFunctions.SingleValue,
-							ViolationTimeLimit: alerts.NrqlConditionViolationTimeLimits.OneHour,
-							ExpectedGroups:     2,
-							IgnoreOverlap:      true,
-							Enabled:            true,
-						},
+						Spec: conditionSpec,
 					},
 				},
 			},
