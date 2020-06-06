@@ -10,7 +10,6 @@ import (
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	"k8s.io/apimachinery/pkg/api/resource"
 )
 
 var _ = Describe("NrqlAlertConditionSpec", func() {
@@ -18,29 +17,33 @@ var _ = Describe("NrqlAlertConditionSpec", func() {
 
 	BeforeEach(func() {
 		condition = NrqlAlertConditionSpec{
-			Terms: []AlertConditionTerm{
-				{
-					Duration:     resource.MustParse("30"),
-					Operator:     "above",
-					Priority:     "critical",
-					Threshold:    resource.MustParse("5"),
-					TimeFunction: "all",
+			GenericConditionSpec{
+				Terms: []AlertConditionTerm{
+					{
+						Duration:     "30",
+						Operator:     "above",
+						Priority:     "critical",
+						Threshold:    "5",
+						TimeFunction: "all",
+					},
+				},
+				Type:             "NRQL",
+				Name:             "NRQL Condition",
+				RunbookURL:       "http://test.com/runbook",
+				ID:               777,
+				Enabled:          true,
+				ExistingPolicyID: 42,
+			},
+			NrqlSpecificSpec{
+				ViolationCloseTimer: 60,
+				ExpectedGroups:      2,
+				IgnoreOverlap:       true,
+				ValueFunction:       "max",
+				Nrql: NrqlQuery{
+					Query:      "SELECT 1 FROM MyEvents",
+					SinceValue: "5",
 				},
 			},
-			Nrql: NrqlQuery{
-				Query:      "SELECT 1 FROM MyEvents",
-				SinceValue: "5",
-			},
-			Type:                "NRQL",
-			Name:                "NRQL Condition",
-			RunbookURL:          "http://test.com/runbook",
-			ValueFunction:       "max",
-			ID:                  777,
-			ViolationCloseTimer: 60,
-			ExpectedGroups:      2,
-			IgnoreOverlap:       true,
-			Enabled:             true,
-			ExistingPolicyID:    42,
 		}
 	})
 
@@ -54,7 +57,6 @@ var _ = Describe("NrqlAlertConditionSpec", func() {
 			Expect(apiCondition.Name).To(Equal("NRQL Condition"))
 			Expect(apiCondition.RunbookURL).To(Equal("http://test.com/runbook"))
 			Expect(apiCondition.ValueFunction).To(Equal(alerts.ValueFunctionTypes.Max))
-			//Expect(apiCondition.PolicyID).To(Equal(42))
 			Expect(apiCondition.ID).To(Equal(777))
 			Expect(apiCondition.ViolationCloseTimer).To(Equal(60))
 			Expect(apiCondition.ExpectedGroups).To(Equal(2))

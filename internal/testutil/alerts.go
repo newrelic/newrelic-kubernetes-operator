@@ -78,6 +78,38 @@ func NewTestAlertsNrqlCondition(t *testing.T) *nrv1.AlertsNrqlCondition {
 
 	accountID, err := strconv.Atoi(os.Getenv("NEW_RELIC_ACCOUNT_ID"))
 	assert.NoError(t, err)
+	conditionSpec = nrv1.AlertsNrqlConditionSpec{
+		APIKey:    "nraa-key",
+		AccountID: accountID,
+		GenericConditionSpec: nrv1.GenericConditionSpec{
+			Terms: []nrv1.AlertConditionTerm{
+				{
+					Duration:     "30",
+					Operator:     "above",
+					Priority:     "critical",
+					Threshold:    "5",
+					TimeFunction: "all",
+				},
+			},
+			Type:       "NRQL",
+			Name:       "NRQL Condition",
+			RunbookURL: "http://test.com/runbook",
+			ID:         777,
+
+			Enabled:          true,
+			ExistingPolicyID: 42,
+		},
+		NrqlSpecificSpec: nrv1.NrqlSpecificSpec{
+			ViolationCloseTimer: 60,
+			ExpectedGroups:      2,
+			IgnoreOverlap:       true,
+			ValueFunction:       "max",
+			Nrql: nrv1.NrqlQuery{
+				Query:      "SELECT 1 FROM MyEvents",
+				SinceValue: "5",
+			},
+		},
+	}
 
 	return &nrv1.AlertsNrqlCondition{
 		ObjectMeta: metav1.ObjectMeta{
@@ -85,38 +117,11 @@ func NewTestAlertsNrqlCondition(t *testing.T) *nrv1.AlertsNrqlCondition {
 			Namespace: "default",
 		},
 
-		// TODO make use of NewTestAlertsNrqlConditionSpec()
-		Spec: nrv1.AlertsNrqlConditionSpec{
-			APIKey:    "nraa-key",
-			AccountID: accountID,
-			Terms: []nrv1.AlertsNrqlConditionTerm{
-				{
-					Operator:             alerts.NrqlConditionOperators.Above,
-					Priority:             alerts.NrqlConditionPriorities.Critical,
-					Threshold:            "5",
-					ThresholdDuration:    60,
-					ThresholdOccurrences: alerts.ThresholdOccurrences.AtLeastOnce,
-				},
-			},
-			Nrql: alerts.NrqlConditionQuery{
-				Query:            "SELECT 1 FROM MyEvents",
-				EvaluationOffset: 5,
-			},
-			Type:               "NRQL",
-			Name:               "NRQL Condition",
-			RunbookURL:         "http://test.com/runbook",
-			ValueFunction:      &alerts.NrqlConditionValueFunctions.SingleValue,
-			ViolationTimeLimit: alerts.NrqlConditionViolationTimeLimits.OneHour,
-			ExpectedGroups:     2,
-			IgnoreOverlap:      true,
-			Enabled:            true,
-		},
+		Spec: conditionSpec,
 		Status: nrv1.AlertsNrqlConditionStatus{
 			AppliedSpec: &nrv1.AlertsNrqlConditionSpec{},
-			// ConditionID: 0,
 		},
 	}
-
 }
 
 func NewTestAlertsNrqlConditionSpec(t *testing.T) *nrv1.AlertsNrqlConditionSpec {

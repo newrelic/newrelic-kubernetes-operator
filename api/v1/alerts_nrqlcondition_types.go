@@ -9,23 +9,32 @@ import (
 
 // AlertsNrqlConditionSpec defines the desired state of AlertsNrqlCondition
 type AlertsNrqlConditionSpec struct {
-	Enabled            bool                                   `json:"enabled"`
-	IgnoreOverlap      bool                                   `json:"ignore_overlap,omitempty"`
-	APIKey             string                                 `json:"api_key,omitempty"`
-	APIKeySecret       NewRelicAPIKeySecret                   `json:"api_key_secret,omitempty"`
-	AccountID          int                                    `json:"account_id,omitempty"`
+	AlertsGenericConditionSpec `json:",inline"`
+	AlertsNrqlSpecificSpec     `json:",inline"`
+}
+
+// AlertsNrqlConditionSpec defines the desired state of AlertsNrqlCondition
+type AlertsGenericConditionSpec struct {
+	Enabled          bool                      `json:"enabled"`
+	APIKey           string                    `json:"api_key,omitempty"`
+	APIKeySecret     NewRelicAPIKeySecret      `json:"api_key_secret,omitempty"`
+	AccountID        int                       `json:"account_id,omitempty"`
+	ExistingPolicyID string                    `json:"existing_policy_id,omitempty"`
+	ID               int                       `json:"id,omitempty"`
+	Name             string                    `json:"name,omitempty"`
+	PolicyID         int                       `json:"-"`
+	Region           string                    `json:"region,omitempty"`
+	RunbookURL       string                    `json:"runbookUrl,omitempty"`
+	Terms            []AlertsNrqlConditionTerm `json:"terms,omitempty"`
+	Type             alerts.NrqlConditionType  `json:"type,omitempty"`
+}
+
+type AlertsNrqlSpecificSpec struct {
 	Description        string                                 `json:"description,omitempty"`
-	ExistingPolicyID   string                                 `json:"existing_policy_id,omitempty"`
-	ExpectedGroups     int                                    `json:"expected_groups,omitempty"`
-	ID                 int                                    `json:"id,omitempty"`
-	Name               string                                 `json:"name,omitempty"`
 	Nrql               alerts.NrqlConditionQuery              `json:"nrql,omitempty"`
-	PolicyID           int                                    `json:"-"`
-	Region             string                                 `json:"region,omitempty"`
-	RunbookURL         string                                 `json:"runbookUrl,omitempty"`
-	Terms              []AlertsNrqlConditionTerm              `json:"terms,omitempty"`
-	Type               alerts.NrqlConditionType               `json:"type,omitempty"`
 	ValueFunction      *alerts.NrqlConditionValueFunction     `json:"valueFunction,omitempty"`
+	ExpectedGroups     int                                    `json:"expected_groups,omitempty"`
+	IgnoreOverlap      bool                                   `json:"ignore_overlap,omitempty"`
 	ViolationTimeLimit alerts.NrqlConditionViolationTimeLimit `json:"violationTimeLimit,omitempty"`
 }
 
@@ -94,7 +103,7 @@ func (in AlertsNrqlConditionSpec) ToNrqlConditionInput() alerts.NrqlConditionInp
 	// }
 
 	for _, term := range in.Terms {
-		t := alerts.NrqlConditionTerms{}
+		t := alerts.NrqlConditionTerm{}
 
 		t.Operator = term.Operator
 		t.Priority = term.Priority

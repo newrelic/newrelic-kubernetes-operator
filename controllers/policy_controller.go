@@ -90,10 +90,6 @@ func (r *PolicyReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 		return r.deletePolicy(r.ctx, &policy, deleteFinalizer)
 	}
 
-	//if reflect.DeepEqual(&policy.Spec, policy.Status.AppliedSpec) {
-	//	return ctrl.Result{}, nil
-	//}
-
 	if policy.Spec.Equals(*policy.Status.AppliedSpec) {
 		return ctrl.Result{}, nil
 	}
@@ -155,7 +151,15 @@ func (r *PolicyReconciler) createConditions(policy *nrv1.Policy) error {
 	r.Log.Info("initial policy creation so create all policies")
 	collectedErrors := new(customErrors.ErrorCollector)
 	for i, condition := range policy.Spec.Conditions {
-		err := r.createCondition(policy, &condition)
+
+		var err error
+		switch nrv1.GetConditionType(condition) {
+		case "ApmAlertCondition":
+			err = r.createApmCondition(policy, &condition)
+		case "NrqlAlertCondition":
+			err = r.createNrqlCondition(policy, &condition)
+		}
+
 		if err != nil {
 			r.Log.Error(err, "error creating condition")
 			collectedErrors.Collect(err)
@@ -195,36 +199,85 @@ func (r *PolicyReconciler) createOrUpdateCondition(policy *nrv1.Policy, conditio
 
 		if condition.Name == "" {
 			r.Log.Info("made it through all existing appliedConditions, creating a new one")
-			err := r.createCondition(policy, condition)
+
+			var err error
+			switch nrv1.GetConditionType(*condition) {
+			case "ApmAlertCondition":
+				err = r.createApmCondition(policy, condition)
+			case "NrqlAlertCondition":
+				err = r.createNrqlCondition(policy, condition)
+			}
 			return condition, err
 		}
 	}
 
-	nrqlCondition := r.getNrqlConditionFromPolicyCondition(condition)
+	var err error
+	switch nrv1.GetConditionType(*condition) {
+	case "ApmAlertCondition":
+		err = r.updateApmCondition(policy, condition)
+	case "NrqlAlertCondition":
+		err = r.updateNrqlCondition(policy, condition)
+	}
 
-	r.Log.Info("Found condition to update", "retrievedCondition", nrqlCondition)
+	return condition, err
+}
+
+func (r *PolicyReconciler) updateNrqlCondition(policy *nrv1.Policy, condition *nrv1.PolicyCondition) error {
+	nrqlAlertCondition := r.getNrqlConditionFromPolicyCondition(condition)
+
+	r.Log.Info("Found nrql condition to update", "retrievedCondition", nrqlAlertCondition)
 
 	//Now check to confirm the NrqlCondition matches our PolicyCondition
-	retrievedPolicyCondition := nrv1.PolicyCondition{Spec: nrqlCondition.Spec}
-	r.Log.Info("spec hash", "retrieved", retrievedPolicyCondition.SpecHash(), "condition", condition.SpecHash())
+	retrievedPolicyCondition := nrv1.PolicyCondition{}
+	retrievedPolicyCondition.GenerateSpecFromNrqlConditionSpec(nrqlAlertCondition.Spec)
 	r.Log.Info("conditions", "retrieved", retrievedPolicyCondition, "condition", condition)
 
 	if retrievedPolicyCondition.SpecHash() == condition.SpecHash() {
 		r.Log.Info("existing NrqlCondition matches going to next")
-		return condition, nil
+		return nil
 	}
 
 	r.Log.Info("updating existing condition", "policyRegion", policy.Spec.Region, "policyId", policy.Status.PolicyID)
 
-	nrqlCondition.Spec = condition.Spec
+	nrqlAlertCondition.Spec = condition.ReturnNrqlConditionSpec()
 	//Set inherited values
-	nrqlCondition.Spec.Region = policy.Spec.Region
-	nrqlCondition.Spec.ExistingPolicyID = policy.Status.PolicyID
-	nrqlCondition.Spec.APIKey = policy.Spec.APIKey
-	nrqlCondition.Spec.APIKeySecret = policy.Spec.APIKeySecret
+	nrqlAlertCondition.Spec.Region = policy.Spec.Region
+	nrqlAlertCondition.Spec.ExistingPolicyID = policy.Status.PolicyID
+	nrqlAlertCondition.Spec.APIKey = policy.Spec.APIKey
+	nrqlAlertCondition.Spec.APIKeySecret = policy.Spec.APIKeySecret
 
-	err := r.Client.Update(r.ctx, &nrqlCondition)
-	return condition, err
+	err := r.Client.Update(r.ctx, &nrqlAlertCondition)
+	return err
+}
+
+func (r *PolicyReconciler) updateApmCondition(policy *nrv1.Policy, condition *nrv1.PolicyCondition) error {
+	apmAlertCondition := r.getApmConditionFromPolicyCondition(condition)
+
+	r.Log.Info("Found apm condition to update", "retrievedCondition", apmAlertCondition)
+
+	//Now check to confirm the NrqlCondition matches our PolicyCondition
+	retrievedPolicyCondition := nrv1.PolicyCondition{}
+	retrievedPolicyCondition.GenerateSpecFromApmConditionSpec(apmAlertCondition.Spec)
+	r.Log.Info("conditions", "retrieved", retrievedPolicyCondition, "condition", condition)
+
+	if retrievedPolicyCondition.SpecHash() == condition.SpecHash() {
+		r.Log.Info("existing ApmCondition matches going to next")
+		return nil
+	}
+
+	r.Log.Info("updating existing condition", "policyRegion", policy.Spec.Region, "policyId", policy.Status)
+
+	apmAlertCondition.Spec = condition.ReturnApmConditionSpec()
+	//Set inherited values
+	apmAlertCondition.Spec.Region = policy.Spec.Region
+	apmAlertCondition.Spec.ExistingPolicyID = policy.Status.PolicyID
+	apmAlertCondition.Spec.APIKey = policy.Spec.APIKey
+	apmAlertCondition.Spec.APIKeySecret = policy.Spec.APIKeySecret
+
+	r.Log.Info("updating existing condition", "apmAlertCondition", apmAlertCondition)
+
+	err := r.Client.Update(r.ctx, &apmAlertCondition)
+	return err
 }
 
 func (r *PolicyReconciler) createOrUpdateConditions(policy *nrv1.Policy) error {
@@ -249,6 +302,7 @@ func (r *PolicyReconciler) createOrUpdateConditions(policy *nrv1.Policy) error {
 			r.Log.Error(err, "error creating condition")
 			collectedErrors.Collect(err)
 		}
+		r.Log.Info("processed condition", "conditionName", condition.Name, "condition", condition)
 
 		//add to the list of processed conditions
 		existingConditions[condition.Name] = processedConditions{
@@ -286,7 +340,7 @@ func (r *PolicyReconciler) createOrUpdateConditions(policy *nrv1.Policy) error {
 	return nil
 }
 
-func (r *PolicyReconciler) createCondition(policy *nrv1.Policy, condition *nrv1.PolicyCondition) error {
+func (r *PolicyReconciler) createNrqlCondition(policy *nrv1.Policy, condition *nrv1.PolicyCondition) error {
 	var nrqlAlertCondition nrv1.NrqlAlertCondition
 	nrqlAlertCondition.GenerateName = policy.Name + "-condition-"
 	nrqlAlertCondition.Namespace = policy.Namespace
@@ -294,14 +348,14 @@ func (r *PolicyReconciler) createCondition(policy *nrv1.Policy, condition *nrv1.
 	//TODO: no clue if this is needed, I'm guessing no
 	//condition.OwnerReferences: []metav1.OwnerReference{*metav1.NewControllerRef(policy, conditionKind)},
 
-	nrqlAlertCondition.Spec = condition.Spec
+	nrqlAlertCondition.Spec = condition.ReturnNrqlConditionSpec()
 	nrqlAlertCondition.Spec.Region = policy.Spec.Region
 	nrqlAlertCondition.Spec.ExistingPolicyID = policy.Status.PolicyID
 	nrqlAlertCondition.Spec.APIKey = policy.Spec.APIKey
 	nrqlAlertCondition.Spec.APIKeySecret = policy.Spec.APIKeySecret
 	nrqlAlertCondition.Status.AppliedSpec = &nrv1.NrqlAlertConditionSpec{}
 
-	r.Log.Info("creating condition", "condition", condition.Name, "conditionName", condition.Spec.Name, "nrqlAlertCondition", nrqlAlertCondition)
+	r.Log.Info("creating nrql condition", "condition", condition.Name, "conditionName", condition.Spec.Name, "nrqlAlertCondition", nrqlAlertCondition)
 	errCondition := r.Create(r.ctx, &nrqlAlertCondition)
 	if errCondition != nil {
 		r.Log.Error(errCondition, "error creating condition")
@@ -309,18 +363,56 @@ func (r *PolicyReconciler) createCondition(policy *nrv1.Policy, condition *nrv1.
 	}
 	condition.Name = nrqlAlertCondition.Name //created from generated name
 	condition.Namespace = nrqlAlertCondition.Namespace
-	//condition.SpecHash = nrv1.ComputeHash(&condition.Spec)
 
-	r.Log.Info("created condition", "condition", condition.Name, "conditionName", condition.Spec.Name, "nrqlAlertCondition", nrqlAlertCondition)
+	r.Log.Info("created condition", "condition", condition.Name, "conditionName", condition.Spec.Name, "nrqlAlertCondition", nrqlAlertCondition, "actualCondition", condition.Spec)
+
+	return nil
+}
+
+func (r *PolicyReconciler) createApmCondition(policy *nrv1.Policy, condition *nrv1.PolicyCondition) error {
+	var apmAlertCondition nrv1.ApmAlertCondition
+	apmAlertCondition.GenerateName = policy.Name + "-condition-"
+	apmAlertCondition.Namespace = policy.Namespace
+	apmAlertCondition.Labels = policy.Labels
+	//TODO: no clue if this is needed, I'm guessing no
+	//condition.OwnerReferences: []metav1.OwnerReference{*metav1.NewControllerRef(policy, conditionKind)},
+
+	apmAlertCondition.Spec = condition.ReturnApmConditionSpec()
+	apmAlertCondition.Spec.Region = policy.Spec.Region
+	apmAlertCondition.Spec.ExistingPolicyID = policy.Status.PolicyID
+	apmAlertCondition.Spec.APIKey = policy.Spec.APIKey
+	apmAlertCondition.Spec.APIKeySecret = policy.Spec.APIKeySecret
+	apmAlertCondition.Status.AppliedSpec = &nrv1.ApmAlertConditionSpec{}
+
+	r.Log.Info("creating apm condition", "condition", condition.Name, "conditionName", condition.Spec.Name, "apmAlertCondition", apmAlertCondition)
+	errCondition := r.Create(r.ctx, &apmAlertCondition)
+	if errCondition != nil {
+		r.Log.Error(errCondition, "error creating condition")
+		return errCondition
+	}
+	condition.Name = apmAlertCondition.Name //created from generated name
+	condition.Namespace = apmAlertCondition.Namespace
+
+	r.Log.Info("created apm condition", "condition", condition.Name, "conditionName", condition.Spec.Name, "apmAlertCondition", apmAlertCondition, "actualCondition", condition.Spec)
 
 	return nil
 }
 
 func (r *PolicyReconciler) deleteCondition(condition *nrv1.PolicyCondition) error {
 	r.Log.Info("Deleting condition", "condition", condition.Name, "conditionName", condition.Spec.Name)
-	retrievedCondition := r.getNrqlConditionFromPolicyCondition(condition)
+
+	var retrievedCondition runtime.Object
+	switch nrv1.GetConditionType(*condition) {
+	case "ApmAlertCondition":
+		returnedCondition := r.getApmConditionFromPolicyCondition(condition)
+		retrievedCondition = &returnedCondition
+	case "NrqlAlertCondition":
+		returnedCondition := r.getNrqlConditionFromPolicyCondition(condition)
+		retrievedCondition = &returnedCondition
+	}
+
 	r.Log.Info("retrieved condition for deletion", "retrievedCondition", retrievedCondition)
-	err := r.Delete(r.ctx, &retrievedCondition)
+	err := r.Delete(r.ctx, retrievedCondition)
 	if err != nil {
 		r.Log.Error(err, "error deleting condition resource")
 		return err
@@ -329,10 +421,18 @@ func (r *PolicyReconciler) deleteCondition(condition *nrv1.PolicyCondition) erro
 }
 
 func (r *PolicyReconciler) getNrqlConditionFromPolicyCondition(condition *nrv1.PolicyCondition) (nrqlAlertCondition nrv1.NrqlAlertCondition) {
-	r.Log.Info("condition before retrieval", "condition", condition)
+	r.Log.Info("nrql condition before retrieval", "condition", condition)
 	//throw away the error since empty conditions are expected
 	_ = r.Client.Get(r.ctx, condition.GetNamespace(), &nrqlAlertCondition)
 	r.Log.Info("retrieved condition", "nrqlAlertCondition", nrqlAlertCondition, "namespace", condition.GetNamespace())
+	return
+}
+
+func (r *PolicyReconciler) getApmConditionFromPolicyCondition(condition *nrv1.PolicyCondition) (apmAlertCondition nrv1.ApmAlertCondition) {
+	r.Log.Info("apm condition before retrieval", "condition", condition)
+	//throw away the error since empty conditions are expected
+	_ = r.Client.Get(r.ctx, condition.GetNamespace(), &apmAlertCondition)
+	r.Log.Info("retrieved condition", "apmAlertCondition", apmAlertCondition, "namespace", condition.GetNamespace())
 	return
 }
 

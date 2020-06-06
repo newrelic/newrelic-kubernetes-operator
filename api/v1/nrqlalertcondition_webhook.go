@@ -38,7 +38,6 @@ var (
 func (r *NrqlAlertCondition) SetupWebhookWithManager(mgr ctrl.Manager) error {
 	alertClientFunc = interfaces.InitializeAlertsClient
 	k8Client = mgr.GetClient()
-	ctx = context.Background()
 	return ctrl.NewWebhookManagedBy(mgr).
 		For(r).
 		Complete()
@@ -46,7 +45,7 @@ func (r *NrqlAlertCondition) SetupWebhookWithManager(mgr ctrl.Manager) error {
 
 // EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
 
-// +kubebuilder:webhook:path=/mutate-nr-k8s-newrelic-com-v1-nrqlalertcondition,mutating=true,failurePolicy=fail,groups=nr.k8s.newrelic.com,resources=nrqlalertconditions,verbs=create;update,versions=v1,name=mnrqlalertcondition.kb.io
+// +kubebuilder:webhook:path=/mutate-nr-k8s-newrelic-com-v1-nrqlalertcondition,mutating=true,failurePolicy=fail,groups=nr.k8s.newrelic.com,resources=nrqlalertconditions,verbs=create;update,versions=v1,name=mnrqlalertcondition.kb.io,sideEffects=None
 
 var _ webhook.Defaulter = &NrqlAlertCondition{}
 
@@ -61,8 +60,7 @@ func (r *NrqlAlertCondition) Default() {
 	log.Info("r.Status.AppliedSpec after", "r.Status.AppliedSpec", r.Status.AppliedSpec)
 }
 
-// TODO(user): change verbs to "verbs=create;update;delete" if you want to enable deletion validation.
-// +kubebuilder:webhook:verbs=create;update,path=/validate-nr-k8s-newrelic-com-v1-nrqlalertcondition,mutating=false,failurePolicy=fail,groups=nr.k8s.newrelic.com,resources=nrqlalertconditions,versions=v1,name=vnrqlalertcondition.kb.io
+// +kubebuilder:webhook:verbs=create;update,path=/validate-nr-k8s-newrelic-com-v1-nrqlalertcondition,mutating=false,failurePolicy=fail,groups=nr.k8s.newrelic.com,resources=nrqlalertconditions,versions=v1,name=vnrqlalertcondition.kb.io,sideEffects=None
 
 var _ webhook.Validator = &NrqlAlertCondition{}
 
@@ -85,9 +83,16 @@ func (r *NrqlAlertCondition) ValidateCreate() error {
 // ValidateUpdate implements webhook.Validator so a webhook will be registered for the type
 func (r *NrqlAlertCondition) ValidateUpdate(old runtime.Object) error {
 	log.Info("validate update", "name", r.Name)
+	err := r.CheckForAPIKeyOrSecret()
+	if err != nil {
+		return err
+	}
 
-	// TODO(user): fill in your validation logic upon object update.
-	return nil
+	err = r.CheckRequiredFields()
+	if err != nil {
+		return err
+	}
+	return r.CheckExistingPolicyID()
 }
 
 // ValidateDelete implements webhook.Validator so a webhook will be registered for the type
@@ -100,6 +105,7 @@ func (r *NrqlAlertCondition) ValidateDelete() error {
 
 func (r *NrqlAlertCondition) CheckExistingPolicyID() error {
 	log.Info("Checking existing", "policyId", r.Spec.ExistingPolicyID)
+	ctx := context.Background()
 	var apiKey string
 	if r.Spec.APIKey == "" {
 		key := types.NamespacedName{Namespace: r.Spec.APIKeySecret.Namespace, Name: r.Spec.APIKeySecret.Name}
@@ -126,6 +132,13 @@ func (r *NrqlAlertCondition) CheckExistingPolicyID() error {
 	}
 	alertPolicy, errAlertPolicy := alertsClient.GetPolicy(r.Spec.ExistingPolicyID)
 	if errAlertPolicy != nil {
+		if r.GetDeletionTimestamp() != nil {
+			log.Info("Deleting resource", "errAlertPolicy", errAlertPolicy)
+			if strings.Contains(errAlertPolicy.Error(), "no alert policy found for id") {
+				log.Info("ExistingAlertPolicy not found but we are deleting the condition so this is ok")
+				return nil
+			}
+		}
 		log.Error(errAlertPolicy, "failed to get policy",
 			"policyId", r.Spec.ExistingPolicyID,
 			"API Key", interfaces.PartialAPIKey(apiKey),

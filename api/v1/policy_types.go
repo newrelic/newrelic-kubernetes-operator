@@ -39,10 +39,16 @@ type PolicySpec struct {
 
 //PolicyCondition defined the conditions contained within a a policy
 type PolicyCondition struct {
-	Name      string                 `json:"name"`
-	Namespace string                 `json:"namespace"`
-	Spec      NrqlAlertConditionSpec `json:"spec,omitempty"`
-	//SpecHash uint32					`json:"specHash,omitempty"`
+	Name      string        `json:"name"`
+	Namespace string        `json:"namespace"`
+	Spec      ConditionSpec `json:"spec,omitempty"`
+}
+
+//ConditionSpec - Merged superset of Condition types
+type ConditionSpec struct {
+	GenericConditionSpec `json:",inline"`
+	NrqlSpecificSpec     `json:",inline"`
+	APMSpecificSpec      `json:",inline"`
 }
 
 // PolicyStatus defines the observed state of Policy
@@ -139,4 +145,35 @@ func (in PolicySpec) Equals(policyToCompare PolicySpec) bool {
 		}
 	}
 	return true
+}
+
+//GetConditionType - returns the string representative of the Condition type
+func GetConditionType(condition PolicyCondition) string {
+	if condition.Spec.Type == "NRQL" {
+		return "NrqlAlertCondition"
+	}
+	return "ApmAlertCondition"
+
+}
+
+func (p *PolicyCondition) GenerateSpecFromNrqlConditionSpec(nrqlConditionSpec NrqlAlertConditionSpec) {
+	jsonString, _ := json.Marshal(nrqlConditionSpec)
+	json.Unmarshal(jsonString, &p.Spec) //nolint
+}
+
+func (p *PolicyCondition) GenerateSpecFromApmConditionSpec(apmConditionSpec ApmAlertConditionSpec) {
+	jsonString, _ := json.Marshal(apmConditionSpec)
+	json.Unmarshal(jsonString, &p.Spec) //nolint
+}
+
+func (p *PolicyCondition) ReturnNrqlConditionSpec() (nrqlAlertConditionSpec NrqlAlertConditionSpec) {
+	jsonString, _ := json.Marshal(p.Spec)
+	json.Unmarshal(jsonString, &nrqlAlertConditionSpec) //nolint
+	return
+}
+
+func (p *PolicyCondition) ReturnApmConditionSpec() (apmAlertConditionSpec ApmAlertConditionSpec) {
+	jsonString, _ := json.Marshal(p.Spec)
+	json.Unmarshal(jsonString, &apmAlertConditionSpec) //nolint
+	return
 }

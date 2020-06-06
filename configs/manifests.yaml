@@ -60,6 +60,7 @@ webhooks:
     - UPDATE
     resources:
     - apmalertconditions
+  sideEffects: None
 - clientConfig:
     caBundle: Cg==
     service:
@@ -78,6 +79,7 @@ webhooks:
     - UPDATE
     resources:
     - nrqlalertconditions
+  sideEffects: None
 - clientConfig:
     caBundle: Cg==
     service:
@@ -96,6 +98,7 @@ webhooks:
     - UPDATE
     resources:
     - policies
+  sideEffects: None
 
 ---
 apiVersion: admissionregistration.k8s.io/v1beta1
@@ -158,6 +161,7 @@ webhooks:
     - UPDATE
     resources:
     - apmalertconditions
+  sideEffects: None
 - clientConfig:
     caBundle: Cg==
     service:
@@ -176,6 +180,7 @@ webhooks:
     - UPDATE
     resources:
     - nrqlalertconditions
+  sideEffects: None
 - clientConfig:
     caBundle: Cg==
     service:
@@ -194,3 +199,4 @@ webhooks:
     - UPDATE
     resources:
     - policies
+  sideEffects: None

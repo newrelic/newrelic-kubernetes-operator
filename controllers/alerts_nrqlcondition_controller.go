@@ -36,6 +36,10 @@ import (
 	nrv1 "github.com/newrelic/newrelic-kubernetes-operator/api/v1"
 )
 
+const (
+	alertsNrqlConditionDeleteFinalizer = "alertsnrqlconditions.finalizers.nr.k8s.newrelic.com"
+)
+
 // AlertsNrqlConditionReconciler reconciles a AlertsNrqlCondition object
 type AlertsNrqlConditionReconciler struct {
 	client.Client
@@ -52,7 +56,7 @@ type AlertsNrqlConditionReconciler struct {
 // Reconcile is responsible for reconciling the spec and state of the AlertsNrqlCondition.
 func (r *AlertsNrqlConditionReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) { //nolint: gocyclo
 	ctx := context.Background()
-	_ = r.Log.WithValues("nrqlalertcondition", req.NamespacedName)
+	_ = r.Log.WithValues("alertsnrqlcondition", req.NamespacedName)
 
 	r.Log.Info("starting reconcile action")
 	var condition nrv1.AlertsNrqlCondition
@@ -79,20 +83,18 @@ func (r *AlertsNrqlConditionReconciler) Reconcile(req ctrl.Request) (ctrl.Result
 	}
 	r.Alerts = alertsClient
 
-	deleteFinalizer := "nrqlalertconditions.finalizers.nr.k8s.newrelic.com"
-
 	// examine DeletionTimestamp to determine if object is under deletion
 	if condition.DeletionTimestamp.IsZero() {
-		if !containsString(condition.Finalizers, deleteFinalizer) {
-			condition.Finalizers = append(condition.Finalizers, deleteFinalizer)
+		if !containsString(condition.Finalizers, alertsNrqlConditionDeleteFinalizer) {
+			condition.Finalizers = append(condition.Finalizers, alertsNrqlConditionDeleteFinalizer)
 		}
 	} else {
 		// the object is being deleted
-		if containsString(condition.Finalizers, deleteFinalizer) {
+		if containsString(condition.Finalizers, alertsNrqlConditionDeleteFinalizer) {
 			// catch invalid state
 			if condition.Status.ConditionID == "" {
 				r.Log.Info("No Condition ID set, just removing finalizer")
-				condition.Finalizers = removeString(condition.Finalizers, deleteFinalizer)
+				condition.Finalizers = removeString(condition.Finalizers, alertsNrqlConditionDeleteFinalizer)
 				if err := r.Client.Update(ctx, &condition); err != nil {
 					r.Log.Error(err, "Failed to update condition after deleting New Relic Alert condition")
 					return ctrl.Result{}, err
@@ -120,7 +122,7 @@ func (r *AlertsNrqlConditionReconciler) Reconcile(req ctrl.Request) (ctrl.Result
 				}
 				// remove our finalizer from the list and update it.
 				r.Log.Info("New Relic Alert condition deleted, Removing finalizer")
-				condition.Finalizers = removeString(condition.Finalizers, deleteFinalizer)
+				condition.Finalizers = removeString(condition.Finalizers, alertsNrqlConditionDeleteFinalizer)
 				if err := r.Client.Update(ctx, &condition); err != nil {
 					r.Log.Error(err, "Failed to update condition after deleting New Relic Alert condition")
 					return ctrl.Result{}, err

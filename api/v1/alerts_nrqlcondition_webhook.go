@@ -33,7 +33,6 @@ import (
 func (r *AlertsNrqlCondition) SetupWebhookWithManager(mgr ctrl.Manager) error {
 	alertClientFunc = interfaces.InitializeAlertsClient
 	k8Client = mgr.GetClient()
-	ctx = context.Background()
 	return ctrl.NewWebhookManagedBy(mgr).
 		For(r).
 		Complete()
@@ -99,7 +98,7 @@ func (r *AlertsNrqlCondition) CheckExistingPolicyID() error {
 	if r.Spec.APIKey == "" {
 		key := types.NamespacedName{Namespace: r.Spec.APIKeySecret.Namespace, Name: r.Spec.APIKeySecret.Name}
 		var apiKeySecret v1.Secret
-		getErr := k8Client.Get(ctx, key, &apiKeySecret)
+		getErr := k8Client.Get(context.Background(), key, &apiKeySecret)
 		if getErr != nil {
 			log.Error(getErr, "Error getting secret")
 			return getErr
