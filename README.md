@@ -65,7 +65,7 @@ Currently the operator supports managing the following resources:
 1. Install the operator in the test cluster.
 
    ```bash
-   kustomize build github.com/newrelic/newrelic-kubernetes-operator/configs/default | kubectl apply -f -
+   kustomize build https://github.com/newrelic/newrelic-kubernetes-operator/configs/default | kubectl apply -f -
    ```
    > <small>**Note:** This will install operator on whatever kubernetes cluster kubectl is configured to use.</small>
 
@@ -153,7 +153,7 @@ Once you've completed the [Quick Start](#quick-start) section, you can start pro
 
 2. See your configured policies with the following command.
    ```bash
-   kubectl describe policies.nr.k8s.newrelic.com
+   kubectl describe alertspolicies.nr.k8s.newrelic.com
    ```
    > <small>**Note:** You should also see the newly created policy within your New Relic account.</small>
 

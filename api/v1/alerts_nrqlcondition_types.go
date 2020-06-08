@@ -39,12 +39,6 @@ type AlertsNrqlSpecificSpec struct {
 	ViolationTimeLimit alerts.NrqlConditionViolationTimeLimit `json:"violationTimeLimit,omitempty"`
 }
 
-// AlertsNrqlConditionQuery represents a NRQL query to use with a NRQL alert condition
-type AlertsNrqlConditionQuery struct {
-	Query      string `json:"query,omitempty"`
-	SinceValue string `json:"since_value,omitempty"`
-}
-
 // AlertsNrqlConditionTerm represents the terms of a New Relic alert condition.
 type AlertsNrqlConditionTerm struct {
 	Operator             alerts.NrqlConditionOperator `json:"operator,omitempty"`
