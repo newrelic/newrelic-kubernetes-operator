@@ -233,7 +233,11 @@ This section should get you set up properly for doing development on the operato
       make lint
       ```
 
-1. Perform the steps from the [Quick Start](#quick-start) section, which walk through the initial required setup and get you going with your first `kubectl apply` of the operator configuration.
+1. Perform the steps from the [Quick Start](#quick-start) section, except use the following instead of step 4 to install with the :snapshot image:
+
+   ```bash
+   kustomize build configs/developer | kubectl apply -f -
+   ```
 
 1. Confirm your configuration was deployed to your local Kubernetes cluster (the one that we created with `kind`). <br>
     - Show your namespaces. You should see `newrelic-kubernetes-operator-system` in the list of namespaces.
