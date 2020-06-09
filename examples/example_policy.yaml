@@ -7,39 +7,42 @@ kind: AlertsPolicy
 metadata:
   name: my-policy
 spec:
+  account_id: <your New Relic account ID>
   api_key: <your New Relic personal API key>
   # api_key_secret:
   #   name: nr-api-key
   #   namespace: default
   #   key_name: api-key
   name: k8s created policy
-  incident_preference: "PER_POLICY"
-  region: "us"
+  incidentPreference: "PER_POLICY"
+  region: "US"
   conditions:
     - spec:
         type: "NRQL"
         nrql:
           query: "SELECT count(*) FROM Transactions"
-          since_value: "10"
+          evaluationOffset: 10
         enabled: true
         terms:
           - threshold: "75.0"
-            time_function: "all"
-            duration: "5"
-            priority: "critical"
-            operator: "above"
-        name: "K8s generated nrql alert condition"
+            threshold_occurrences: "ALL"
+            threshold_duration: 60
+            priority: "CRITICAL"
+            operator: "ABOVE"
+        name: "nrql condition"
+        violationTimeLimit: "ONE_HOUR"
+        valueFunction: "SINGLE_VALUE"
     - spec:
         type: "apm_app_metric"
         enabled: true
         metric: "apdex"
         condition_scope: application
         entities:
-          - "5950260"
-        terms:
+          - "215037795"
+        apm_terms:
           - threshold: "0.9"
             time_function: "all"
             duration: "5"
             priority: "critical"
             operator: "above"
-        name: "K8s generated apm alert condition"
+        name: "apm condition"
