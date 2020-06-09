@@ -50,7 +50,7 @@ func (r *AlertsPolicy) Default() {
 	AlertsPolicyLog.Info("default", "name", r.Name)
 
 	if r.Status.AppliedSpec == nil {
-		log.Info("Setting null Applied Spec to empty interface")
+		AlertsPolicyLog.Info("Setting null Applied Spec to empty interface")
 		r.Status.AppliedSpec = &AlertsPolicySpec{}
 	}
 
@@ -144,7 +144,7 @@ func (r *AlertsPolicy) CheckForDuplicateConditions() error {
 		conditionHashMap[condition.SpecHash()] = true
 	}
 	if len(conditionHashMap) != len(r.Spec.Conditions) {
-		log.Info("duplicate conditions detected or hash collision", "conditionHash", conditionHashMap)
+		AlertsPolicyLog.Info("duplicate conditions detected or hash collision", "conditionHash", conditionHashMap)
 		return errors.New("duplicate conditions detected or hash collision")
 	}
 
@@ -156,7 +156,7 @@ func (r *AlertsPolicy) ValidateIncidentPreference() error {
 	case "PER_POLICY", "PER_CONDITION", "PER_CONDITION_AND_TARGET":
 		return nil
 	}
-	log.Info("Incident preference must be PER_POLICY, PER_CONDITION, or PER_CONDITION_AND_TARGET", "IncidentPreference value", r.Spec.IncidentPreference)
+	AlertsPolicyLog.Info("Incident preference must be PER_POLICY, PER_CONDITION, or PER_CONDITION_AND_TARGET", "IncidentPreference value", r.Spec.IncidentPreference)
 	return errors.New("incident preference must be PER_POLICY, PER_CONDITION, or PER_CONDITION_AND_TARGET")
 }
 

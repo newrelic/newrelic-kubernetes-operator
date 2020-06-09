@@ -55,7 +55,7 @@ func (r *AlertsAPMCondition) Default() {
 	alertsapmconditionlog.Info("default", "name", r.Name)
 
 	if r.Status.AppliedSpec == nil {
-		log.Info("Setting null Applied Spec to empty interface")
+		alertsapmconditionlog.Info("Setting null Applied Spec to empty interface")
 		r.Status.AppliedSpec = &AlertsAPMConditionSpec{}
 	}
 }
@@ -134,7 +134,7 @@ func (r *AlertsAPMCondition) ValidateType() InvalidAttributeSlice {
 		string(alerts.ConditionTypes.ServersMetric):
 		return []invalidAttribute{}
 	default:
-		log.Info("Invalid Type attribute", "Type", r.Spec.Type)
+		alertsapmconditionlog.Info("Invalid Type attribute", "Type", r.Spec.Type)
 		return []invalidAttribute{{attribute: "Type", value: string(r.Spec.Type)}}
 	}
 }
@@ -176,7 +176,7 @@ func (r *AlertsAPMCondition) ValidateMetric() InvalidAttributeSlice {
 		alerts.MetricTypes.WebApplication:
 		return []invalidAttribute{}
 	default:
-		log.Info("Invalid Metric attribute", "Metric", r.Spec.Metric)
+		alertsapmconditionlog.Info("Invalid Metric attribute", "Metric", r.Spec.Metric)
 		return []invalidAttribute{{attribute: "Type", value: r.Spec.Metric}}
 	}
 }
@@ -188,7 +188,7 @@ func (r *AlertsAPMCondition) ValidateTerms() InvalidAttributeSlice {
 		case alerts.TimeFunctionTypes.All, alerts.TimeFunctionTypes.Any:
 			continue
 		default:
-			log.Info("Invalid UserDefined.ValueFunction passed", "UserDefined.ValueFunction", term.TimeFunction)
+			alertsapmconditionlog.Info("Invalid UserDefined.ValueFunction passed", "UserDefined.ValueFunction", term.TimeFunction)
 			invalidTerms = append(invalidTerms, invalidAttribute{
 				attribute: "Term.TimeFunction",
 				value:     term.TimeFunction,
@@ -198,7 +198,7 @@ func (r *AlertsAPMCondition) ValidateTerms() InvalidAttributeSlice {
 		case alerts.OperatorTypes.Equal, alerts.OperatorTypes.Above, alerts.OperatorTypes.Below:
 			continue
 		default:
-			log.Info("Invalid Term.Operator passed", "Term.Operator ", term.Operator)
+			alertsapmconditionlog.Info("Invalid Term.Operator passed", "Term.Operator ", term.Operator)
 			invalidTerms = append(invalidTerms, invalidAttribute{
 				attribute: "Term.Operator",
 				value:     term.Operator,
@@ -208,7 +208,7 @@ func (r *AlertsAPMCondition) ValidateTerms() InvalidAttributeSlice {
 		case alerts.PriorityTypes.Critical, alerts.PriorityTypes.Warning:
 			continue
 		default:
-			log.Info("Invalid term.Priority passed", "term.Priority", term.Priority)
+			alertsapmconditionlog.Info("Invalid term.Priority passed", "term.Priority", term.Priority)
 			invalidTerms = append(invalidTerms, invalidAttribute{
 				attribute: "Term.Priority",
 				value:     term.Priority,
@@ -230,13 +230,13 @@ func (r *AlertsAPMCondition) ValidateUserDefinedValueFunction() InvalidAttribute
 		alerts.ValueFunctionTypes.Total:
 		return []invalidAttribute{}
 	default:
-		log.Info("Invalid UserDefined.ValueFunction passed", "UserDefined.ValueFunction", r.Spec.UserDefined.ValueFunction)
+		alertsapmconditionlog.Info("Invalid UserDefined.ValueFunction passed", "UserDefined.ValueFunction", r.Spec.UserDefined.ValueFunction)
 		return []invalidAttribute{{attribute: "UserDefined.ValueFunction: ", value: string(r.Spec.UserDefined.ValueFunction)}}
 	}
 }
 
 func (r *AlertsAPMCondition) CheckExistingPolicyID() error {
-	log.Info("Checking existing", "policyId", r.Spec.ExistingPolicyID)
+	alertsapmconditionlog.Info("Checking existing", "policyId", r.Spec.ExistingPolicyID)
 	ctx := context.Background()
 	var apiKey string
 	if r.Spec.APIKey == "" {
@@ -244,7 +244,7 @@ func (r *AlertsAPMCondition) CheckExistingPolicyID() error {
 		var apiKeySecret v1.Secret
 		getErr := k8Client.Get(ctx, key, &apiKeySecret)
 		if getErr != nil {
-			log.Error(getErr, "Error getting secret")
+			alertsapmconditionlog.Error(getErr, "Error getting secret")
 			return getErr
 		}
 		apiKey = string(apiKeySecret.Data[r.Spec.APIKeySecret.KeyName])
@@ -255,23 +255,25 @@ func (r *AlertsAPMCondition) CheckExistingPolicyID() error {
 
 	alertsClient, errAlertClient := alertClientFunc(apiKey, r.Spec.Region)
 	if errAlertClient != nil {
-		log.Error(errAlertClient, "failed to get policy",
+		alertsapmconditionlog.Error(errAlertClient, "failed to get policy",
 			"policyId", r.Spec.ExistingPolicyID,
 			"API Key", interfaces.PartialAPIKey(apiKey),
+			"accountID", r.Spec.AccountID,
 			"region", r.Spec.Region,
 		)
 		return errAlertClient
 	}
+
 	alertPolicy, errAlertPolicy := alertsClient.QueryPolicy(r.Spec.AccountID, r.Spec.ExistingPolicyID)
 	if errAlertPolicy != nil {
 		if r.GetDeletionTimestamp() != nil {
-			log.Info("Deleting resource", "errAlertPolicy", errAlertPolicy)
+			alertsapmconditionlog.Info("Deleting resource", "errAlertPolicy", errAlertPolicy)
 			if strings.Contains(errAlertPolicy.Error(), "no alert policy found for id") {
 				log.Info("ExistingAlertPolicy not found but we are deleting the condition so this is ok")
 				return nil
 			}
 		}
-		log.Error(errAlertPolicy, "failed to get policy",
+		alertsapmconditionlog.Error(errAlertPolicy, "failed to get policy",
 			"policyId", r.Spec.ExistingPolicyID,
 			"API Key", interfaces.PartialAPIKey(apiKey),
 			"region", r.Spec.Region,
@@ -280,7 +282,7 @@ func (r *AlertsAPMCondition) CheckExistingPolicyID() error {
 	}
 
 	if alertPolicy.ID != r.Spec.ExistingPolicyID {
-		log.Info("Alert policy returned by the API failed to match provided policy ID")
+		alertsapmconditionlog.Info("Alert policy returned by the API failed to match provided policy ID")
 		return errors.New("alert policy returned by API did not match")
 	}
 	return nil

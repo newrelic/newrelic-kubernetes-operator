@@ -25,9 +25,15 @@ import (
 
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
+	logf "sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/webhook"
 
 	"github.com/newrelic/newrelic-kubernetes-operator/interfaces"
+)
+
+// log is for logging in this package.
+var (
+	alertsNrqlConditionLog = logf.Log.WithName("alertsnrqlcondition-resource")
 )
 
 func (r *AlertsNrqlCondition) SetupWebhookWithManager(mgr ctrl.Manager) error {
@@ -46,13 +52,13 @@ var _ webhook.Defaulter = &AlertsNrqlCondition{}
 
 // Default implements webhook.Defaulter so a webhook will be registered for the type
 func (r *AlertsNrqlCondition) Default() {
-	log.Info("default", "name", r.Name)
+	alertsNrqlConditionLog.Info("default", "name", r.Name)
 
 	if r.Status.AppliedSpec == nil {
-		log.Info("Setting null Applied Spec to empty interface")
+		alertsNrqlConditionLog.Info("Setting null Applied Spec to empty interface")
 		r.Status.AppliedSpec = &AlertsNrqlConditionSpec{}
 	}
-	log.Info("r.Status.AppliedSpec after", "r.Status.AppliedSpec", r.Status.AppliedSpec)
+	alertsNrqlConditionLog.Info("r.Status.AppliedSpec after", "r.Status.AppliedSpec", r.Status.AppliedSpec)
 }
 
 // TODO(user): change verbs to "verbs=create;update;delete" if you want to enable deletion validation.
@@ -62,7 +68,7 @@ var _ webhook.Validator = &AlertsNrqlCondition{}
 
 // ValidateCreate implements webhook.Validator so a webhook will be registered for the type
 func (r *AlertsNrqlCondition) ValidateCreate() error {
-	log.Info("validate create", "name", r.Name)
+	alertsNrqlConditionLog.Info("validate create", "name", r.Name)
 	//TODO this should write this value TO a new secret so code path always reads from a secret
 	err := r.CheckForAPIKeyOrSecret()
 	if err != nil {
@@ -78,7 +84,7 @@ func (r *AlertsNrqlCondition) ValidateCreate() error {
 
 // ValidateUpdate implements webhook.Validator so a webhook will be registered for the type
 func (r *AlertsNrqlCondition) ValidateUpdate(old runtime.Object) error {
-	log.Info("validate update", "name", r.Name)
+	alertsNrqlConditionLog.Info("validate update", "name", r.Name)
 
 	// TODO(user): fill in your validation logic upon object update.
 	return nil
@@ -86,21 +92,21 @@ func (r *AlertsNrqlCondition) ValidateUpdate(old runtime.Object) error {
 
 // ValidateDelete implements webhook.Validator so a webhook will be registered for the type
 func (r *AlertsNrqlCondition) ValidateDelete() error {
-	log.Info("validate delete", "name", r.Name)
+	alertsNrqlConditionLog.Info("validate delete", "name", r.Name)
 
 	// TODO(user): fill in your validation logic upon object deletion.
 	return nil
 }
 
 func (r *AlertsNrqlCondition) CheckExistingPolicyID() error {
-	log.Info("Checking existing", "policyId", r.Spec.ExistingPolicyID)
+	alertsNrqlConditionLog.Info("Checking existing", "policyId", r.Spec.ExistingPolicyID)
 	var apiKey string
 	if r.Spec.APIKey == "" {
 		key := types.NamespacedName{Namespace: r.Spec.APIKeySecret.Namespace, Name: r.Spec.APIKeySecret.Name}
 		var apiKeySecret v1.Secret
 		getErr := k8Client.Get(context.Background(), key, &apiKeySecret)
 		if getErr != nil {
-			log.Error(getErr, "Error getting secret")
+			alertsNrqlConditionLog.Error(getErr, "Error getting secret")
 			return getErr
 		}
 		apiKey = string(apiKeySecret.Data[r.Spec.APIKeySecret.KeyName])
@@ -111,7 +117,7 @@ func (r *AlertsNrqlCondition) CheckExistingPolicyID() error {
 
 	alertsClient, errAlertClient := alertClientFunc(apiKey, r.Spec.Region)
 	if errAlertClient != nil {
-		log.Error(errAlertClient, "failed to get policy",
+		alertsNrqlConditionLog.Error(errAlertClient, "failed to get policy",
 			"policyId", r.Spec.ExistingPolicyID,
 			"API Key", interfaces.PartialAPIKey(apiKey),
 			"region", r.Spec.Region,
@@ -120,7 +126,7 @@ func (r *AlertsNrqlCondition) CheckExistingPolicyID() error {
 	}
 	_, errAlertPolicy := alertsClient.QueryPolicy(r.Spec.AccountID, r.Spec.ExistingPolicyID)
 	if errAlertPolicy != nil {
-		log.Error(errAlertPolicy, "failed to get policy",
+		alertsNrqlConditionLog.Error(errAlertPolicy, "failed to get policy",
 			"policyId", r.Spec.ExistingPolicyID,
 			"API Key", interfaces.PartialAPIKey(apiKey),
 			"region", r.Spec.Region,
