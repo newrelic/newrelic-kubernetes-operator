@@ -164,9 +164,6 @@ spec:
                     required:
                     - enabled
                     type: object
-                required:
-                - name
-                - namespace
                 type: object
               type: array
             incidentPreference:
@@ -319,9 +316,6 @@ spec:
                         required:
                         - enabled
                         type: object
-                    required:
-                    - name
-                    - namespace
                     type: object
                   type: array
                 incidentPreference:

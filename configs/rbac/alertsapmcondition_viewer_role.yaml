@@ -1,0 +1,20 @@
+# permissions for end users to view alertsapmconditions.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: alertsapmcondition-viewer-role
+rules:
+- apiGroups:
+  - nr.k8s.newrelic.com
+  resources:
+  - alertsapmconditions
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - nr.k8s.newrelic.com
+  resources:
+  - alertsapmconditions/status
+  verbs:
+  - get

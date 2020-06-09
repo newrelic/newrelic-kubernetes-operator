@@ -1,0 +1,26 @@
+# permissions to do edit alertsnrqlconditions.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: alertsnrqlcondition-editor-role
+rules:
+- apiGroups:
+  - nr.k8s.newrelic.com
+  resources:
+  - alertsnrqlconditions
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - nr.k8s.newrelic.com
+  resources:
+  - alertsnrqlconditions/status
+  verbs:
+  - get
+  - patch
+  - update

@@ -1,0 +1,20 @@
+# permissions to do viewer alertspolicies.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: alertspolicy-viewer-role
+rules:
+- apiGroups:
+  - nr.k8s.newrelic.com
+  resources:
+  - alertspolicies
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - nr.k8s.newrelic.com
+  resources:
+  - alertspolicies/status
+  verbs:
+  - get

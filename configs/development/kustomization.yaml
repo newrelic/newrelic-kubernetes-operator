@@ -4,4 +4,4 @@ resources:
 - ../default
 images:
 - name: newrelic/kubernetes-operator
-  newTag: snapshot
+  newTag: dev

@@ -40,8 +40,8 @@ type AlertsPolicySpec struct {
 
 //AlertsPolicyCondition defined the conditions contained within an AlertsPolicy
 type AlertsPolicyCondition struct {
-	Name      string                    `json:"name"`
-	Namespace string                    `json:"namespace"`
+	Name      string                    `json:"name,omitempty"`
+	Namespace string                    `json:"namespace,omitempty"`
 	Spec      AlertsPolicyConditionSpec `json:"spec,omitempty"`
 }
 
