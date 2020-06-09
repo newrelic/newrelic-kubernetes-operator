@@ -299,7 +299,7 @@ var _ = Describe("alertspolicy reconciliation", func() {
 				Expect(mockAlertsClient.CreatePolicyMutationCallCount()).To(Equal(1))
 
 				var endStateAlertsPolicy nrv1.AlertsPolicy
-				var endStateCondition nrv1.ApmAlertCondition
+				var endStateCondition nrv1.AlertsAPMCondition
 				err = k8sClient.Get(ctx, namespacedName, &endStateAlertsPolicy)
 				Expect(err).To(BeNil())
 				conditionNameType := types.NamespacedName{
@@ -888,7 +888,7 @@ var _ = Describe("alertspolicy reconciliation", func() {
 				Expect(mockAlertsClient.UpdatePolicyMutationCallCount()).To(Equal(0))
 
 				var endStateAlertsPolicy nrv1.AlertsPolicy
-				var endStateCondition nrv1.ApmAlertCondition
+				var endStateCondition nrv1.AlertsAPMCondition
 				err = k8sClient.Get(ctx, namespacedName, &endStateAlertsPolicy)
 				Expect(err).To(BeNil())
 
@@ -946,7 +946,7 @@ var _ = Describe("alertspolicy reconciliation", func() {
 				Expect(err).ToNot(HaveOccurred())
 
 				var endStateAlertsPolicy nrv1.AlertsPolicy
-				var endStateCondition nrv1.ApmAlertCondition
+				var endStateCondition nrv1.AlertsAPMCondition
 				err = k8sClient.Get(ctx, namespacedName, &endStateAlertsPolicy)
 				Expect(err).To(BeNil())
 				conditionNameType := types.NamespacedName{
@@ -973,7 +973,7 @@ var _ = Describe("alertspolicy reconciliation", func() {
 				err = k8sClient.Get(ctx, namespacedName, &endStateAlertsPolicy)
 				Expect(err).To(BeNil())
 
-				var originalCondition nrv1.ApmAlertCondition
+				var originalCondition nrv1.AlertsAPMCondition
 				originalConditionNamespaceType := types.NamespacedName{
 					Name:      originalConditionName,
 					Namespace: endStateAlertsPolicy.Spec.Conditions[0].Namespace,
@@ -993,7 +993,7 @@ var _ = Describe("alertspolicy reconciliation", func() {
 				alertspolicy.Spec.Conditions[0].Spec.Metric = "Custom/bar"
 			})
 
-			It("should update the existing ApmAlertCondition with the updated spec", func() {
+			It("should update the existing AlertsAPMCondition with the updated spec", func() {
 				originalConditionName := alertspolicy.Status.AppliedSpec.Conditions[0].Name
 
 				err := k8sClient.Update(ctx, alertspolicy)
@@ -1004,7 +1004,7 @@ var _ = Describe("alertspolicy reconciliation", func() {
 				Expect(err).ToNot(HaveOccurred())
 
 				var endStateAlertsPolicy nrv1.AlertsPolicy
-				var endStateCondition nrv1.ApmAlertCondition
+				var endStateCondition nrv1.AlertsAPMCondition
 				err = k8sClient.Get(ctx, namespacedName, &endStateAlertsPolicy)
 				Expect(err).To(BeNil())
 				conditionNameType := types.NamespacedName{
@@ -1029,7 +1029,7 @@ var _ = Describe("alertspolicy reconciliation", func() {
 				Expect(err).ToNot(HaveOccurred())
 
 				var endStateAlertsPolicy nrv1.AlertsPolicy
-				var endStateCondition nrv1.ApmAlertCondition
+				var endStateCondition nrv1.AlertsAPMCondition
 				err = k8sClient.Get(ctx, namespacedName, &endStateAlertsPolicy)
 				Expect(err).To(BeNil())
 				conditionNameType := types.NamespacedName{
@@ -1090,7 +1090,7 @@ var _ = Describe("alertspolicy reconciliation", func() {
 				Expect(err).ToNot(HaveOccurred())
 
 				var endStateAlertsPolicy nrv1.AlertsPolicy //test-alertspolicy1942898816
-				var endStateCondition nrv1.ApmAlertCondition
+				var endStateCondition nrv1.AlertsAPMCondition
 				err = k8sClient.Get(ctx, namespacedName, &endStateAlertsPolicy) //1942898816
 				Expect(err).To(BeNil())
 				conditionNameType := types.NamespacedName{

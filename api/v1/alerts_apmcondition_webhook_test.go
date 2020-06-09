@@ -13,7 +13,7 @@ import (
 	"github.com/newrelic/newrelic-kubernetes-operator/interfaces/interfacesfakes"
 )
 
-var _ = Describe("apmAlertCondition_webhook", func() {
+var _ = Describe("alertsAPMCondition_webhook", func() {
 	var (
 		r            AlertsAPMCondition
 		alertsClient *interfacesfakes.FakeNewRelicAlertsClient

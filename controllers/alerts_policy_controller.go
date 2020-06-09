@@ -212,7 +212,7 @@ func (r *AlertsPolicyReconciler) createOrUpdateCondition(policy *nrv1.AlertsPoli
 
 			var err error
 			switch nrv1.GetAlertsConditionType(*condition) {
-			case "ApmAlertCondition":
+			case "AlertsAPMCondition":
 				err = r.createApmCondition(policy, condition)
 			case "AlertsNrqlCondition":
 				err = r.createNrqlCondition(policy, condition)
@@ -223,7 +223,7 @@ func (r *AlertsPolicyReconciler) createOrUpdateCondition(policy *nrv1.AlertsPoli
 
 	var err error
 	switch nrv1.GetAlertsConditionType(*condition) {
-	case "ApmAlertCondition":
+	case "AlertsAPMCondition":
 		err = r.updateApmCondition(policy, condition)
 	case "AlertsNrqlCondition":
 		err = r.updateNrqlCondition(policy, condition)
@@ -285,7 +285,7 @@ func (r *AlertsPolicyReconciler) updateApmCondition(policy *nrv1.AlertsPolicy, c
 
 	apmCondition.Spec.ExistingPolicyID = policy.Status.PolicyID
 
-	r.Log.Info("updating existing condition", "apmAlertCondition", apmCondition)
+	r.Log.Info("updating existing condition", "alertsAPMCondition", apmCondition)
 
 	err := r.Client.Update(r.ctx, &apmCondition)
 	return err
@@ -391,7 +391,7 @@ func (r *AlertsPolicyReconciler) createApmCondition(policy *nrv1.AlertsPolicy, c
 
 	apmCondition.Spec.ExistingPolicyID = policy.Status.PolicyID
 
-	r.Log.Info("creating apm condition", "condition", condition.Name, "conditionName", condition.Spec.Name, "apmAlertCondition", apmCondition)
+	r.Log.Info("creating apm condition", "condition", condition.Name, "conditionName", condition.Spec.Name, "alertsAPMCondition", apmCondition)
 	errCondition := r.Create(r.ctx, &apmCondition)
 	if errCondition != nil {
 		r.Log.Error(errCondition, "error creating condition")
@@ -401,7 +401,7 @@ func (r *AlertsPolicyReconciler) createApmCondition(policy *nrv1.AlertsPolicy, c
 	condition.Name = apmCondition.Name
 	condition.Namespace = apmCondition.Namespace
 
-	r.Log.Info("created apm condition", "condition", condition.Name, "conditionName", condition.Spec.Name, "apmAlertCondition", apmCondition, "actualCondition", condition.Spec)
+	r.Log.Info("created apm condition", "condition", condition.Name, "conditionName", condition.Spec.Name, "alertsAPMCondition", apmCondition, "actualCondition", condition.Spec)
 
 	return nil
 }
@@ -411,7 +411,7 @@ func (r *AlertsPolicyReconciler) deleteCondition(condition *nrv1.AlertsPolicyCon
 
 	var retrievedCondition runtime.Object
 	switch nrv1.GetAlertsConditionType(*condition) {
-	case "ApmAlertCondition":
+	case "AlertsAPMCondition":
 		returnedCondition := r.getApmConditionFromAlertsPolicyCondition(condition)
 		retrievedCondition = &returnedCondition
 	case "AlertsNrqlCondition":
