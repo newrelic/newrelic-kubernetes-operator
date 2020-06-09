@@ -166,8 +166,7 @@ func GetAlertsConditionType(condition AlertsPolicyCondition) string {
 	if condition.Spec.Type == "NRQL" {
 		return "AlertsNrqlCondition"
 	}
-	return "ApmAlertCondition"
-
+	return "AlertsAPMCondition"
 }
 
 func (p *AlertsPolicyCondition) GenerateSpecFromNrqlConditionSpec(nrqlConditionSpec AlertsNrqlConditionSpec) {
@@ -175,7 +174,7 @@ func (p *AlertsPolicyCondition) GenerateSpecFromNrqlConditionSpec(nrqlConditionS
 	json.Unmarshal(jsonString, &p.Spec) //nolint
 }
 
-func (p *AlertsPolicyCondition) GenerateSpecFromApmConditionSpec(apmConditionSpec ApmAlertConditionSpec) {
+func (p *AlertsPolicyCondition) GenerateSpecFromApmConditionSpec(apmConditionSpec AlertsAPMConditionSpec) {
 	jsonString, _ := json.Marshal(apmConditionSpec)
 	json.Unmarshal(jsonString, &p.Spec) //nolint
 }
@@ -186,8 +185,8 @@ func (p *AlertsPolicyCondition) ReturnNrqlConditionSpec() (nrqlConditionSpec Ale
 	return
 }
 
-func (p *AlertsPolicyCondition) ReturnApmConditionSpec() (apmAlertConditionSpec ApmAlertConditionSpec) {
+func (p *AlertsPolicyCondition) ReturnApmConditionSpec() (apmConditionSpec AlertsAPMConditionSpec) {
 	jsonString, _ := json.Marshal(p.Spec)
-	json.Unmarshal(jsonString, &apmAlertConditionSpec) //nolint
+	json.Unmarshal(jsonString, &apmConditionSpec) //nolint
 	return
 }

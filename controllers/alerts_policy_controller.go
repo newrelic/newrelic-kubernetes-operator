@@ -19,7 +19,6 @@ import (
 	"context"
 	"errors"
 	"reflect"
-	"strconv"
 	"strings"
 
 	"github.com/newrelic/newrelic-client-go/pkg/alerts"
@@ -165,7 +164,7 @@ func (r *AlertsPolicyReconciler) createConditions(policy *nrv1.AlertsPolicy) err
 	for i, condition := range policy.Spec.Conditions {
 		var err error
 		switch nrv1.GetAlertsConditionType(condition) {
-		case "ApmAlertCondition":
+		case "AlertsAPMCondition":
 			err = r.createApmCondition(policy, &condition)
 		case "AlertsNrqlCondition":
 			err = r.createNrqlCondition(policy, &condition)
@@ -284,17 +283,11 @@ func (r *AlertsPolicyReconciler) updateApmCondition(policy *nrv1.AlertsPolicy, c
 	apmCondition.Spec.APIKey = policy.Spec.APIKey
 	apmCondition.Spec.APIKeySecret = policy.Spec.APIKeySecret
 
-	intPolicyID, err := strconv.Atoi(policy.Status.PolicyID)
-
-	if err != nil {
-		return err
-	}
-
-	apmCondition.Spec.ExistingPolicyID = intPolicyID
+	apmCondition.Spec.ExistingPolicyID = policy.Status.PolicyID
 
 	r.Log.Info("updating existing condition", "apmAlertCondition", apmCondition)
 
-	err = r.Client.Update(r.ctx, &apmCondition)
+	err := r.Client.Update(r.ctx, &apmCondition)
 	return err
 }
 
@@ -385,7 +378,7 @@ func (r *AlertsPolicyReconciler) createNrqlCondition(policy *nrv1.AlertsPolicy, 
 }
 
 func (r *AlertsPolicyReconciler) createApmCondition(policy *nrv1.AlertsPolicy, condition *nrv1.AlertsPolicyCondition) error {
-	var apmCondition nrv1.ApmAlertCondition
+	var apmCondition nrv1.AlertsAPMCondition
 	apmCondition.GenerateName = policy.Name + "-condition-"
 	apmCondition.Namespace = policy.Namespace
 	apmCondition.Labels = policy.Labels
@@ -394,14 +387,9 @@ func (r *AlertsPolicyReconciler) createApmCondition(policy *nrv1.AlertsPolicy, c
 	apmCondition.Spec.Region = policy.Spec.Region
 	apmCondition.Spec.APIKey = policy.Spec.APIKey
 	apmCondition.Spec.APIKeySecret = policy.Spec.APIKeySecret
-	apmCondition.Status.AppliedSpec = &nrv1.ApmAlertConditionSpec{}
+	apmCondition.Status.AppliedSpec = &nrv1.AlertsAPMConditionSpec{}
 
-	intPolicyID, err := strconv.Atoi(policy.Status.PolicyID)
-	if err != nil {
-		return err
-	}
-
-	apmCondition.Spec.ExistingPolicyID = intPolicyID
+	apmCondition.Spec.ExistingPolicyID = policy.Status.PolicyID
 
 	r.Log.Info("creating apm condition", "condition", condition.Name, "conditionName", condition.Spec.Name, "apmAlertCondition", apmCondition)
 	errCondition := r.Create(r.ctx, &apmCondition)
@@ -452,12 +440,12 @@ func (r *AlertsPolicyReconciler) getAlertsNrqlConditionFromAlertsPolicyCondition
 	return
 }
 
-func (r *AlertsPolicyReconciler) getApmConditionFromAlertsPolicyCondition(condition *nrv1.AlertsPolicyCondition) (apmCondition nrv1.ApmAlertCondition) {
+func (r *AlertsPolicyReconciler) getApmConditionFromAlertsPolicyCondition(condition *nrv1.AlertsPolicyCondition) (apmCondition nrv1.AlertsAPMCondition) {
 	r.Log.Info("apm condition before retrieval", "condition", condition)
 
 	//throw away the error since empty conditions are expected
 	_ = r.Client.Get(r.ctx, condition.GetNamespace(), &apmCondition)
-	r.Log.Info("retrieved condition", "apmAlertCondition", apmCondition, "namespace", condition.GetNamespace())
+	r.Log.Info("retrieved condition", "alertsAPMCondition", apmCondition, "namespace", condition.GetNamespace())
 	return
 }
 

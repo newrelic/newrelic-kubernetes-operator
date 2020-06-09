@@ -28,6 +28,7 @@ import (
 )
 
 func registerAlerts(mgr *ctrl.Manager) error {
+	// nrqlalertcondition
 	nrqlAlertConditionReconciler := &controllers.NrqlAlertConditionReconciler{
 		Client:          (*mgr).GetClient(),
 		Log:             ctrl.Log.WithName("controllers").WithName("NrqlAlertCondition"),
@@ -46,6 +47,7 @@ func registerAlerts(mgr *ctrl.Manager) error {
 		os.Exit(1)
 	}
 
+	// alertsnrqlcondition
 	alertsNrqlConditionReconciler := &controllers.AlertsNrqlConditionReconciler{
 		Client:          (*mgr).GetClient(),
 		Log:             ctrl.Log.WithName("controllers").WithName("AlertsNrqlCondition"),
@@ -64,11 +66,12 @@ func registerAlerts(mgr *ctrl.Manager) error {
 		os.Exit(1)
 	}
 
+	// apmalertcondition
 	apmReconciler := &controllers.ApmAlertConditionReconciler{
-		Client: (*mgr).GetClient(),
-		Log:    ctrl.Log.WithName("controllers").WithName("ApmAlertCondition"),
-		Scheme: (*mgr).GetScheme(),
-		//AlertClientFunc: interfaces.InitializeAlertsClient,
+		Client:          (*mgr).GetClient(),
+		Log:             ctrl.Log.WithName("controllers").WithName("ApmAlertCondition"),
+		Scheme:          (*mgr).GetScheme(),
+		AlertClientFunc: interfaces.InitializeAlertsClient,
 	}
 
 	if err := apmReconciler.SetupWithManager(*mgr); err != nil {
@@ -82,10 +85,12 @@ func registerAlerts(mgr *ctrl.Manager) error {
 		os.Exit(1)
 	}
 
+	// alertsapmcondition
 	alertsAPMReconciler := &controllers.AlertsAPMConditionReconciler{
-		Client: (*mgr).GetClient(),
-		Log:    ctrl.Log.WithName("controllers").WithName("AlertsAPMCondition"),
-		Scheme: (*mgr).GetScheme(),
+		Client:          (*mgr).GetClient(),
+		Log:             ctrl.Log.WithName("controllers").WithName("AlertsAPMCondition"),
+		Scheme:          (*mgr).GetScheme(),
+		AlertClientFunc: interfaces.InitializeAlertsClient,
 	}
 
 	if err := alertsAPMReconciler.SetupWithManager(*mgr); err != nil {
@@ -99,6 +104,7 @@ func registerAlerts(mgr *ctrl.Manager) error {
 		os.Exit(1)
 	}
 
+	// policy
 	policyReconciler := &controllers.PolicyReconciler{
 		Client:          (*mgr).GetClient(),
 		Log:             ctrl.Log.WithName("controllers").WithName("Policy"),
@@ -112,12 +118,12 @@ func registerAlerts(mgr *ctrl.Manager) error {
 	}
 
 	policy := &nrv1.Policy{}
-
 	if err := policy.SetupWebhookWithManager(*mgr); err != nil {
 		setupLog.Error(err, "unable to create webhook", "webhook", "Policy")
 		os.Exit(1)
 	}
 
+	// alertspolicy
 	alertsPolicyReconciler := &controllers.AlertsPolicyReconciler{
 		Client:          (*mgr).GetClient(),
 		Log:             ctrl.Log.WithName("controllers").WithName("AlertsPolicy"),
@@ -131,7 +137,6 @@ func registerAlerts(mgr *ctrl.Manager) error {
 	}
 
 	alertsPolicy := &nrv1.AlertsPolicy{}
-
 	if err := alertsPolicy.SetupWebhookWithManager(*mgr); err != nil {
 		setupLog.Error(err, "unable to create webhook", "webhook", "AlertsPolicy")
 		os.Exit(1)
