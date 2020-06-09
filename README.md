@@ -254,9 +254,19 @@ This section should get you set up properly for doing development on the operato
       newrelic-control-plane   Ready    master   163m   v1.18.2
       ```
 
-1. Next steps:
-    - [Create a New Relic alert policy](#create-a-new-relic-alert-policy-with-nrql-alert-conditions)
-    - [Create a New Relic NRQL alert condition](#create-a-nrql-alert-condition-and-add-it-to-an-existing-alert-policy)
+1. Personalize your development alert policy
+
+    Edit `examples/development/personal*` with your name and API key.
+
+    Next, create your customized alert policy:
+    ```bash
+    kustomize build examples | kubectl apply -f -
+    ```
+
+    To delete your customized policy:
+    ```bash
+    kustomize build examples | kubectl delete -f -
+    ```
 
 <br>
 
