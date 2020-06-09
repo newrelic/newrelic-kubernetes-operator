@@ -255,6 +255,7 @@ func (r *AlertsPolicyReconciler) updateNrqlCondition(policy *nrv1.AlertsPolicy, 
 	nrqlCondition.Spec.ExistingPolicyID = policy.Status.PolicyID
 	nrqlCondition.Spec.APIKey = policy.Spec.APIKey
 	nrqlCondition.Spec.APIKeySecret = policy.Spec.APIKeySecret
+	nrqlCondition.Spec.AccountID = policy.Spec.AccountID
 
 	err := r.Client.Update(r.ctx, &nrqlCondition)
 	return err
@@ -282,6 +283,7 @@ func (r *AlertsPolicyReconciler) updateApmCondition(policy *nrv1.AlertsPolicy, c
 	apmCondition.Spec.Region = policy.Spec.Region
 	apmCondition.Spec.APIKey = policy.Spec.APIKey
 	apmCondition.Spec.APIKeySecret = policy.Spec.APIKeySecret
+	apmCondition.Spec.AccountID = policy.Spec.AccountID
 
 	apmCondition.Spec.ExistingPolicyID = policy.Status.PolicyID
 
@@ -359,6 +361,7 @@ func (r *AlertsPolicyReconciler) createNrqlCondition(policy *nrv1.AlertsPolicy, 
 	alertsNrqlCondition.Spec.ExistingPolicyID = policy.Status.PolicyID
 	alertsNrqlCondition.Spec.APIKey = policy.Spec.APIKey
 	alertsNrqlCondition.Spec.APIKeySecret = policy.Spec.APIKeySecret
+	alertsNrqlCondition.Spec.AccountID = policy.Spec.AccountID
 	alertsNrqlCondition.Status.AppliedSpec = &nrv1.AlertsNrqlConditionSpec{}
 
 	r.Log.Info("creating condition", "condition", condition.Name, "conditionName", condition.Spec.Name, "alertsNrqlCondition", alertsNrqlCondition)
@@ -387,6 +390,7 @@ func (r *AlertsPolicyReconciler) createApmCondition(policy *nrv1.AlertsPolicy, c
 	apmCondition.Spec.Region = policy.Spec.Region
 	apmCondition.Spec.APIKey = policy.Spec.APIKey
 	apmCondition.Spec.APIKeySecret = policy.Spec.APIKeySecret
+	apmCondition.Spec.AccountID = policy.Spec.AccountID
 	apmCondition.Status.AppliedSpec = &nrv1.AlertsAPMConditionSpec{}
 
 	apmCondition.Spec.ExistingPolicyID = policy.Status.PolicyID
