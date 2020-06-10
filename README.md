@@ -111,23 +111,26 @@ Once you've completed the [Quick Start](#quick-start) section, you can start pro
     metadata:
       name: my-policy
     spec:
+      # Add your account ID here
+      account_id: <your New Relic account ID>
       # Add your API key here
       api_key: <your New Relic personal API key>
       name: k8s created policy
-      incident_preference: "PER_POLICY"
-      region: "us"
+      incidentPreference: "PER_POLICY"
+      region: "US"
       conditions:
         - spec:
+            type: "NRQL"
             nrql:
               query: "SELECT count(*) FROM Transactions"
-              since_value: "10"
+              evaluationOffset: 10
             enabled: true
             terms:
               - threshold: "75.0"
-                time_function: "all"
-                duration: "5"
-                priority: "critical"
-                operator: "above"
+                threshold_occurrences: "ALL"
+                threshold_duration: 60
+                priority: "CRITICAL"
+                operator: "ABOVE"
             name: "K8s generated alert condition"
         - spec:
             type: "apm_app_metric"
@@ -136,7 +139,7 @@ Once you've completed the [Quick Start](#quick-start) section, you can start pro
             condition_scope: application
             entities:
               - "5950260"
-            terms:
+            apm_terms:
               - threshold: "0.9"
                 time_function: "all"
                 duration: "30"
@@ -167,29 +170,32 @@ The operator will create and update alert policies and NRQL alert conditions as 
 
     ```yaml
     apiVersion: nr.k8s.newrelic.com/v1
-    kind: NrqlAlerttsNrqlCondition
+    kind: AlertsNrqlCondition
     metadata:
       name: my-alert-condition
     spec:
+      # Add your account ID here
+      account_id: <your New Relic account ID>
       # Add your API key here
       api_key: <your New Relic personal API key>
       name: "K8s generated alert condition"
+      type: "NRQL"
       nrql:
         # Note: This is just an example.
         # You'll want to use a query with parameters that are
         # more specific to the needs for targeting associated
         # kubernetes objects.
         query: "SELECT count(*) FROM Transactions"
-        since_value: "10"
+        evaluationOffset: 10
       enabled: true
       terms:
         - threshold: "75.0"
-          time_function: "all"
-          duration: "5"
-          priority: "critical"
-          operator: "above"
-      existing_policy_id: 26458245 # Note: must match an existing policy in your account
-      region: "us"
+          threshold_occurrences: "ALL"
+          threshold_duration: 60
+          priority: "CRITICAL"
+          operator: "ABOVE"
+      existing_policy_id: "26458245" # Note: must match an existing policy in your account
+      region: "US"
     ```
 
 ### Uninstall the operator
