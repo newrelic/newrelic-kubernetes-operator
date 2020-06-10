@@ -66,27 +66,23 @@ var _ webhook.Validator = &AlertsChannel{}
 func (r *AlertsChannel) ValidateCreate() error {
 	alertschannellog.Info("validate create", "name", r.Name)
 
-	err := r.CheckForAPIKeyOrSecret()
+	err := CheckForAPIKeyOrSecret(r.Spec.APIKey, r.Spec.APIKeySecret)
 	if err != nil {
 		return err
 	}
 
-	// err = r.CheckRequiredFields()
-	// if err != nil {
-	// 	return err
-	// }
+	if !ValidRegion(r.Spec.Region) {
+		return errors.New("Invalid region set, value was: " + r.Spec.Region)
+	}
 
-	// var invalidAttributes InvalidAttributeSlice
+	var invalidAttributes InvalidAttributeSlice
 
-	// invalidAttributes = append(invalidAttributes, r.ValidateType()...)
-	// invalidAttributes = append(invalidAttributes, r.ValidateMetric()...)
-	// invalidAttributes = append(invalidAttributes, r.ValidateTerms()...)
-	// invalidAttributes = append(invalidAttributes, r.ValidateUserDefinedValueFunction()...)
+	r.ValidateType()
+	invalidAttributes = append(invalidAttributes, r.ValidateType()...)
 
-	// if len(invalidAttributes) > 0 {
-	// 	return errors.New("error with invalid attributes: \n" + invalidAttributes.errorString())
-	// }
-	// return r.CheckExistingPolicyID()
+	if len(invalidAttributes) > 0 {
+		return errors.New("error with invalid attributes: \n" + invalidAttributes.errorString())
+	}
 	return nil
 }
 
@@ -94,26 +90,19 @@ func (r *AlertsChannel) ValidateCreate() error {
 func (r *AlertsChannel) ValidateUpdate(old runtime.Object) error {
 	alertschannellog.Info("validate update", "name", r)
 
-	err := r.CheckForAPIKeyOrSecret()
+	err := CheckForAPIKeyOrSecret(r.Spec.APIKey, r.Spec.APIKeySecret)
 	if err != nil {
 		return err
 	}
 
-	// err = r.CheckRequiredFields()
-	// if err != nil {
-	// 	return err
-	// }
-	// var invalidAttributes InvalidAttributeSlice
+	var invalidAttributes InvalidAttributeSlice
 
-	// invalidAttributes = append(invalidAttributes, r.ValidateType()...)
-	// invalidAttributes = append(invalidAttributes, r.ValidateMetric()...)
-	// invalidAttributes = append(invalidAttributes, r.ValidateTerms()...)
-	// invalidAttributes = append(invalidAttributes, r.ValidateUserDefinedValueFunction()...)
+	r.ValidateType()
+	invalidAttributes = append(invalidAttributes, r.ValidateType()...)
 
-	// if len(invalidAttributes) > 0 {
-	// 	return errors.New("error with invalid attributes")
-	// }
-	// return r.CheckExistingPolicyID()
+	if len(invalidAttributes) > 0 {
+		return errors.New("error with invalid attributes: \n" + invalidAttributes.errorString())
+	}
 	return nil
 }
 
@@ -138,180 +127,20 @@ func (r *AlertsChannel) ValidateType() InvalidAttributeSlice {
 		string(alerts.ChannelTypes.Webhook):
 		return []invalidAttribute{}
 	default:
-		log.Info("Invalid Type attribute", "Type", r.Spec.Type)
+		alertschannellog.Info("Invalid Type attribute", "Type", r.Spec.Type)
 		return []invalidAttribute{{attribute: "Type", value: r.Spec.Type}}
 	}
 }
 
-// func (r *AlertsChannel) ValidateMetric() InvalidAttributeSlice {
-// 	switch alerts.MetricType(r.Spec.Metric) {
-// 	case alerts.MetricTypes.AjaxResponseTime,
-// 		alerts.MetricTypes.AjaxThroughput,
-// 		alerts.MetricTypes.Apdex,
-// 		alerts.MetricTypes.CPUPercentage,
-// 		alerts.MetricTypes.Database,
-// 		alerts.MetricTypes.DiskIOPercentage,
-// 		alerts.MetricTypes.DomProcessing,
-// 		alerts.MetricTypes.EndUserApdex,
-// 		alerts.MetricTypes.ErrorCount,
-// 		alerts.MetricTypes.ErrorPercentage,
-// 		alerts.MetricTypes.FullestDiskPercentage,
-// 		alerts.MetricTypes.Images,
-// 		alerts.MetricTypes.JSON,
-// 		alerts.MetricTypes.LoadAverageOneMinute,
-// 		alerts.MetricTypes.MemoryPercentage,
-// 		alerts.MetricTypes.MobileCrashRate,
-// 		alerts.MetricTypes.Network,
-// 		alerts.MetricTypes.NetworkErrorPercentage,
-// 		alerts.MetricTypes.PageRendering,
-// 		alerts.MetricTypes.PageViewThroughput,
-// 		alerts.MetricTypes.PageViewsWithJsErrors,
-// 		alerts.MetricTypes.RequestQueuing,
-// 		alerts.MetricTypes.ResponseTime,
-// 		alerts.MetricTypes.ResponseTimeBackground,
-// 		alerts.MetricTypes.ResponseTimeWeb,
-// 		alerts.MetricTypes.StatusErrorPercentage,
-// 		alerts.MetricTypes.Throughput,
-// 		alerts.MetricTypes.ThroughputBackground,
-// 		alerts.MetricTypes.ThroughputWeb,
-// 		alerts.MetricTypes.TotalPageLoad,
-// 		alerts.MetricTypes.UserDefined,
-// 		alerts.MetricTypes.ViewLoading,
-// 		alerts.MetricTypes.WebApplication:
-// 		return []invalidAttribute{}
-// 	default:
-// 		log.Info("Invalid Metric attribute", "Metric", r.Spec.Metric)
-// 		return []invalidAttribute{{attribute: "Type", value: r.Spec.Metric}}
+// // CheckForAPIKeyOrSecret - Ensures resources have set an API Key
+// func (r *AlertsChannel) CheckForAPIKeyOrSecret() error {
+// 	if r.Spec.APIKey != "" {
+// 		return nil
 // 	}
-// }
-
-// func (r *AlertsChannel) ValidateTerms() InvalidAttributeSlice {
-// 	var invalidTerms InvalidAttributeSlice
-// 	for _, term := range r.Spec.Terms {
-// 		switch alerts.TimeFunctionType(term.TimeFunction) {
-// 		case alerts.TimeFunctionTypes.All, alerts.TimeFunctionTypes.Any:
-// 			continue
-// 		default:
-// 			log.Info("Invalid UserDefined.ValueFunction passed", "UserDefined.ValueFunction", term.TimeFunction)
-// 			invalidTerms = append(invalidTerms, invalidAttribute{
-// 				attribute: "Term.TimeFunction",
-// 				value:     term.TimeFunction,
-// 			})
+// 	if r.Spec.APIKeySecret != (NewRelicAPIKeySecret{}) {
+// 		if r.Spec.APIKeySecret.Name != "" && r.Spec.APIKeySecret.Namespace != "" && r.Spec.APIKeySecret.KeyName != "" {
+// 			return nil
 // 		}
-// 		switch alerts.OperatorType(term.Operator) {
-// 		case alerts.OperatorTypes.Equal, alerts.OperatorTypes.Above, alerts.OperatorTypes.Below:
-// 			continue
-// 		default:
-// 			log.Info("Invalid Term.Operator passed", "Term.Operator ", term.Operator)
-// 			invalidTerms = append(invalidTerms, invalidAttribute{
-// 				attribute: "Term.Operator",
-// 				value:     term.Operator,
-// 			})
-// 		}
-// 		switch alerts.PriorityType(term.Priority) {
-// 		case alerts.PriorityTypes.Critical, alerts.PriorityTypes.Warning:
-// 			continue
-// 		default:
-// 			log.Info("Invalid term.Priority passed", "term.Priority", term.Priority)
-// 			invalidTerms = append(invalidTerms, invalidAttribute{
-// 				attribute: "Term.Priority",
-// 				value:     term.Priority,
-// 			})
-// 		}
-
 // 	}
-
-// 	return invalidTerms
-// }
-
-// func (r *AlertsChannel) ValidateUserDefinedValueFunction() InvalidAttributeSlice {
-// 	switch r.Spec.UserDefined.ValueFunction {
-// 	case "", alerts.ValueFunctionTypes.Average,
-// 		alerts.ValueFunctionTypes.Max,
-// 		alerts.ValueFunctionTypes.Min,
-// 		alerts.ValueFunctionTypes.SampleSize,
-// 		alerts.ValueFunctionTypes.SingleValue,
-// 		alerts.ValueFunctionTypes.Total:
-// 		return []invalidAttribute{}
-// 	default:
-// 		log.Info("Invalid UserDefined.ValueFunction passed", "UserDefined.ValueFunction", r.Spec.UserDefined.ValueFunction)
-// 		return []invalidAttribute{{attribute: "UserDefined.ValueFunction: ", value: string(r.Spec.UserDefined.ValueFunction)}}
-// 	}
-// }
-
-// func (r *AlertsChannel) CheckExistingPolicyID() error {
-// 	log.Info("Checking existing", "policyId", r.Spec.ExistingPolicyID)
-// 	ctx := context.Background()
-// 	var apiKey string
-// 	if r.Spec.APIKey == "" {
-// 		key := types.NamespacedName{Namespace: r.Spec.APIKeySecret.Namespace, Name: r.Spec.APIKeySecret.Name}
-// 		var apiKeySecret v1.Secret
-// 		getErr := k8Client.Get(ctx, key, &apiKeySecret)
-// 		if getErr != nil {
-// 			log.Error(getErr, "Error getting secret")
-// 			return getErr
-// 		}
-// 		apiKey = string(apiKeySecret.Data[r.Spec.APIKeySecret.KeyName])
-
-// 	} else {
-// 		apiKey = r.Spec.APIKey
-// 	}
-
-// 	alertsClient, errAlertClient := alertClientFunc(apiKey, r.Spec.Region)
-// 	if errAlertClient != nil {
-// 		log.Error(errAlertClient, "failed to get policy",
-// 			"policyId", r.Spec.ExistingPolicyID,
-// 			"API Key", interfaces.PartialAPIKey(apiKey),
-// 			"region", r.Spec.Region,
-// 		)
-// 		return errAlertClient
-// 	}
-// 	alertPolicy, errAlertPolicy := alertsClient.GetPolicy(r.Spec.ExistingPolicyID)
-// 	if errAlertPolicy != nil {
-// 		if r.GetDeletionTimestamp() != nil {
-// 			log.Info("Deleting resource", "errAlertPolicy", errAlertPolicy)
-// 			if strings.Contains(errAlertPolicy.Error(), "no alert policy found for id") {
-// 				log.Info("ExistingAlertPolicy not found but we are deleting the condition so this is ok")
-// 				return nil
-// 			}
-// 		}
-// 		log.Error(errAlertPolicy, "failed to get policy",
-// 			"policyId", r.Spec.ExistingPolicyID,
-// 			"API Key", interfaces.PartialAPIKey(apiKey),
-// 			"region", r.Spec.Region,
-// 		)
-// 		return errAlertPolicy
-// 	}
-// 	if alertPolicy.ID != r.Spec.ExistingPolicyID {
-// 		log.Info("Alert policy returned by the API failed to match provided policy ID")
-// 		return errors.New("alert policy returned by API did not match")
-// 	}
-// 	return nil
-// }
-
-func (r *AlertsChannel) CheckForAPIKeyOrSecret() error {
-	if r.Spec.APIKey != "" {
-		return nil
-	}
-	if r.Spec.APIKeySecret != (NewRelicAPIKeySecret{}) {
-		if r.Spec.APIKeySecret.Name != "" && r.Spec.APIKeySecret.Namespace != "" && r.Spec.APIKeySecret.KeyName != "" {
-			return nil
-		}
-	}
-	return errors.New("either api_key or api_key_secret must be set")
-}
-
-// func (r *AlertsChannel) CheckRequiredFields() error {
-
-// 	missingFields := []string{}
-// 	if r.Spec.Region == "" {
-// 		missingFields = append(missingFields, "region")
-// 	}
-// 	if r.Spec.ExistingPolicyID == 0 {
-// 		missingFields = append(missingFields, "existing_policy_id")
-// 	}
-// 	if len(missingFields) > 0 {
-// 		return errors.New(strings.Join(missingFields, " and ") + " must be set")
-// 	}
-// 	return nil
+// 	return errors.New("either api_key or api_key_secret must be set")
 // }
