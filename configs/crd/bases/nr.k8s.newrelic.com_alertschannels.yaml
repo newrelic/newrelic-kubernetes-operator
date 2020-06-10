@@ -46,6 +46,44 @@ spec:
                 namespace:
                   type: string
               type: object
+            configuration:
+              description: AlertsChannelConfiguration - copy of alerts.ChannelConfiguration
+              properties:
+                api_key:
+                  type: string
+                auth_password:
+                  type: string
+                auth_token:
+                  type: string
+                auth_username:
+                  type: string
+                base_url:
+                  type: string
+                channel:
+                  type: string
+                include_json_attachment:
+                  type: string
+                key:
+                  type: string
+                payload_type:
+                  type: string
+                recipients:
+                  type: string
+                region:
+                  type: string
+                route_key:
+                  type: string
+                service_key:
+                  type: string
+                tags:
+                  type: string
+                teams:
+                  type: string
+                url:
+                  type: string
+                user_id:
+                  type: string
+              type: object
             id:
               type: integer
             links:
@@ -55,20 +93,21 @@ spec:
                   items:
                     type: integer
                   type: array
+                policy_names:
+                  items:
+                    type: string
+                  type: array
               type: object
             name:
               type: string
             region:
               type: string
             type:
-              description: ChannelType specifies the channel type used when creating the alert channel.
               type: string
           type: object
         status:
           description: AlertsChannelStatus defines the observed state of AlertsChannel
           properties:
-            Channel_id:
-              type: integer
             applied_spec:
               description: AlertsChannelSpec defines the desired state of AlertsChannel
               properties:
@@ -83,6 +122,44 @@ spec:
                     namespace:
                       type: string
                   type: object
+                configuration:
+                  description: AlertsChannelConfiguration - copy of alerts.ChannelConfiguration
+                  properties:
+                    api_key:
+                      type: string
+                    auth_password:
+                      type: string
+                    auth_token:
+                      type: string
+                    auth_username:
+                      type: string
+                    base_url:
+                      type: string
+                    channel:
+                      type: string
+                    include_json_attachment:
+                      type: string
+                    key:
+                      type: string
+                    payload_type:
+                      type: string
+                    recipients:
+                      type: string
+                    region:
+                      type: string
+                    route_key:
+                      type: string
+                    service_key:
+                      type: string
+                    tags:
+                      type: string
+                    teams:
+                      type: string
+                    url:
+                      type: string
+                    user_id:
+                      type: string
+                  type: object
                 id:
                   type: integer
                 links:
@@ -92,18 +169,23 @@ spec:
                       items:
                         type: integer
                       type: array
+                    policy_names:
+                      items:
+                        type: string
+                      type: array
                   type: object
                 name:
                   type: string
                 region:
                   type: string
                 type:
-                  description: ChannelType specifies the channel type used when creating the alert channel.
                   type: string
               type: object
+            channel_id:
+              type: integer
           required:
-          - Channel_id
           - applied_spec
+          - channel_id
           type: object
       type: object
   version: v1

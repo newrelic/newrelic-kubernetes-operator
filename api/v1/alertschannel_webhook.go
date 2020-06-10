@@ -23,6 +23,8 @@ import (
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/webhook"
 
+	"github.com/newrelic/newrelic-client-go/pkg/alerts"
+
 	"github.com/newrelic/newrelic-kubernetes-operator/interfaces"
 )
 
@@ -123,19 +125,23 @@ func (r *AlertsChannel) ValidateDelete() error {
 	return nil
 }
 
-// func (r *AlertsChannel) ValidateType() InvalidAttributeSlice {
-// 	switch r.Spec.Type {
-// 	case string(alerts.ConditionTypes.APMApplicationMetric),
-// 		string(alerts.ConditionTypes.APMKeyTransactionMetric),
-// 		string(alerts.ConditionTypes.BrowserMetric),
-// 		string(alerts.ConditionTypes.MobileMetric),
-// 		string(alerts.ConditionTypes.ServersMetric):
-// 		return []invalidAttribute{}
-// 	default:
-// 		log.Info("Invalid Type attribute", "Type", r.Spec.Type)
-// 		return []invalidAttribute{{attribute: "Type", value: r.Spec.Type}}
-// 	}
-// }
+//ValidateType - Validates the Type attribute
+func (r *AlertsChannel) ValidateType() InvalidAttributeSlice {
+
+	switch r.Spec.Type {
+	case string(alerts.ChannelTypes.Email),
+		string(alerts.ChannelTypes.OpsGenie),
+		string(alerts.ChannelTypes.PagerDuty),
+		string(alerts.ChannelTypes.Slack),
+		string(alerts.ChannelTypes.User),
+		string(alerts.ChannelTypes.VictorOps),
+		string(alerts.ChannelTypes.Webhook):
+		return []invalidAttribute{}
+	default:
+		log.Info("Invalid Type attribute", "Type", r.Spec.Type)
+		return []invalidAttribute{{attribute: "Type", value: r.Spec.Type}}
+	}
+}
 
 // func (r *AlertsChannel) ValidateMetric() InvalidAttributeSlice {
 // 	switch alerts.MetricType(r.Spec.Metric) {
