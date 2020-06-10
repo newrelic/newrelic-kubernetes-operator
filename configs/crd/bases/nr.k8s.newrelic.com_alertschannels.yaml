@@ -6,7 +6,7 @@ metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.3.0
   creationTimestamp: null
-  name: alertchannels.nr.k8s.newrelic.com
+  name: alertschannels.nr.k8s.newrelic.com
 spec:
   additionalPrinterColumns:
   - JSONPath: .status.created
@@ -14,15 +14,15 @@ spec:
     type: boolean
   group: nr.k8s.newrelic.com
   names:
-    kind: AlertChannel
-    listKind: AlertChannelList
-    plural: alertchannels
-    singular: alertchannel
+    kind: AlertsChannel
+    listKind: AlertsChannelList
+    plural: alertschannels
+    singular: alertschannel
   scope: Namespaced
   subresources: {}
   validation:
     openAPIV3Schema:
-      description: AlertChannel is the Schema for the AlertChannel API
+      description: AlertsChannel is the Schema for the AlertsChannel API
       properties:
         apiVersion:
           description: 'APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
@@ -33,7 +33,7 @@ spec:
         metadata:
           type: object
         spec:
-          description: AlertChannelSpec defines the desired state of AlertChannel
+          description: AlertsChannelSpec defines the desired state of AlertsChannel
           properties:
             api_key:
               type: string
@@ -65,12 +65,12 @@ spec:
               type: string
           type: object
         status:
-          description: AlertChannelStatus defines the observed state of AlertChannel
+          description: AlertsChannelStatus defines the observed state of AlertsChannel
           properties:
             Channel_id:
               type: integer
             applied_spec:
-              description: AlertChannelSpec defines the desired state of AlertChannel
+              description: AlertsChannelSpec defines the desired state of AlertsChannel
               properties:
                 api_key:
                   type: string

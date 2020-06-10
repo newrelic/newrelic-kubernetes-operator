@@ -1,13 +1,13 @@
-# permissions for end users to edit alertchannels.
+# permissions for end users to edit alertschannels.
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
-  name: alertchannel-editor-role
+  name: alertschannel-editor-role
 rules:
 - apiGroups:
   - nr.k8s.newrelic.com
   resources:
-  - alertchannels
+  - alertschannels
   verbs:
   - create
   - delete
@@ -19,6 +19,6 @@ rules:
 - apiGroups:
   - nr.k8s.newrelic.com
   resources:
-  - alertchannels/status
+  - alertschannels/status
   verbs:
   - get

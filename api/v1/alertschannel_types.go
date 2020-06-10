@@ -7,8 +7,8 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-// AlertChannelSpec defines the desired state of AlertChannel
-type AlertChannelSpec struct {
+// AlertsChannelSpec defines the desired state of AlertsChannel
+type AlertsChannelSpec struct {
 	ID           int                  `json:"id,omitempty"`
 	Name         string               `json:"name,omitempty"`
 	APIKey       string               `json:"api_key,omitempty"`
@@ -25,38 +25,38 @@ type ChannelLinks struct {
 	PolicyIDs []int `json:"policy_ids,omitempty"`
 }
 
-// AlertChannelStatus defines the observed state of AlertChannel
-type AlertChannelStatus struct {
-	AppliedSpec *AlertChannelSpec `json:"applied_spec"`
-	ChannelID   int               `json:"Channel_id"`
+// AlertsChannelStatus defines the observed state of AlertsChannel
+type AlertsChannelStatus struct {
+	AppliedSpec *AlertsChannelSpec `json:"applied_spec"`
+	ChannelID   int                `json:"Channel_id"`
 }
 
 // +kubebuilder:object:root=true
 // +kubebuilder:printcolumn:name="Created",type="boolean",JSONPath=".status.created"
 
-// AlertChannel is the Schema for the AlertChannel API
-type AlertChannel struct {
+// AlertsChannel is the Schema for the AlertsChannel API
+type AlertsChannel struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 
-	Spec   AlertChannelSpec   `json:"spec,omitempty"`
-	Status AlertChannelStatus `json:"status,omitempty"`
+	Spec   AlertsChannelSpec   `json:"spec,omitempty"`
+	Status AlertsChannelStatus `json:"status,omitempty"`
 }
 
 // +kubebuilder:object:root=true
 
-// AlertChannelList contains a list of AlertChannel
-type AlertChannelList struct {
+// AlertsChannelList contains a list of AlertsChannel
+type AlertsChannelList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`
-	Items           []AlertChannel `json:"items"`
+	Items           []AlertsChannel `json:"items"`
 }
 
 func init() {
-	SchemeBuilder.Register(&AlertChannel{}, &AlertChannelList{})
+	SchemeBuilder.Register(&AlertsChannel{}, &AlertsChannelList{})
 }
 
-func (in AlertChannelSpec) APICondition() alerts.Channel {
+func (in AlertsChannelSpec) APICondition() alerts.Channel {
 	jsonString, _ := json.Marshal(in)
 	var APICondition alerts.Channel
 	json.Unmarshal(jsonString, &APICondition) //nolint

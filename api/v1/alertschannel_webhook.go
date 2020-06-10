@@ -28,11 +28,11 @@ import (
 
 // log is for logging in this package.
 var (
-	alertchannellog = logf.Log.WithName("alertchannel-resource")
+	alertschannellog = logf.Log.WithName("alertschannel-resource")
 )
 
 // SetupWebhookWithManager - instantiates the Webhook
-func (r *AlertChannel) SetupWebhookWithManager(mgr ctrl.Manager) error {
+func (r *AlertsChannel) SetupWebhookWithManager(mgr ctrl.Manager) error {
 	alertClientFunc = interfaces.InitializeAlertsClient
 	k8Client = mgr.GetClient()
 	return ctrl.NewWebhookManagedBy(mgr).
@@ -42,27 +42,27 @@ func (r *AlertChannel) SetupWebhookWithManager(mgr ctrl.Manager) error {
 
 // EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
 
-// +kubebuilder:webhook:path=/mutate-nr-k8s-newrelic-com-v1-alertchannel,mutating=true,failurePolicy=fail,groups=nr.k8s.newrelic.com,resources=alertchannels,verbs=create;update,versions=v1,name=malertchannel.kb.io,sideEffects=None
+// +kubebuilder:webhook:path=/mutate-nr-k8s-newrelic-com-v1-alertschannel,mutating=true,failurePolicy=fail,groups=nr.k8s.newrelic.com,resources=alertschannels,verbs=create;update,versions=v1,name=malertschannel.kb.io,sideEffects=None
 
-var _ webhook.Defaulter = &AlertChannel{}
+var _ webhook.Defaulter = &AlertsChannel{}
 
 // Default implements webhook.Defaulter so a webhook will be registered for the type
-func (r *AlertChannel) Default() {
-	alertchannellog.Info("default", "name", r.Name)
+func (r *AlertsChannel) Default() {
+	alertschannellog.Info("default", "name", r.Name)
 
 	if r.Status.AppliedSpec == nil {
 		log.Info("Setting null Applied Spec to empty interface")
-		r.Status.AppliedSpec = &AlertChannelSpec{}
+		r.Status.AppliedSpec = &AlertsChannelSpec{}
 	}
 }
 
-// +kubebuilder:webhook:verbs=create;update,path=/validate-nr-k8s-newrelic-com-v1-alertchannel,mutating=false,failurePolicy=fail,groups=nr.k8s.newrelic.com,resources=alertchannels,versions=v1,name=valertchannel.kb.io,sideEffects=None
+// +kubebuilder:webhook:verbs=create;update,path=/validate-nr-k8s-newrelic-com-v1-alertschannel,mutating=false,failurePolicy=fail,groups=nr.k8s.newrelic.com,resources=alertschannels,versions=v1,name=valertschannel.kb.io,sideEffects=None
 
-var _ webhook.Validator = &AlertChannel{}
+var _ webhook.Validator = &AlertsChannel{}
 
 // ValidateCreate implements webhook.Validator so a webhook will be registered for the type
-func (r *AlertChannel) ValidateCreate() error {
-	alertchannellog.Info("validate create", "name", r.Name)
+func (r *AlertsChannel) ValidateCreate() error {
+	alertschannellog.Info("validate create", "name", r.Name)
 
 	err := r.CheckForAPIKeyOrSecret()
 	if err != nil {
@@ -89,8 +89,8 @@ func (r *AlertChannel) ValidateCreate() error {
 }
 
 // ValidateUpdate implements webhook.Validator so a webhook will be registered for the type
-func (r *AlertChannel) ValidateUpdate(old runtime.Object) error {
-	alertchannellog.Info("validate update", "name", r)
+func (r *AlertsChannel) ValidateUpdate(old runtime.Object) error {
+	alertschannellog.Info("validate update", "name", r)
 
 	err := r.CheckForAPIKeyOrSecret()
 	if err != nil {
@@ -116,14 +116,14 @@ func (r *AlertChannel) ValidateUpdate(old runtime.Object) error {
 }
 
 // ValidateDelete implements webhook.Validator so a webhook will be registered for the type
-func (r *AlertChannel) ValidateDelete() error {
-	alertchannellog.Info("validate delete", "name", r.Name)
+func (r *AlertsChannel) ValidateDelete() error {
+	alertschannellog.Info("validate delete", "name", r.Name)
 
 	// TODO(user): fill in your validation logic upon object deletion.
 	return nil
 }
 
-// func (r *AlertChannel) ValidateType() InvalidAttributeSlice {
+// func (r *AlertsChannel) ValidateType() InvalidAttributeSlice {
 // 	switch r.Spec.Type {
 // 	case string(alerts.ConditionTypes.APMApplicationMetric),
 // 		string(alerts.ConditionTypes.APMKeyTransactionMetric),
@@ -137,7 +137,7 @@ func (r *AlertChannel) ValidateDelete() error {
 // 	}
 // }
 
-// func (r *AlertChannel) ValidateMetric() InvalidAttributeSlice {
+// func (r *AlertsChannel) ValidateMetric() InvalidAttributeSlice {
 // 	switch alerts.MetricType(r.Spec.Metric) {
 // 	case alerts.MetricTypes.AjaxResponseTime,
 // 		alerts.MetricTypes.AjaxThroughput,
@@ -179,7 +179,7 @@ func (r *AlertChannel) ValidateDelete() error {
 // 	}
 // }
 
-// func (r *AlertChannel) ValidateTerms() InvalidAttributeSlice {
+// func (r *AlertsChannel) ValidateTerms() InvalidAttributeSlice {
 // 	var invalidTerms InvalidAttributeSlice
 // 	for _, term := range r.Spec.Terms {
 // 		switch alerts.TimeFunctionType(term.TimeFunction) {
@@ -218,7 +218,7 @@ func (r *AlertChannel) ValidateDelete() error {
 // 	return invalidTerms
 // }
 
-// func (r *AlertChannel) ValidateUserDefinedValueFunction() InvalidAttributeSlice {
+// func (r *AlertsChannel) ValidateUserDefinedValueFunction() InvalidAttributeSlice {
 // 	switch r.Spec.UserDefined.ValueFunction {
 // 	case "", alerts.ValueFunctionTypes.Average,
 // 		alerts.ValueFunctionTypes.Max,
@@ -233,7 +233,7 @@ func (r *AlertChannel) ValidateDelete() error {
 // 	}
 // }
 
-// func (r *AlertChannel) CheckExistingPolicyID() error {
+// func (r *AlertsChannel) CheckExistingPolicyID() error {
 // 	log.Info("Checking existing", "policyId", r.Spec.ExistingPolicyID)
 // 	ctx := context.Background()
 // 	var apiKey string
@@ -283,7 +283,7 @@ func (r *AlertChannel) ValidateDelete() error {
 // 	return nil
 // }
 
-func (r *AlertChannel) CheckForAPIKeyOrSecret() error {
+func (r *AlertsChannel) CheckForAPIKeyOrSecret() error {
 	if r.Spec.APIKey != "" {
 		return nil
 	}
@@ -295,7 +295,7 @@ func (r *AlertChannel) CheckForAPIKeyOrSecret() error {
 	return errors.New("either api_key or api_key_secret must be set")
 }
 
-// func (r *AlertChannel) CheckRequiredFields() error {
+// func (r *AlertsChannel) CheckRequiredFields() error {
 
 // 	missingFields := []string{}
 // 	if r.Spec.Region == "" {

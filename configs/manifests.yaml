@@ -11,9 +11,9 @@ webhooks:
     service:
       name: webhook-service
       namespace: system
-      path: /mutate-nr-k8s-newrelic-com-v1-alertchannel
+      path: /mutate-nr-k8s-newrelic-com-v1-alertschannel
   failurePolicy: Fail
-  name: malertchannel.kb.io
+  name: malertschannel.kb.io
   rules:
   - apiGroups:
     - nr.k8s.newrelic.com
@@ -23,7 +23,7 @@ webhooks:
     - CREATE
     - UPDATE
     resources:
-    - alertchannels
+    - alertschannels
   sideEffects: None
 - clientConfig:
     caBundle: Cg==
@@ -95,9 +95,9 @@ webhooks:
     service:
       name: webhook-service
       namespace: system
-      path: /validate-nr-k8s-newrelic-com-v1-alertchannel
+      path: /validate-nr-k8s-newrelic-com-v1-alertschannel
   failurePolicy: Fail
-  name: valertchannel.kb.io
+  name: valertschannel.kb.io
   rules:
   - apiGroups:
     - nr.k8s.newrelic.com
@@ -107,7 +107,7 @@ webhooks:
     - CREATE
     - UPDATE
     resources:
-    - alertchannels
+    - alertschannels
   sideEffects: None
 - clientConfig:
     caBundle: Cg==
