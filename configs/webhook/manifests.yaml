@@ -60,6 +60,24 @@ webhooks:
     - UPDATE
     resources:
     - policies
+- clientConfig:
+    caBundle: Cg==
+    service:
+      name: webhook-service
+      namespace: system
+      path: /mutate-nr-k8s-newrelic-com-v1-alertchannel
+  failurePolicy: Fail
+  name: malertchannel.kb.io
+  rules:
+  - apiGroups:
+    - nr.k8s.newrelic.com
+    apiVersions:
+    - v1
+    operations:
+    - CREATE
+    - UPDATE
+    resources:
+    - alertchannel
 
 ---
 apiVersion: admissionregistration.k8s.io/v1beta1
@@ -122,3 +140,21 @@ webhooks:
     - UPDATE
     resources:
     - policies
+- clientConfig:
+    caBundle: Cg==
+    service:
+      name: webhook-service
+      namespace: system
+      path: /validate-nr-k8s-newrelic-com-v1-alertchannel
+  failurePolicy: Fail
+  name: valertchannel.kb.io
+  rules:
+  - apiGroups:
+    - nr.k8s.newrelic.com
+    apiVersions:
+    - v1
+    operations:
+    - CREATE
+    - UPDATE
+    resources:
+    - alertchannel

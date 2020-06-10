@@ -9,6 +9,26 @@ rules:
 - apiGroups:
   - nr.k8s.newrelic.com
   resources:
+  - alertchannel
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - nr.k8s.newrelic.com
+  resources:
+  - alertchannel/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - nr.k8s.newrelic.com
+  resources:
   - apmalertconditions
   verbs:
   - create

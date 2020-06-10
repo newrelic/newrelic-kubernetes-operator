@@ -69,3 +69,23 @@ rules:
   - get
   - patch
   - update
+- apiGroups:
+  - nr.k8s.newrelic.com
+  resources:
+  - alertchannels
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - nr.k8s.newrelic.com
+  resources:
+  - alertchannels/status
+  verbs:
+  - get
+  - patch
+  - update

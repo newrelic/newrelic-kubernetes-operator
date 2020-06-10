@@ -5,6 +5,7 @@ resources:
 - bases/nr.k8s.newrelic.com_nrqlalertconditions.yaml
 - bases/nr.k8s.newrelic.com_policies.yaml
 - bases/nr.k8s.newrelic.com_apmalertconditions.yaml
+- bases/nr.k8s.newrelic.com_alertchannels.yaml
 # +kubebuilder:scaffold:crdkustomizeresource
 
 patchesStrategicMerge:
