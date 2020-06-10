@@ -1,0 +1,6 @@
+apiVersion: nr.k8s.newrelic.com/v1
+kind: Policy
+metadata:
+  name: my-policy
+spec:
+  name: <NAME> k8s created policy
