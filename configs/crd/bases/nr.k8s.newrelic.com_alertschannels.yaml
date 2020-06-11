@@ -93,6 +93,10 @@ spec:
                   items:
                     type: integer
                   type: array
+                policy_kubernetes_objects:
+                  items:
+                    type: object
+                  type: array
                 policy_names:
                   items:
                     type: string
@@ -168,6 +172,10 @@ spec:
                     policy_ids:
                       items:
                         type: integer
+                      type: array
+                    policy_kubernetes_objects:
+                      items:
+                        type: object
                       type: array
                     policy_names:
                       items:

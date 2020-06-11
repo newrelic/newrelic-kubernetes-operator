@@ -20,6 +20,7 @@ limitations under the License.
 package v1
 
 import (
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 )
 
@@ -397,6 +398,13 @@ func (in *ChannelLinks) DeepCopyInto(out *ChannelLinks) {
 		in, out := &in.PolicyNames, &out.PolicyNames
 		*out = make([]string, len(*in))
 		copy(*out, *in)
+	}
+	if in.PolicyKubernetesObjects != nil {
+		in, out := &in.PolicyKubernetesObjects, &out.PolicyKubernetesObjects
+		*out = make([]metav1.ObjectMeta, len(*in))
+		for i := range *in {
+			(*in)[i].DeepCopyInto(&(*out)[i])
+		}
 	}
 }
 

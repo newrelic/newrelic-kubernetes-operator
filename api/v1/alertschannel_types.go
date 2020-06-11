@@ -21,8 +21,9 @@ type AlertsChannelSpec struct {
 
 // ChannelLinks - copy of alerts.ChannelLinks
 type ChannelLinks struct {
-	PolicyIDs   []int    `json:"policy_ids,omitempty"`
-	PolicyNames []string `json:"policy_names,omitempty"`
+	PolicyIDs               []int               `json:"policy_ids,omitempty"`
+	PolicyNames             []string            `json:"policy_names,omitempty"`
+	PolicyKubernetesObjects []metav1.ObjectMeta `json:"policy_kubernetes_objects,omitempty"`
 }
 
 // AlertsChannelStatus defines the observed state of AlertsChannel
