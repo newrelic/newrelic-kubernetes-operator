@@ -3,7 +3,7 @@ kind: AlertsChannel
 metadata:
   name: my-channel1
 spec:
-  #api_key: <your New Relic personal API key>
+  api_key: <your New Relic personal API key>
   # api_key_secret:
   #   name: nr-api-key
   #   namespace: default
@@ -12,7 +12,6 @@ spec:
 
 
   name:         "my alert channels"
-  api_key:       "NRAK-YKFPBLU0WG1DL6M17L6DGKYMBPW"
   region:       "US"
   type:         "email"
   links:
