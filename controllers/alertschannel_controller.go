@@ -81,15 +81,18 @@ func (r *AlertsChannelReconciler) Reconcile(req ctrl.Request) (ctrl.Result, erro
 
 	//examine DeletionTimestamp to determine if object is under deletion
 	if alertsChannel.DeletionTimestamp.IsZero() {
+
 		if !containsString(alertsChannel.Finalizers, deleteFinalizer) {
 			alertsChannel.Finalizers = append(alertsChannel.Finalizers, deleteFinalizer)
 		}
 	} else {
+		r.Log.Info("K8s resource deletion")
 		err := r.deleteAlertsChannel(&alertsChannel, deleteFinalizer)
 		if err != nil {
 			r.Log.Error(err, "error deleting channel", "name", alertsChannel.Name)
 			return ctrl.Result{}, err
 		}
+		return ctrl.Result{}, nil
 	}
 
 	if reflect.DeepEqual(&alertsChannel.Spec, alertsChannel.Status.AppliedSpec) {
@@ -169,21 +172,46 @@ func (r *AlertsChannelReconciler) createAlertsChannel(alertsChannel *nrv1.Alerts
 	APIChannel := alertsChannel.Spec.APIChannel()
 	createdCondition, err := r.Alerts.CreateChannel(APIChannel)
 	if err != nil {
-		r.Log.Error(err, "error creating AlertsChannel"+alertsChannel.Name)
+		r.Log.Error(err, "Error creating AlertsChannel"+alertsChannel.Name)
 		return err
 	}
 	alertsChannel.Status.ChannelID = createdCondition.ID
 	alertsChannel.Status.AppliedSpec = &alertsChannel.Spec
 	err = r.Client.Update(r.ctx, alertsChannel)
 	if err != nil {
-		r.Log.Error(err, "tried updating condition status", "name", alertsChannel.Name, "Namespace", alertsChannel.Namespace)
+		r.Log.Error(err, "Tried updating channel status", "name", alertsChannel.Name, "Namespace", alertsChannel.Namespace)
 		return err
 	}
 	return nil
 }
 
-func (r *AlertsChannelReconciler) updateAlertsChannel(alertschannel *nrv1.AlertsChannel) error {
+func (r *AlertsChannelReconciler) updateAlertsChannel(alertsChannel *nrv1.AlertsChannel) error {
+	r.Log.Info("Updating AlertsChannel", "name", alertsChannel.Name, "ChannelName", alertsChannel.Spec.Name)
+
+	// Now update the AppliedSpec and the k8s object
+	alertsChannel.Status.AppliedSpec = &alertsChannel.Spec
+
+	err := r.Client.Update(r.ctx, alertsChannel)
+	if err != nil {
+		r.Log.Error(err, "Tried updating channel status", "name", alertsChannel.Name, "Namespace", alertsChannel.Namespace)
+		return err
+	}
+
 	return nil
 }
 
-func (r *AlertsChannelReconciler) checkForExistingAlertsChannel(alertsChannel *nrv1.AlertsChannel) {}
+func (r *AlertsChannelReconciler) checkForExistingAlertsChannel(alertsChannel *nrv1.AlertsChannel) {
+	r.Log.Info("Checking for existing Channels matching name: " + alertsChannel.Spec.Name)
+	retrievedChannels, err := r.Alerts.ListChannels()
+	if err != nil {
+		r.Log.Error(err, "error retrieving list of Channels")
+		return
+	}
+	for _, channel := range retrievedChannels {
+		if channel.Name == alertsChannel.Spec.Name {
+			r.Log.Info("Found matching Alerts Channel name from the New Relic API", "ID", channel.ID)
+			alertsChannel.Status.ChannelID = channel.ID
+			return
+		}
+	}
+}

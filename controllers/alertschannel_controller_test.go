@@ -46,6 +46,9 @@ var _ = Describe("AlertsChannel reconciliation", func() {
 			a.ID = 543
 			return &a, nil
 		}
+		alertsClient.ListChannelsStub = func() ([]*alerts.Channel, error) {
+			return []*alerts.Channel{}, nil
+		}
 
 		fakeAlertFunc = func(string, string) (interfaces.NewRelicAlertsClient, error) {
 			return alertsClient, nil
@@ -141,6 +144,58 @@ var _ = Describe("AlertsChannel reconciliation", func() {
 				})
 			})
 
+		})
+
+		Context("and given as new alertsChannel that exists in New Relic", func() {
+			BeforeEach(func() {
+				alertsClient.ListChannelsStub = func() ([]*alerts.Channel, error) {
+					return []*alerts.Channel{
+						{
+							ID:   112233,
+							Name: "my alert channel",
+						},
+					}, nil
+				}
+
+			})
+			It("Should not create a new AlertsChannel in New Relic", func() {
+
+				err := k8sClient.Create(ctx, alertsChannel)
+				Expect(err).ToNot(HaveOccurred())
+
+				// call reconcile
+				_, err = r.Reconcile(request)
+				Expect(err).ToNot(HaveOccurred())
+				Expect(alertsClient.ListChannelsCallCount()).To(Equal(1))
+				Expect(alertsClient.CreateChannelCallCount()).To(Equal(0))
+
+			})
+			It("Should update the ChannelId on the kubernetes object", func() {
+
+				err := k8sClient.Create(ctx, alertsChannel)
+				Expect(err).ToNot(HaveOccurred())
+
+				// call reconcile
+				_, err = r.Reconcile(request)
+				Expect(err).ToNot(HaveOccurred())
+				var endStateAlertsChannel nrv1.AlertsChannel
+				err = k8sClient.Get(ctx, namespacedName, &endStateAlertsChannel)
+				Expect(err).To(BeNil())
+				Expect(endStateAlertsChannel.Status.ChannelID).To(Equal(112233))
+			})
+			It("Should update the AppliedSpec on the kubernetes object", func() {
+
+				err := k8sClient.Create(ctx, alertsChannel)
+				Expect(err).ToNot(HaveOccurred())
+
+				// call reconcile
+				_, err = r.Reconcile(request)
+				Expect(err).ToNot(HaveOccurred())
+				var endStateAlertsChannel nrv1.AlertsChannel
+				err = k8sClient.Get(ctx, namespacedName, &endStateAlertsChannel)
+				Expect(err).To(BeNil())
+				Expect(endStateAlertsChannel.Status.AppliedSpec).To(Equal(&alertsChannel.Spec))
+			})
 		})
 
 		AfterEach(func() {
