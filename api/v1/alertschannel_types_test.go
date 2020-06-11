@@ -34,9 +34,9 @@ var _ = Describe("AlertsChannelSpec", func() {
 
 	})
 
-	Describe("APICondition", func() {
+	Describe("APIChannel", func() {
 		It("converts AlertsChannelSpec object to alerts.Channel object from go client, retaining field values", func() {
-			apiChannel := alertsChannelSpec.APICondition()
+			apiChannel := alertsChannelSpec.APIChannel()
 
 			Expect(fmt.Sprint(reflect.TypeOf(apiChannel))).To(Equal("alerts.Channel"))
 			Expect(apiChannel.ID).To(Equal(88))

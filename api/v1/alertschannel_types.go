@@ -78,10 +78,10 @@ func init() {
 	SchemeBuilder.Register(&AlertsChannel{}, &AlertsChannelList{})
 }
 
-// APICondition - Converts AlertsChannelSpec object to alerts.Channel
-func (in AlertsChannelSpec) APICondition() alerts.Channel {
+// APIChannel - Converts AlertsChannelSpec object to alerts.Channel
+func (in AlertsChannelSpec) APIChannel() alerts.Channel {
 	jsonString, _ := json.Marshal(in)
-	var APICondition alerts.Channel
-	json.Unmarshal(jsonString, &APICondition) //nolint
-	return APICondition
+	var APIChannel alerts.Channel
+	json.Unmarshal(jsonString, &APIChannel) //nolint
+	return APIChannel
 }

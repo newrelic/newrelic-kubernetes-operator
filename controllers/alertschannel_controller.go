@@ -85,7 +85,11 @@ func (r *AlertsChannelReconciler) Reconcile(req ctrl.Request) (ctrl.Result, erro
 			alertsChannel.Finalizers = append(alertsChannel.Finalizers, deleteFinalizer)
 		}
 	} else {
-		return r.deleteAlertsChannel(r.ctx, &alertsChannel, deleteFinalizer)
+		err := r.deleteAlertsChannel(&alertsChannel, deleteFinalizer)
+		if err != nil {
+			r.Log.Error(err, "error deleting channel", "name", alertsChannel.Name)
+			return ctrl.Result{}, err
+		}
 	}
 
 	if reflect.DeepEqual(&alertsChannel.Spec, alertsChannel.Status.AppliedSpec) {
@@ -113,6 +117,7 @@ func (r *AlertsChannelReconciler) Reconcile(req ctrl.Request) (ctrl.Result, erro
 	return ctrl.Result{}, nil
 }
 
+//SetupWithManager - Sets up Controller for AlertsChannel
 func (r *AlertsChannelReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&nrv1.AlertsChannel{}).
@@ -137,11 +142,43 @@ func (r *AlertsChannelReconciler) getAPIKeyOrSecret(alertschannel nrv1.AlertsCha
 	return ""
 }
 
-func (r *AlertsChannelReconciler) deleteAlertsChannel(ctx context.Context, alertsChannel *nrv1.AlertsChannel, deleteFinalizer string) (ctrl.Result, error) {
-	return ctrl.Result{}, nil
+func (r *AlertsChannelReconciler) deleteAlertsChannel(alertsChannel *nrv1.AlertsChannel, deleteFinalizer string) (err error) {
+
+	r.Log.Info("Deleting AlertsChannel", "name", alertsChannel.Name, "ChannelName", alertsChannel.Spec.Name)
+
+	if alertsChannel.Status.ChannelID != 0 {
+		_, err = r.Alerts.DeleteChannel(alertsChannel.Status.ChannelID)
+		if err != nil {
+			r.Log.Error(err, "error deleting AlertsChannel", "name", alertsChannel.Name, "ChannelName", alertsChannel.Spec.Name)
+		}
+
+	}
+	// Now remove finalizer
+	alertsChannel.Finalizers = removeString(alertsChannel.Finalizers, deleteFinalizer)
+
+	err = r.Client.Update(r.ctx, alertsChannel)
+	if err != nil {
+		r.Log.Error(err, "tried updating condition status", "name", alertsChannel.Name, "Namespace", alertsChannel.Namespace)
+		return err
+	}
+	return nil
 }
 
-func (r *AlertsChannelReconciler) createAlertsChannel(alertschannel *nrv1.AlertsChannel) error {
+func (r *AlertsChannelReconciler) createAlertsChannel(alertsChannel *nrv1.AlertsChannel) error {
+	r.Log.Info("Creating AlertsChannel", "name", alertsChannel.Name, "ChannelName", alertsChannel.Spec.Name)
+	APIChannel := alertsChannel.Spec.APIChannel()
+	createdCondition, err := r.Alerts.CreateChannel(APIChannel)
+	if err != nil {
+		r.Log.Error(err, "error creating AlertsChannel"+alertsChannel.Name)
+		return err
+	}
+	alertsChannel.Status.ChannelID = createdCondition.ID
+	alertsChannel.Status.AppliedSpec = &alertsChannel.Spec
+	err = r.Client.Update(r.ctx, alertsChannel)
+	if err != nil {
+		r.Log.Error(err, "tried updating condition status", "name", alertsChannel.Name, "Namespace", alertsChannel.Namespace)
+		return err
+	}
 	return nil
 }
 

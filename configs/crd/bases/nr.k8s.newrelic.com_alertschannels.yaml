@@ -108,6 +108,8 @@ spec:
               type: string
             type:
               type: string
+          required:
+          - name
           type: object
         status:
           description: AlertsChannelStatus defines the observed state of AlertsChannel
@@ -188,6 +190,8 @@ spec:
                   type: string
                 type:
                   type: string
+              required:
+              - name
               type: object
             channel_id:
               type: integer
