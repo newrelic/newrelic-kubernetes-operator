@@ -66,6 +66,26 @@ var _ webhook.Validator = &AlertsChannel{}
 func (r *AlertsChannel) ValidateCreate() error {
 	alertschannellog.Info("validate create", "name", r.Name)
 
+	return r.ValidateAlertsChannel()
+}
+
+// ValidateUpdate implements webhook.Validator so a webhook will be registered for the type
+func (r *AlertsChannel) ValidateUpdate(old runtime.Object) error {
+	alertschannellog.Info("validate update", "name", r)
+
+	return r.ValidateAlertsChannel()
+}
+
+// ValidateDelete implements webhook.Validator so a webhook will be registered for the type
+func (r *AlertsChannel) ValidateDelete() error {
+	alertschannellog.Info("validate delete", "name", r.Name)
+
+	// TODO(user): fill in your validation logic upon object deletion.
+	return nil
+}
+
+// ValidateAlertsChannel - Validates create/update of AlertsChannel
+func (r *AlertsChannel) ValidateAlertsChannel() error {
 	err := CheckForAPIKeyOrSecret(r.Spec.APIKey, r.Spec.APIKeySecret)
 	if err != nil {
 		return err
@@ -84,34 +104,7 @@ func (r *AlertsChannel) ValidateCreate() error {
 		return errors.New("error with invalid attributes: \n" + invalidAttributes.errorString())
 	}
 	return nil
-}
 
-// ValidateUpdate implements webhook.Validator so a webhook will be registered for the type
-func (r *AlertsChannel) ValidateUpdate(old runtime.Object) error {
-	alertschannellog.Info("validate update", "name", r)
-
-	err := CheckForAPIKeyOrSecret(r.Spec.APIKey, r.Spec.APIKeySecret)
-	if err != nil {
-		return err
-	}
-
-	var invalidAttributes InvalidAttributeSlice
-
-	r.ValidateType()
-	invalidAttributes = append(invalidAttributes, r.ValidateType()...)
-
-	if len(invalidAttributes) > 0 {
-		return errors.New("error with invalid attributes: \n" + invalidAttributes.errorString())
-	}
-	return nil
-}
-
-// ValidateDelete implements webhook.Validator so a webhook will be registered for the type
-func (r *AlertsChannel) ValidateDelete() error {
-	alertschannellog.Info("validate delete", "name", r.Name)
-
-	// TODO(user): fill in your validation logic upon object deletion.
-	return nil
 }
 
 //ValidateType - Validates the Type attribute
@@ -131,16 +124,3 @@ func (r *AlertsChannel) ValidateType() InvalidAttributeSlice {
 		return []invalidAttribute{{attribute: "Type", value: r.Spec.Type}}
 	}
 }
-
-// // CheckForAPIKeyOrSecret - Ensures resources have set an API Key
-// func (r *AlertsChannel) CheckForAPIKeyOrSecret() error {
-// 	if r.Spec.APIKey != "" {
-// 		return nil
-// 	}
-// 	if r.Spec.APIKeySecret != (NewRelicAPIKeySecret{}) {
-// 		if r.Spec.APIKeySecret.Name != "" && r.Spec.APIKeySecret.Namespace != "" && r.Spec.APIKeySecret.KeyName != "" {
-// 			return nil
-// 		}
-// 	}
-// 	return errors.New("either api_key or api_key_secret must be set")
-// }

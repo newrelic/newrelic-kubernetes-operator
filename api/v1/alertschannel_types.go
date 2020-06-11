@@ -10,7 +10,7 @@ import (
 // AlertsChannelSpec defines the desired state of AlertsChannel
 type AlertsChannelSpec struct {
 	ID            int                        `json:"id,omitempty"`
-	Name          string                     `json:"name,omitempty"`
+	Name          string                     `json:"name"`
 	APIKey        string                     `json:"api_key,omitempty"`
 	APIKeySecret  NewRelicAPIKeySecret       `json:"api_key_secret,omitempty"`
 	Region        string                     `json:"region,omitempty"`
