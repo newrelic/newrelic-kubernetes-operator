@@ -29,9 +29,16 @@ type NewRelicAlertsClient interface {
 
 	// NerdGraph
 	CreatePolicyMutation(accountID int, policy alerts.AlertsPolicyInput) (*alerts.AlertsPolicy, error)
-	UpdatePolicyMutation(accountID int, policyID int, policy alerts.AlertsPolicyUpdateInput) (*alerts.AlertsPolicy, error)
-	DeletePolicyMutation(accountID, id int) (*alerts.AlertsPolicy, error)
+	UpdatePolicyMutation(accountID int, policyID string, policy alerts.AlertsPolicyUpdateInput) (*alerts.AlertsPolicy, error)
+	DeletePolicyMutation(accountID int, id string) (*alerts.AlertsPolicy, error)
 	QueryPolicySearch(accountID int, params alerts.AlertsPoliciesSearchCriteriaInput) ([]*alerts.AlertsPolicy, error)
+	QueryPolicy(accountID int, id string) (*alerts.AlertsPolicy, error)
+
+	CreateNrqlConditionStaticMutation(accountID int, policyID string, nrqlCondition alerts.NrqlConditionInput) (*alerts.NrqlAlertCondition, error)
+	UpdateNrqlConditionStaticMutation(accountID int, conditionID string, nrqlCondition alerts.NrqlConditionInput) (*alerts.NrqlAlertCondition, error)
+	DeleteConditionMutation(accountID int, conditionID string) (string, error)
+	SearchNrqlConditionsQuery(accountID int, searchCriteria alerts.NrqlConditionsSearchCriteria) ([]*alerts.NrqlAlertCondition, error)
+	GetNrqlConditionQuery(accountID int, conditionID string) (*alerts.NrqlAlertCondition, error)
 }
 
 func NewClient(apiKey string, regionValue string) (*newrelic.NewRelic, error) {

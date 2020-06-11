@@ -150,11 +150,8 @@ func TestIntegrationPolicyController(t *testing.T) {
 	}
 
 	// call reconcile
-	result, err := reconciler.Reconcile(request)
-
+	_, err := reconciler.Reconcile(request)
 	require.NoError(t, err)
-
-	t.Logf("\n\n RESULT: %+v \n\n", result)
 
 	// Deferred teardown
 	// defer func() {

@@ -1,0 +1,26 @@
+# permissions to do edit alertspolicies.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: alertspolicy-editor-role
+rules:
+- apiGroups:
+  - nr.k8s.newrelic.com
+  resources:
+  - alertspolicies
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - nr.k8s.newrelic.com
+  resources:
+  - alertspolicies/status
+  verbs:
+  - get
+  - patch
+  - update

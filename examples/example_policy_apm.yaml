@@ -3,18 +3,19 @@
 # `kubectl apply -f examples/example_secret.yaml`
 
 apiVersion: nr.k8s.newrelic.com/v1
-kind: Policy
+kind: AlertsPolicy
 metadata:
   name: my-apm-policy
 spec:
+  account_id: <your New Relic account ID>
   api_key: <your New Relic personal API key>
 #  api_key_secret:
 #    name: nr-api-key
 #    namespace: default
 #    key_name: api-key
-  name: k8s created policy
-  incident_preference: "PER_POLICY"
-  region: "us"
+  name: k8s created policy (new)
+  incidentPreference: "PER_POLICY"
+  region: "US"
   conditions:
     - spec:
         type: "apm_app_metric"
@@ -22,8 +23,8 @@ spec:
         metric: "apdex"
         condition_scope: application
         entities:
-          - "5950260"
-        terms:
+          - "215037795"
+        apm_terms:
           - threshold: "0.9"
             time_function: "all"
             duration: "5"
@@ -36,8 +37,8 @@ spec:
         metric: "apdex"
         condition_scope: application
         entities:
-          - "5950260"
-        terms:
+          - "215037795"
+        apm_terms:
           - threshold: "0.9"
             time_function: "all"
             duration: "30"

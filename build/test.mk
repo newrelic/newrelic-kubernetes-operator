@@ -30,7 +30,7 @@ test-unit:
 test-integration:
 	@echo "=== $(PROJECT_NAME) === [ test-integration ]: running integration tests..."
 	@mkdir -p $(COVERAGE_DIR)
-	@$(GO) test -v -parallel 4 -tags integration -covermode=$(COVERMODE) -coverprofile $(COVERAGE_DIR)/integration.tmp $(GO_PKGS)
+	@$(GO) test -v -parallel 4 -timeout 30m -tags integration -covermode=$(COVERMODE) -coverprofile $(COVERAGE_DIR)/integration.tmp $(GO_PKGS)
 
 
 #

@@ -3,10 +3,11 @@
 # `kubectl apply -f examples/example_secret.yaml`
 
 apiVersion: nr.k8s.newrelic.com/v1
-kind: ApmAlertCondition
+kind: AlertsAPMCondition
 metadata:
   name: alert-1029267
 spec:
+  account_id: <your New Relic account ID>
   api_key: <your New Relic personal API key>
   # api_key_secret:
   #   name: nr-api-key
@@ -17,8 +18,8 @@ spec:
   metric: "apdex"
   condition_scope: application
   entities:
-    - "5950260"
-  terms:
+    - "215037795"
+  apm_terms:
     - threshold: "0.9"
       time_function: "all"
       duration: "5"
@@ -26,6 +27,5 @@ spec:
       operator: "above"
   name: "K8s generated apm alert condition"
   # Must reference an existing New Relic alert policy from your account
-  existing_policy_id: 46286
-  region: "staging"
-
+  existing_policy_id: "897188"
+  region: "US"
