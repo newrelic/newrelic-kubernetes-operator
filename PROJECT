@@ -16,4 +16,7 @@ resources:
 - group: nr
   kind: AlertsPolicy
   version: v1
+- group: nr
+  kind: AlertsAPMCondition
+  version: v1
 version: "2"
