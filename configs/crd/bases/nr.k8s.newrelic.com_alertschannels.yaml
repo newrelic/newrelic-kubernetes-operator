@@ -193,9 +193,14 @@ spec:
               required:
               - name
               type: object
+            appliedPolicyIDs:
+              items:
+                type: integer
+              type: array
             channel_id:
               type: integer
           required:
+          - appliedPolicyIDs
           - applied_spec
           - channel_id
           type: object

@@ -20,6 +20,7 @@ import (
 	"errors"
 	"reflect"
 	"strings"
+	"time"
 
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/types"
@@ -174,13 +175,29 @@ func (r *AlertsChannelReconciler) createAlertsChannel(alertsChannel *nrv1.Alerts
 	r.Log.Info("Creating AlertsChannel", "name", alertsChannel.Name, "ChannelName", alertsChannel.Spec.Name)
 	APIChannel := alertsChannel.Spec.APIChannel()
 
-	APIChannel.Links.PolicyIDs = r.getAllPolicyIDs(&alertsChannel.Spec)
-	createdCondition, err := r.Alerts.CreateChannel(APIChannel)
+	r.Log.Info("APIChannel", "", APIChannel)
+	createdChannel, err := r.Alerts.CreateChannel(APIChannel)
 	if err != nil {
 		r.Log.Error(err, "Error creating AlertsChannel"+alertsChannel.Name)
 		return err
 	}
-	alertsChannel.Status.ChannelID = createdCondition.ID
+	alertsChannel.Status.ChannelID = createdChannel.ID
+
+	// Now create the links to policies
+	allPolicyIDs := r.getAllPolicyIDs(&alertsChannel.Spec)
+
+	for _, policyID := range allPolicyIDs {
+
+		policyChannels, errUpdatePolicies := r.Alerts.UpdatePolicyChannels(policyID, []int{createdChannel.ID})
+		if errUpdatePolicies != nil {
+			r.Log.Error(errUpdatePolicies, "error updating policyAlertsChannels", "policyID", policyID, "conditionID", createdChannel.ID)
+			r.Log.Info("policyChannels", "", policyChannels)
+		} else {
+			alertsChannel.Status.AppliedPolicyIDs = append(alertsChannel.Status.AppliedPolicyIDs, policyID)
+
+		}
+	}
+
 	alertsChannel.Status.AppliedSpec = &alertsChannel.Spec
 	err = r.Client.Update(r.ctx, alertsChannel)
 	if err != nil {
@@ -199,6 +216,43 @@ func (r *AlertsChannelReconciler) updateAlertsChannel(alertsChannel *nrv1.Alerts
 	IncomingPolicyIDs := r.getAllPolicyIDs(&alertsChannel.Spec)
 
 	r.Log.Info("Updating list of policies attached to AlertsChannel", "policyIDs", IncomingPolicyIDs, "AppliedPolicyIDs", AppliedPolicyIDs)
+
+	processedPolicyIDs := make(map[int]bool)
+
+	for _, incomingPolicyID := range IncomingPolicyIDs {
+		processedPolicyIDs[incomingPolicyID] = false
+	}
+
+	for _, appliedPolicyID := range AppliedPolicyIDs {
+		if _, ok := processedPolicyIDs[appliedPolicyID]; ok {
+			r.Log.Info("Already had ", "", appliedPolicyID)
+			processedPolicyIDs[appliedPolicyID] = true
+		} else {
+			r.Log.Info("Need to delete", "", appliedPolicyID)
+			policyChannels, err := r.Alerts.DeletePolicyChannel(appliedPolicyID, alertsChannel.Status.ChannelID)
+			if err != nil {
+				r.Log.Error(err, "error updating policyAlertsChannels", "policyID", appliedPolicyID, "conditionID", alertsChannel.Status.ChannelID)
+				r.Log.Info("policyChannels", "", policyChannels)
+			} else {
+				alertsChannel.Status.AppliedPolicyIDs = append(alertsChannel.Status.AppliedPolicyIDs, appliedPolicyID)
+
+			}
+		}
+	}
+	//TODO: iterate through map to find those that are still false and add them
+	for policyID, processed := range processedPolicyIDs {
+		r.Log.Info("processing ", "policyID", policyID, ":processed", processed)
+		if !processed {
+			r.Log.Info("need to add ", "policyID", policyID)
+			policyChannels, err := r.Alerts.UpdatePolicyChannels(policyID, []int{alertsChannel.Status.ChannelID})
+			if err != nil {
+				r.Log.Error(err, "error updating policyAlertsChannels", "policyID", policyID, "conditionID", alertsChannel.Status.ChannelID)
+				r.Log.Info("policyChannels", "", policyChannels)
+			}
+
+		}
+
+	}
 
 	//TODO: Need to add this work
 	// if AppliedPolicyIDs != IncomingPolicyIDs {
@@ -245,6 +299,18 @@ func (r *AlertsChannelReconciler) getAllPolicyIDs(alertsChannelSpec *nrv1.Alerts
 		if err != nil {
 			r.Log.Error(err, "Error getting list of policies")
 		}
+
+		if len(retrievedPolicies) == 0 {
+			r.Log.Info("Failed to get list of policies, sleep 5 seconds and try again")
+			time.Sleep(5 * time.Second)
+			retrievedPolicies, err = r.Alerts.ListPolicies(alertParams)
+			if err != nil {
+				r.Log.Error(err, "Error getting list of policies")
+			}
+		}
+
+		r.Log.Info("Retrieved policies", "", retrievedPolicies)
+
 		for _, policyName := range alertsChannelSpec.Links.PolicyNames {
 			for _, APIPolicy := range retrievedPolicies {
 				if policyName == APIPolicy.Name {

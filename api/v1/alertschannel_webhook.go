@@ -56,6 +56,10 @@ func (r *AlertsChannel) Default() {
 		log.Info("Setting null Applied Spec to empty interface")
 		r.Status.AppliedSpec = &AlertsChannelSpec{}
 	}
+	if r.Status.AppliedPolicyIDs == nil {
+		log.Info("Setting null AppliedPolicyIDs to empty interface")
+		r.Status.AppliedPolicyIDs = []int{}
+	}
 }
 
 // +kubebuilder:webhook:verbs=create;update,path=/validate-nr-k8s-newrelic-com-v1-alertschannel,mutating=false,failurePolicy=fail,groups=nr.k8s.newrelic.com,resources=alertschannels,versions=v1,name=valertschannel.kb.io,sideEffects=None

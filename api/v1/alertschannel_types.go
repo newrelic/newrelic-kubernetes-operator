@@ -28,8 +28,9 @@ type ChannelLinks struct {
 
 // AlertsChannelStatus defines the observed state of AlertsChannel
 type AlertsChannelStatus struct {
-	AppliedSpec *AlertsChannelSpec `json:"applied_spec"`
-	ChannelID   int                `json:"channel_id"`
+	AppliedSpec      *AlertsChannelSpec `json:"applied_spec"`
+	ChannelID        int                `json:"channel_id"`
+	AppliedPolicyIDs []int              `json:"appliedPolicyIDs"`
 }
 
 // AlertsChannelConfiguration - copy of alerts.ChannelConfiguration

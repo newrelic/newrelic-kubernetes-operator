@@ -117,19 +117,6 @@ type FakeNewRelicAlertsClient struct {
 		result1 *alerts.NrqlCondition
 		result2 error
 	}
-	DeletePluginsConditionStub        func(int) (*alerts.PluginsCondition, error)
-	deletePluginsConditionMutex       sync.RWMutex
-	deletePluginsConditionArgsForCall []struct {
-		arg1 int
-	}
-	deletePluginsConditionReturns struct {
-		result1 *alerts.PluginsCondition
-		result2 error
-	}
-	deletePluginsConditionReturnsOnCall map[int]struct {
-		result1 *alerts.PluginsCondition
-		result2 error
-	}
 	DeletePolicyStub        func(int) (*alerts.Policy, error)
 	deletePolicyMutex       sync.RWMutex
 	deletePolicyArgsForCall []struct {
@@ -141,6 +128,20 @@ type FakeNewRelicAlertsClient struct {
 	}
 	deletePolicyReturnsOnCall map[int]struct {
 		result1 *alerts.Policy
+		result2 error
+	}
+	DeletePolicyChannelStub        func(int, int) (*alerts.Channel, error)
+	deletePolicyChannelMutex       sync.RWMutex
+	deletePolicyChannelArgsForCall []struct {
+		arg1 int
+		arg2 int
+	}
+	deletePolicyChannelReturns struct {
+		result1 *alerts.Channel
+		result2 error
+	}
+	deletePolicyChannelReturnsOnCall map[int]struct {
+		result1 *alerts.Channel
 		result2 error
 	}
 	DeletePolicyMutationStub        func(int, int) (*alerts.AlertsPolicy, error)
@@ -814,69 +815,6 @@ func (fake *FakeNewRelicAlertsClient) DeleteNrqlConditionReturnsOnCall(i int, re
 	}{result1, result2}
 }
 
-func (fake *FakeNewRelicAlertsClient) DeletePluginsCondition(arg1 int) (*alerts.PluginsCondition, error) {
-	fake.deletePluginsConditionMutex.Lock()
-	ret, specificReturn := fake.deletePluginsConditionReturnsOnCall[len(fake.deletePluginsConditionArgsForCall)]
-	fake.deletePluginsConditionArgsForCall = append(fake.deletePluginsConditionArgsForCall, struct {
-		arg1 int
-	}{arg1})
-	fake.recordInvocation("DeletePluginsCondition", []interface{}{arg1})
-	fake.deletePluginsConditionMutex.Unlock()
-	if fake.DeletePluginsConditionStub != nil {
-		return fake.DeletePluginsConditionStub(arg1)
-	}
-	if specificReturn {
-		return ret.result1, ret.result2
-	}
-	fakeReturns := fake.deletePluginsConditionReturns
-	return fakeReturns.result1, fakeReturns.result2
-}
-
-func (fake *FakeNewRelicAlertsClient) DeletePluginsConditionCallCount() int {
-	fake.deletePluginsConditionMutex.RLock()
-	defer fake.deletePluginsConditionMutex.RUnlock()
-	return len(fake.deletePluginsConditionArgsForCall)
-}
-
-func (fake *FakeNewRelicAlertsClient) DeletePluginsConditionCalls(stub func(int) (*alerts.PluginsCondition, error)) {
-	fake.deletePluginsConditionMutex.Lock()
-	defer fake.deletePluginsConditionMutex.Unlock()
-	fake.DeletePluginsConditionStub = stub
-}
-
-func (fake *FakeNewRelicAlertsClient) DeletePluginsConditionArgsForCall(i int) int {
-	fake.deletePluginsConditionMutex.RLock()
-	defer fake.deletePluginsConditionMutex.RUnlock()
-	argsForCall := fake.deletePluginsConditionArgsForCall[i]
-	return argsForCall.arg1
-}
-
-func (fake *FakeNewRelicAlertsClient) DeletePluginsConditionReturns(result1 *alerts.PluginsCondition, result2 error) {
-	fake.deletePluginsConditionMutex.Lock()
-	defer fake.deletePluginsConditionMutex.Unlock()
-	fake.DeletePluginsConditionStub = nil
-	fake.deletePluginsConditionReturns = struct {
-		result1 *alerts.PluginsCondition
-		result2 error
-	}{result1, result2}
-}
-
-func (fake *FakeNewRelicAlertsClient) DeletePluginsConditionReturnsOnCall(i int, result1 *alerts.PluginsCondition, result2 error) {
-	fake.deletePluginsConditionMutex.Lock()
-	defer fake.deletePluginsConditionMutex.Unlock()
-	fake.DeletePluginsConditionStub = nil
-	if fake.deletePluginsConditionReturnsOnCall == nil {
-		fake.deletePluginsConditionReturnsOnCall = make(map[int]struct {
-			result1 *alerts.PluginsCondition
-			result2 error
-		})
-	}
-	fake.deletePluginsConditionReturnsOnCall[i] = struct {
-		result1 *alerts.PluginsCondition
-		result2 error
-	}{result1, result2}
-}
-
 func (fake *FakeNewRelicAlertsClient) DeletePolicy(arg1 int) (*alerts.Policy, error) {
 	fake.deletePolicyMutex.Lock()
 	ret, specificReturn := fake.deletePolicyReturnsOnCall[len(fake.deletePolicyArgsForCall)]
@@ -936,6 +874,70 @@ func (fake *FakeNewRelicAlertsClient) DeletePolicyReturnsOnCall(i int, result1 *
 	}
 	fake.deletePolicyReturnsOnCall[i] = struct {
 		result1 *alerts.Policy
+		result2 error
+	}{result1, result2}
+}
+
+func (fake *FakeNewRelicAlertsClient) DeletePolicyChannel(arg1 int, arg2 int) (*alerts.Channel, error) {
+	fake.deletePolicyChannelMutex.Lock()
+	ret, specificReturn := fake.deletePolicyChannelReturnsOnCall[len(fake.deletePolicyChannelArgsForCall)]
+	fake.deletePolicyChannelArgsForCall = append(fake.deletePolicyChannelArgsForCall, struct {
+		arg1 int
+		arg2 int
+	}{arg1, arg2})
+	fake.recordInvocation("DeletePolicyChannel", []interface{}{arg1, arg2})
+	fake.deletePolicyChannelMutex.Unlock()
+	if fake.DeletePolicyChannelStub != nil {
+		return fake.DeletePolicyChannelStub(arg1, arg2)
+	}
+	if specificReturn {
+		return ret.result1, ret.result2
+	}
+	fakeReturns := fake.deletePolicyChannelReturns
+	return fakeReturns.result1, fakeReturns.result2
+}
+
+func (fake *FakeNewRelicAlertsClient) DeletePolicyChannelCallCount() int {
+	fake.deletePolicyChannelMutex.RLock()
+	defer fake.deletePolicyChannelMutex.RUnlock()
+	return len(fake.deletePolicyChannelArgsForCall)
+}
+
+func (fake *FakeNewRelicAlertsClient) DeletePolicyChannelCalls(stub func(int, int) (*alerts.Channel, error)) {
+	fake.deletePolicyChannelMutex.Lock()
+	defer fake.deletePolicyChannelMutex.Unlock()
+	fake.DeletePolicyChannelStub = stub
+}
+
+func (fake *FakeNewRelicAlertsClient) DeletePolicyChannelArgsForCall(i int) (int, int) {
+	fake.deletePolicyChannelMutex.RLock()
+	defer fake.deletePolicyChannelMutex.RUnlock()
+	argsForCall := fake.deletePolicyChannelArgsForCall[i]
+	return argsForCall.arg1, argsForCall.arg2
+}
+
+func (fake *FakeNewRelicAlertsClient) DeletePolicyChannelReturns(result1 *alerts.Channel, result2 error) {
+	fake.deletePolicyChannelMutex.Lock()
+	defer fake.deletePolicyChannelMutex.Unlock()
+	fake.DeletePolicyChannelStub = nil
+	fake.deletePolicyChannelReturns = struct {
+		result1 *alerts.Channel
+		result2 error
+	}{result1, result2}
+}
+
+func (fake *FakeNewRelicAlertsClient) DeletePolicyChannelReturnsOnCall(i int, result1 *alerts.Channel, result2 error) {
+	fake.deletePolicyChannelMutex.Lock()
+	defer fake.deletePolicyChannelMutex.Unlock()
+	fake.DeletePolicyChannelStub = nil
+	if fake.deletePolicyChannelReturnsOnCall == nil {
+		fake.deletePolicyChannelReturnsOnCall = make(map[int]struct {
+			result1 *alerts.Channel
+			result2 error
+		})
+	}
+	fake.deletePolicyChannelReturnsOnCall[i] = struct {
+		result1 *alerts.Channel
 		result2 error
 	}{result1, result2}
 }
@@ -1717,10 +1719,10 @@ func (fake *FakeNewRelicAlertsClient) Invocations() map[string][][]interface{} {
 	defer fake.deleteConditionMutex.RUnlock()
 	fake.deleteNrqlConditionMutex.RLock()
 	defer fake.deleteNrqlConditionMutex.RUnlock()
-	fake.deletePluginsConditionMutex.RLock()
-	defer fake.deletePluginsConditionMutex.RUnlock()
 	fake.deletePolicyMutex.RLock()
 	defer fake.deletePolicyMutex.RUnlock()
+	fake.deletePolicyChannelMutex.RLock()
+	defer fake.deletePolicyChannelMutex.RUnlock()
 	fake.deletePolicyMutationMutex.RLock()
 	defer fake.deletePolicyMutationMutex.RUnlock()
 	fake.getPolicyMutex.RLock()

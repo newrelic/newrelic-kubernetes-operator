@@ -30,7 +30,7 @@ type NewRelicAlertsClient interface {
 	DeleteChannel(id int) (*alerts.Channel, error)
 	ListChannels() ([]*alerts.Channel, error)
 	UpdatePolicyChannels(policyID int, channelIDs []int) (*alerts.PolicyChannels, error)
-	DeletePluginsCondition(id int) (*alerts.PluginsCondition, error)
+	DeletePolicyChannel(policyID int, ChannelID int) (*alerts.Channel, error)
 
 	// NerdGraph
 	CreatePolicyMutation(accountID int, policy alerts.AlertsPolicyInput) (*alerts.AlertsPolicy, error)
