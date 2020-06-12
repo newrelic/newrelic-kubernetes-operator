@@ -29,6 +29,8 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
+	"github.com/newrelic/newrelic-client-go/pkg/alerts"
+
 	nrv1 "github.com/newrelic/newrelic-kubernetes-operator/api/v1"
 	"github.com/newrelic/newrelic-kubernetes-operator/interfaces"
 )
@@ -47,6 +49,7 @@ type AlertsChannelReconciler struct {
 // +kubebuilder:rbac:groups=nr.k8s.newrelic.com,resources=alertschannel,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=nr.k8s.newrelic.com,resources=alertschannel/status,verbs=get;update;patch
 
+//Reconcile - Main processing loop for AlertsChannel reconciliation
 func (r *AlertsChannelReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 	r.ctx = context.Background()
 	_ = r.Log.WithValues("alertsChannel", req.NamespacedName)
@@ -170,6 +173,8 @@ func (r *AlertsChannelReconciler) deleteAlertsChannel(alertsChannel *nrv1.Alerts
 func (r *AlertsChannelReconciler) createAlertsChannel(alertsChannel *nrv1.AlertsChannel) error {
 	r.Log.Info("Creating AlertsChannel", "name", alertsChannel.Name, "ChannelName", alertsChannel.Spec.Name)
 	APIChannel := alertsChannel.Spec.APIChannel()
+
+	APIChannel.Links.PolicyIDs = r.getAllPolicyIDs(&alertsChannel.Spec)
 	createdCondition, err := r.Alerts.CreateChannel(APIChannel)
 	if err != nil {
 		r.Log.Error(err, "Error creating AlertsChannel"+alertsChannel.Name)
@@ -188,9 +193,21 @@ func (r *AlertsChannelReconciler) createAlertsChannel(alertsChannel *nrv1.Alerts
 func (r *AlertsChannelReconciler) updateAlertsChannel(alertsChannel *nrv1.AlertsChannel) error {
 	r.Log.Info("Updating AlertsChannel", "name", alertsChannel.Name, "ChannelName", alertsChannel.Spec.Name)
 
+	//Check to see if update is needed
+	AppliedPolicyIDs := r.getAllPolicyIDs(alertsChannel.Status.AppliedSpec)
+
+	IncomingPolicyIDs := r.getAllPolicyIDs(&alertsChannel.Spec)
+
+	r.Log.Info("Updating list of policies attached to AlertsChannel", "policyIDs", IncomingPolicyIDs, "AppliedPolicyIDs", AppliedPolicyIDs)
+
+	//TODO: Need to add this work
+	// if AppliedPolicyIDs != IncomingPolicyIDs {
+	// 	r.Log.Info("Updating list of policies attached to AlertsChannel", "policyIDs", IncomingPolicyIDs)
+
+	// }
+
 	// Now update the AppliedSpec and the k8s object
 	alertsChannel.Status.AppliedSpec = &alertsChannel.Spec
-
 	err := r.Client.Update(r.ctx, alertsChannel)
 	if err != nil {
 		r.Log.Error(err, "Tried updating channel status", "name", alertsChannel.Name, "Namespace", alertsChannel.Namespace)
@@ -214,4 +231,54 @@ func (r *AlertsChannelReconciler) checkForExistingAlertsChannel(alertsChannel *n
 			return
 		}
 	}
+}
+
+func (r *AlertsChannelReconciler) getAllPolicyIDs(alertsChannelSpec *nrv1.AlertsChannelSpec) (policyIDs []int) {
+	policyIDs = append(policyIDs, alertsChannelSpec.Links.PolicyIDs...)
+
+	if len(alertsChannelSpec.Links.PolicyNames) > 0 {
+		r.Log.Info("Getting PolicyIds from PolicyNames", "PolicyNames", alertsChannelSpec.Links.PolicyNames)
+		alertParams := &alerts.ListPoliciesParams{
+			Name: alertsChannelSpec.Links.PolicyNames[0],
+		}
+		retrievedPolicies, err := r.Alerts.ListPolicies(alertParams)
+		if err != nil {
+			r.Log.Error(err, "Error getting list of policies")
+		}
+		for _, policyName := range alertsChannelSpec.Links.PolicyNames {
+			for _, APIPolicy := range retrievedPolicies {
+				if policyName == APIPolicy.Name {
+					r.Log.Info("Found match of "+policyName, "policyId", APIPolicy.ID)
+					policyIDs = append(policyIDs, APIPolicy.ID)
+				}
+			}
+		}
+
+	}
+
+	if len(alertsChannelSpec.Links.PolicyKubernetesObjects) > 0 {
+		r.Log.Info("Getting PolicyIds from PolicyKubernetesObjects", "PolicyKubernetesObjects", alertsChannelSpec.Links.PolicyKubernetesObjects)
+		for _, policyK8s := range alertsChannelSpec.Links.PolicyKubernetesObjects {
+
+			key := types.NamespacedName{
+				Namespace: policyK8s.Namespace,
+				Name:      policyK8s.Name,
+			}
+			var k8sPolicy nrv1.AlertsPolicy
+			getErr := r.Client.Get(context.Background(), key, &k8sPolicy)
+			if getErr != nil {
+				r.Log.Error(getErr, "Failed to retrieve policy", "k8sPolicy", key)
+			}
+			if k8sPolicy.Status.PolicyID != 0 {
+				policyIDs = append(policyIDs, k8sPolicy.Status.PolicyID)
+			} else {
+				r.Log.Info("Retrieved policy " + policyK8s.Name + "but ID was 0")
+			}
+
+		}
+	}
+
+	r.Log.Info("Full list of PolicyIs to a to Channel", "policyIDs", policyIDs)
+
+	return
 }

@@ -50,6 +50,15 @@ var _ = Describe("AlertsChannel reconciliation", func() {
 			return []*alerts.Channel{}, nil
 		}
 
+		alertsClient.ListPoliciesStub = func(*alerts.ListPoliciesParams) ([]alerts.Policy, error) {
+			return []alerts.Policy{
+				{
+					ID:   1122,
+					Name: "my-policy-name",
+				},
+			}, nil
+		}
+
 		fakeAlertFunc = func(string, string) (interfaces.NewRelicAlertsClient, error) {
 			return alertsClient, nil
 		}
@@ -81,6 +90,15 @@ var _ = Describe("AlertsChannel reconciliation", func() {
 						1,
 						2,
 					},
+					PolicyNames: []string{
+						"my-policy-name",
+					},
+					PolicyKubernetesObjects: []metav1.ObjectMeta{
+						{
+							Name:      "my-policy",
+							Namespace: "default",
+						},
+					},
 				},
 				Configuration: nrv1.AlertsChannelConfiguration{
 					Recipients: "me@email.com",
@@ -97,6 +115,19 @@ var _ = Describe("AlertsChannel reconciliation", func() {
 			Name:      "myalertschannel",
 		}
 		request = ctrl.Request{NamespacedName: namespacedName}
+
+		testPolicy := nrv1.AlertsPolicy{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      "my-policy",
+				Namespace: "default",
+			},
+			Status: nrv1.AlertsPolicyStatus{
+				AppliedSpec: &nrv1.AlertsPolicySpec{},
+				PolicyID:    665544,
+			},
+		}
+		err := ignoreAlreadyExists(k8sClient.Create(ctx, &testPolicy))
+		Expect(err).ToNot(HaveOccurred())
 
 	})
 
@@ -141,6 +172,31 @@ var _ = Describe("AlertsChannel reconciliation", func() {
 					err = k8sClient.Get(ctx, namespacedName, &endStateAlertsChannel)
 					Expect(err).To(BeNil())
 					Expect(endStateAlertsChannel.Status.AppliedSpec).To(Equal(&alertsChannel.Spec))
+				})
+
+				It("adds a policy by policy name to the alertsChannel", func() {
+					err := k8sClient.Create(ctx, alertsChannel)
+					Expect(err).ToNot(HaveOccurred())
+
+					// call reconcile
+					_, err = r.Reconcile(request)
+					Expect(err).ToNot(HaveOccurred())
+
+					alertsChannelAPI := alertsClient.CreateChannelArgsForCall(0)
+					Expect(alertsChannelAPI.Links.PolicyIDs).To(ContainElement(1122))
+
+				})
+
+				It("adds a policy by k8s object reference to the alertsChannel", func() {
+					err := k8sClient.Create(ctx, alertsChannel)
+					Expect(err).ToNot(HaveOccurred())
+
+					// call reconcile
+					_, err = r.Reconcile(request)
+					Expect(err).ToNot(HaveOccurred())
+
+					alertsChannelAPI := alertsClient.CreateChannelArgsForCall(0)
+					Expect(alertsChannelAPI.Links.PolicyIDs).To(ContainElement(665544))
 				})
 			})
 
@@ -206,6 +262,80 @@ var _ = Describe("AlertsChannel reconciliation", func() {
 			// Need to call reconcile to delete finalizer
 			_, err = r.Reconcile(request)
 			Expect(err).ToNot(HaveOccurred())
+		})
+
+	})
+
+	Context("When starting with an existinng alertsChannel", func() {
+		BeforeEach(func() {
+			err := k8sClient.Create(ctx, alertsChannel)
+			Expect(err).ToNot(HaveOccurred())
+
+			// call reconcile
+			_, err = r.Reconcile(request)
+			Expect(err).ToNot(HaveOccurred())
+
+		})
+
+		Context("and deleting that alertsChannel", func() {
+			BeforeEach(func() {
+				err := k8sClient.Delete(ctx, alertsChannel)
+
+				Expect(err).ToNot(HaveOccurred())
+
+				// call reconcile
+				_, err = r.Reconcile(request)
+				Expect(err).ToNot(HaveOccurred())
+			})
+
+			It("Should delete via the NR API", func() {
+				Expect(alertsClient.DeleteChannelCallCount()).To(Equal(1))
+			})
+
+			It("Should delete the k8s object", func() {
+				var endStateAlertsChannel nrv1.AlertsChannel
+				err := k8sClient.Get(ctx, namespacedName, &endStateAlertsChannel)
+				Expect(err).To(HaveOccurred())
+				Expect(err.Error()).To(ContainSubstring(" \"myalertschannel\" not found"))
+				Expect(endStateAlertsChannel.Name).To(Equal(""))
+			})
+		})
+
+		Context("and updating that alertsChannel", func() {
+			BeforeEach(func() {
+				//Get the object again after creation
+				err := k8sClient.Get(ctx, namespacedName, alertsChannel)
+				Expect(err).ToNot(HaveOccurred())
+			})
+
+			PContext("When adding a new policyID to the list of policyIds", func() {
+
+				BeforeEach(func() {
+					alertsChannel.Spec.Links.PolicyIDs = append(alertsChannel.Spec.Links.PolicyIDs, 4)
+					err := k8sClient.Update(ctx, alertsChannel)
+					Expect(err).ToNot(HaveOccurred())
+					_, err = r.Reconcile(request)
+					Expect(err).ToNot(HaveOccurred())
+				})
+
+				It("Should call the NR API", func() {
+					Expect(alertsClient.UpdatePolicyChannelsCallCount()).To(Equal(1))
+				})
+				It("Should update the appliedSpec", func() {
+					var endStateAlertsChannel nrv1.AlertsChannel
+					err := k8sClient.Get(ctx, namespacedName, &endStateAlertsChannel)
+					Expect(err).ToNot(HaveOccurred())
+					Expect(endStateAlertsChannel.Status.AppliedSpec).To(Equal(alertsChannel.Spec))
+				})
+			})
+
+			AfterEach(func() {
+				err := k8sClient.Delete(ctx, alertsChannel)
+				Expect(err).ToNot(HaveOccurred())
+				_, err = r.Reconcile(request)
+				Expect(err).ToNot(HaveOccurred())
+			})
+
 		})
 
 	})
