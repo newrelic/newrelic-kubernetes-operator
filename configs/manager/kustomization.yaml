@@ -5,3 +5,4 @@ kind: Kustomization
 images:
 - name: controller
   newName: newrelic/kubernetes-operator
+  newTag: 0.0.2

@@ -3,26 +3,30 @@
 # `kubectl apply -f examples/example_secret.yaml`
 
 apiVersion: nr.k8s.newrelic.com/v1
-kind: NrqlAlertCondition
+kind: AlertsNrqlCondition
 metadata:
   name: alert-1029266
 spec:
+  account_id: <your New Relic account ID>
   api_key: <your New Relic personal API key>
   # api_key_secret:
   #   name: nr-api-key
   #   namespace: default
   #   key_name: api-key
+  type: "NRQL"
   nrql:
     query: "SELECT count(*) FROM Transactions"
-    since_value: "10"
+    evaluationOffset: 10
   enabled: true
   terms:
     - threshold: "75.0"
-      time_function: "all"
-      duration: "5"
-      priority: "critical"
-      operator: "above"
-  name: "K8s generated alert condition"
+      threshold_occurrences: "ALL"
+      threshold_duration: 60
+      priority: "CRITICAL"
+      operator: "ABOVE"
+  name: "nrql condition (new)"
+  violationTimeLimit: "ONE_HOUR"
+  valueFunction: "SINGLE_VALUE"
   # Must reference an existing New Relic alert policy from your account
-  existing_policy_id: 26458
-  region: "us"
+  existing_policy_id: "897188"
+  region: "US"

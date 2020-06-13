@@ -1,0 +1,24 @@
+# permissions for end users to edit alertsapmconditions.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: alertsapmcondition-editor-role
+rules:
+- apiGroups:
+  - nr.k8s.newrelic.com
+  resources:
+  - alertsapmconditions
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - nr.k8s.newrelic.com
+  resources:
+  - alertsapmconditions/status
+  verbs:
+  - get

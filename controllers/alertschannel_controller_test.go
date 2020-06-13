@@ -125,7 +125,7 @@ var _ = Describe("AlertsChannel reconciliation", func() {
 			},
 			Status: nrv1.AlertsPolicyStatus{
 				AppliedSpec: &nrv1.AlertsPolicySpec{},
-				PolicyID:    665544,
+				PolicyID:    "665544",
 			},
 		}
 		err = ignoreAlreadyExists(k8sClient.Create(ctx, &testPolicy))

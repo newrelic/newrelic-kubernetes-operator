@@ -19,6 +19,7 @@ import (
 	"context"
 	"errors"
 	"reflect"
+	"strconv"
 	"strings"
 	"time"
 
@@ -335,10 +336,14 @@ func (r *AlertsChannelReconciler) getAllPolicyIDs(alertsChannelSpec *nrv1.Alerts
 			if getErr != nil {
 				r.Log.Error(getErr, "Failed to retrieve policy", "k8sPolicy", key)
 			}
-			if k8sPolicy.Status.PolicyID != 0 {
-				policyIDs = append(policyIDs, k8sPolicy.Status.PolicyID)
+			policyID, errInt := strconv.Atoi(k8sPolicy.Status.PolicyID)
+			if errInt != nil {
+				r.Log.Error(errInt, "Failed to parse policyID as an int")
+			}
+			if policyID != 0 {
+				policyIDs = append(policyIDs, policyID)
 			} else {
-				r.Log.Info("Retrieved policy " + policyK8s.Name + "but ID was 0")
+				r.Log.Info("Retrieved policy " + policyK8s.Name + "but ID was blank")
 			}
 
 		}

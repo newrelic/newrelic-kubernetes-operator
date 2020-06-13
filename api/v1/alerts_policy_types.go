@@ -27,8 +27,9 @@ import (
 // EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
 // NOTE: json tags are required.  Any new fields you add must have json tags for the fields to be serialized.
 
+// AlertsPolicySpec defines the desired state of AlertsPolicy
 type AlertsPolicySpec struct {
-	IncidentPreference string                  `json:"incident_preference,omitempty"`
+	IncidentPreference string                  `json:"incidentPreference,omitempty"`
 	Name               string                  `json:"name"`
 	Region             string                  `json:"region"`
 	Conditions         []AlertsPolicyCondition `json:"conditions,omitempty"`
@@ -37,18 +38,23 @@ type AlertsPolicySpec struct {
 	AccountID          int                     `json:"account_id,omitempty"`
 }
 
-//AlertsPolicyCondition defined the conditions contained within a AlertsPolicy
+//AlertsPolicyCondition defined the conditions contained within an AlertsPolicy
 type AlertsPolicyCondition struct {
-	Name      string                 `json:"name"`
-	Namespace string                 `json:"namespace"`
-	Spec      NrqlAlertConditionSpec `json:"spec,omitempty"`
-	//SpecHash uint32					`json:"specHash,omitempty"`
+	Name      string                    `json:"name,omitempty"`
+	Namespace string                    `json:"namespace,omitempty"`
+	Spec      AlertsPolicyConditionSpec `json:"spec,omitempty"`
+}
+
+type AlertsPolicyConditionSpec struct {
+	AlertsGenericConditionSpec `json:",inline"`
+	AlertsNrqlSpecificSpec     `json:",inline"`
+	AlertsAPMSpecificSpec      `json:",inline"`
 }
 
 // AlertsPolicyStatus defines the observed state of AlertsPolicy
 type AlertsPolicyStatus struct {
 	AppliedSpec *AlertsPolicySpec `json:"applied_spec"`
-	PolicyID    int               `json:"policy_id"`
+	PolicyID    string            `json:"policy_id"`
 }
 
 // +kubebuilder:object:root=true
@@ -75,27 +81,41 @@ func init() {
 	SchemeBuilder.Register(&AlertsPolicy{}, &AlertsPolicyList{})
 }
 
-func (in AlertsPolicySpec) APIAlertsPolicy() alerts.AlertsPolicy {
+func (in AlertsPolicySpec) ToAlertsPolicy() alerts.AlertsPolicy {
 	jsonString, _ := json.Marshal(in)
-	var APIPolicy alerts.AlertsPolicy
-	json.Unmarshal(jsonString, &APIPolicy) //nolint
+	var result alerts.AlertsPolicy
+	json.Unmarshal(jsonString, &result) //nolint
 
-	//APICondition.PolicyID = spec.ExistingPolicyId
+	return result
+}
 
-	return APIPolicy
+func (in AlertsPolicySpec) ToAlertsPolicyUpdateInput() alerts.AlertsPolicyUpdateInput {
+	jsonString, _ := json.Marshal(in)
+	var result alerts.AlertsPolicyUpdateInput
+	json.Unmarshal(jsonString, &result) //nolint
+
+	return result
+}
+
+func (in AlertsPolicySpec) ToAlertsPolicyInput() alerts.AlertsPolicyInput {
+	jsonString, _ := json.Marshal(in)
+	var result alerts.AlertsPolicyInput
+	json.Unmarshal(jsonString, &result) //nolint
+
+	return result
 }
 
 func (p *AlertsPolicyCondition) SpecHash() uint32 {
 	//remove api keys and condition from object to enable comparison minus inherited fields
-	strippedPolicy := AlertsPolicyCondition{
+	strippedAlertsPolicy := AlertsPolicyCondition{
 		Spec: p.Spec,
 	}
-	strippedPolicy.Spec.APIKeySecret = NewRelicAPIKeySecret{}
-	strippedPolicy.Spec.APIKey = ""
-	strippedPolicy.Spec.Region = ""
-	strippedPolicy.Spec.ExistingPolicyID = 0
+	strippedAlertsPolicy.Spec.APIKeySecret = NewRelicAPIKeySecret{}
+	strippedAlertsPolicy.Spec.APIKey = ""
+	strippedAlertsPolicy.Spec.Region = ""
+	strippedAlertsPolicy.Spec.ExistingPolicyID = ""
 	conditionTemplateSpecHasher := fnv.New32a()
-	DeepHashObject(conditionTemplateSpecHasher, strippedPolicy)
+	DeepHashObject(conditionTemplateSpecHasher, strippedAlertsPolicy)
 	return conditionTemplateSpecHasher.Sum32()
 }
 
@@ -139,4 +159,34 @@ func (in AlertsPolicySpec) Equals(policyToCompare AlertsPolicySpec) bool {
 		}
 	}
 	return true
+}
+
+//GetAlertsConditionType - returns the string representative of the Condition type
+func GetAlertsConditionType(condition AlertsPolicyCondition) string {
+	if condition.Spec.Type == "NRQL" {
+		return "AlertsNrqlCondition"
+	}
+	return "AlertsAPMCondition"
+}
+
+func (p *AlertsPolicyCondition) GenerateSpecFromNrqlConditionSpec(nrqlConditionSpec AlertsNrqlConditionSpec) {
+	jsonString, _ := json.Marshal(nrqlConditionSpec)
+	json.Unmarshal(jsonString, &p.Spec) //nolint
+}
+
+func (p *AlertsPolicyCondition) GenerateSpecFromApmConditionSpec(apmConditionSpec AlertsAPMConditionSpec) {
+	jsonString, _ := json.Marshal(apmConditionSpec)
+	json.Unmarshal(jsonString, &p.Spec) //nolint
+}
+
+func (p *AlertsPolicyCondition) ReturnNrqlConditionSpec() (nrqlConditionSpec AlertsNrqlConditionSpec) {
+	jsonString, _ := json.Marshal(p.Spec)
+	json.Unmarshal(jsonString, &nrqlConditionSpec) //nolint
+	return
+}
+
+func (p *AlertsPolicyCondition) ReturnApmConditionSpec() (apmConditionSpec AlertsAPMConditionSpec) {
+	jsonString, _ := json.Marshal(p.Spec)
+	json.Unmarshal(jsonString, &apmConditionSpec) //nolint
+	return
 }

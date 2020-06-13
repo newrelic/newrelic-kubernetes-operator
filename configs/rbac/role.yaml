@@ -73,6 +73,19 @@ rules:
   - nr.k8s.newrelic.com
   resources:
   - alertschannels
+
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - nr.k8s.newrelic.com
+  resources:
+  - alertsapmconditions
   verbs:
   - create
   - delete
@@ -85,6 +98,14 @@ rules:
   - nr.k8s.newrelic.com
   resources:
   - alertschannels/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - nr.k8s.newrelic.com
+  resources:
+  - alertsapmconditions/status
   verbs:
   - get
   - patch

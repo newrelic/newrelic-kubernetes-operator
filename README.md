@@ -65,7 +65,7 @@ Currently the operator supports managing the following resources:
 1. Install the operator in the test cluster.
 
    ```bash
-   kustomize build github.com/newrelic/newrelic-kubernetes-operator/configs/default | kubectl apply -f -
+   kustomize build https://github.com/newrelic/newrelic-kubernetes-operator/configs/default | kubectl apply -f -
    ```
    > <small>**Note:** This will install operator on whatever kubernetes cluster kubectl is configured to use.</small>
 
@@ -107,27 +107,30 @@ Once you've completed the [Quick Start](#quick-start) section, you can start pro
 
     ```yaml
     apiVersion: nr.k8s.newrelic.com/v1
-    kind: Policy
+    kind: AlertsPolicy
     metadata:
       name: my-policy
     spec:
+      # Add your account ID here
+      account_id: <your New Relic account ID>
       # Add your API key here
       api_key: <your New Relic personal API key>
       name: k8s created policy
-      incident_preference: "PER_POLICY"
-      region: "us"
+      incidentPreference: "PER_POLICY"
+      region: "US"
       conditions:
         - spec:
+            type: "NRQL"
             nrql:
               query: "SELECT count(*) FROM Transactions"
-              since_value: "10"
+              evaluationOffset: 10
             enabled: true
             terms:
               - threshold: "75.0"
-                time_function: "all"
-                duration: "5"
-                priority: "critical"
-                operator: "above"
+                threshold_occurrences: "ALL"
+                threshold_duration: 60
+                priority: "CRITICAL"
+                operator: "ABOVE"
             name: "K8s generated alert condition"
         - spec:
             type: "apm_app_metric"
@@ -136,7 +139,7 @@ Once you've completed the [Quick Start](#quick-start) section, you can start pro
             condition_scope: application
             entities:
               - "5950260"
-            terms:
+            apm_terms:
               - threshold: "0.9"
                 time_function: "all"
                 duration: "30"
@@ -153,7 +156,7 @@ Once you've completed the [Quick Start](#quick-start) section, you can start pro
 
 2. See your configured policies with the following command.
    ```bash
-   kubectl describe policies.nr.k8s.newrelic.com
+   kubectl describe alertspolicies.nr.k8s.newrelic.com
    ```
    > <small>**Note:** You should also see the newly created policy within your New Relic account.</small>
 
@@ -167,29 +170,32 @@ The operator will create and update alert policies and NRQL alert conditions as 
 
     ```yaml
     apiVersion: nr.k8s.newrelic.com/v1
-    kind: NrqlAlertCondition
+    kind: AlertsNrqlCondition
     metadata:
       name: my-alert-condition
     spec:
+      # Add your account ID here
+      account_id: <your New Relic account ID>
       # Add your API key here
       api_key: <your New Relic personal API key>
       name: "K8s generated alert condition"
+      type: "NRQL"
       nrql:
         # Note: This is just an example.
         # You'll want to use a query with parameters that are
         # more specific to the needs for targeting associated
         # kubernetes objects.
         query: "SELECT count(*) FROM Transactions"
-        since_value: "10"
+        evaluationOffset: 10
       enabled: true
       terms:
         - threshold: "75.0"
-          time_function: "all"
-          duration: "5"
-          priority: "critical"
-          operator: "above"
-      existing_policy_id: 26458245 # Note: must match an existing policy in your account
-      region: "us"
+          threshold_occurrences: "ALL"
+          threshold_duration: 60
+          priority: "CRITICAL"
+          operator: "ABOVE"
+      existing_policy_id: "26458245" # Note: must match an existing policy in your account
+      region: "US"
     ```
 
 ### Uninstall the operator
@@ -274,10 +280,10 @@ This section should get you set up properly for doing development on the operato
 
 ```bash
 # Describe the currently configured policies.
-kubectl describe policies.nr.k8s.newrelic.com
+kubectl describe alertspolicies.nr.k8s.newrelic.com
 
 # Describe the currently configured alert conditions.
-kubectl describe nrqlalertconditions.nr.k8s.newrelic.com
+kubectl describe alertsnrqlconditions.nr.k8s.newrelic.com
 
 # Get the node being used for the newrelic operator.
 kubectl get nodes -n newrelic-kubernetes-operator-system
