@@ -8,14 +8,17 @@ spec:
   #   name: nr-api-key
   #   namespace: default
   #   key_name: api-key
-
-
-
-  name:         "my alert channels"
+  name:         "my alert channel"
   region:       "US"
   type:         "email"
   links:
+    # Policy links can be by NR PolicyID, NR PolicyName OR K8s AlertPolicy object reference 
     policy_ids: 
-      - 14010
+      - 1
+    policy_names: 
+      - "k8s created policy"
+      policy_kubernetes_objects: 
+      - name: "my-policy"
+        namespace: "default"
   configuration: 
     recipients: "me@email.com"

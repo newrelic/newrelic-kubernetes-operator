@@ -66,7 +66,6 @@ func (r *AlertsChannelReconciler) Reconcile(req ctrl.Request) (ctrl.Result, erro
 		r.Log.Error(err, "Failed to GET alertsChannel", "name", req.NamespacedName.String())
 		return ctrl.Result{}, nil
 	}
-	r.Log.Info("Starting reconcile action")
 	r.Log.Info("alertsChannel", "alertsChannel.Spec", alertsChannel.Spec, "alertsChannel.status.applied", alertsChannel.Status.AppliedSpec)
 
 	r.apiKey = r.getAPIKeyOrSecret(alertsChannel)
@@ -91,7 +90,6 @@ func (r *AlertsChannelReconciler) Reconcile(req ctrl.Request) (ctrl.Result, erro
 			alertsChannel.Finalizers = append(alertsChannel.Finalizers, deleteFinalizer)
 		}
 	} else {
-		r.Log.Info("K8s resource deletion")
 		err := r.deleteAlertsChannel(&alertsChannel, deleteFinalizer)
 		if err != nil {
 			r.Log.Error(err, "error deleting channel", "name", alertsChannel.Name)
@@ -176,7 +174,7 @@ func (r *AlertsChannelReconciler) createAlertsChannel(alertsChannel *nrv1.Alerts
 	r.Log.Info("Creating AlertsChannel", "name", alertsChannel.Name, "ChannelName", alertsChannel.Spec.Name)
 	APIChannel := alertsChannel.Spec.APIChannel()
 
-	r.Log.Info("APIChannel", "", APIChannel)
+	r.Log.Info("API Payload before calling NR API", "APIChannel", APIChannel)
 	createdChannel, err := r.Alerts.CreateChannel(APIChannel)
 	if err != nil {
 		r.Log.Error(err, "Error creating AlertsChannel"+alertsChannel.Name)
@@ -191,8 +189,7 @@ func (r *AlertsChannelReconciler) createAlertsChannel(alertsChannel *nrv1.Alerts
 
 		policyChannels, errUpdatePolicies := r.Alerts.UpdatePolicyChannels(policyID, []int{createdChannel.ID})
 		if errUpdatePolicies != nil {
-			r.Log.Error(errUpdatePolicies, "error updating policyAlertsChannels", "policyID", policyID, "conditionID", createdChannel.ID)
-			r.Log.Info("policyChannels", "", policyChannels)
+			r.Log.Error(errUpdatePolicies, "error updating policyAlertsChannels", "policyID", policyID, "conditionID", createdChannel.ID, "policyChannels", policyChannels)
 		} else {
 			alertsChannel.Status.AppliedPolicyIDs = append(alertsChannel.Status.AppliedPolicyIDs, policyID)
 
@@ -200,10 +197,10 @@ func (r *AlertsChannelReconciler) createAlertsChannel(alertsChannel *nrv1.Alerts
 	}
 
 	alertsChannel.Status.AppliedSpec = &alertsChannel.Spec
-	err = r.Client.Update(r.ctx, alertsChannel)
-	if err != nil {
-		r.Log.Error(err, "Tried updating channel status", "name", alertsChannel.Name, "Namespace", alertsChannel.Namespace)
-		return err
+	errClientUpdate := r.Client.Update(r.ctx, alertsChannel)
+	if errClientUpdate != nil {
+		r.Log.Error(errClientUpdate, "Error updating channel status", "name", alertsChannel.Name, "Namespace", alertsChannel.Namespace)
+		return errClientUpdate
 	}
 	return nil
 }
@@ -216,7 +213,10 @@ func (r *AlertsChannelReconciler) updateAlertsChannel(alertsChannel *nrv1.Alerts
 
 	IncomingPolicyIDs := r.getAllPolicyIDs(&alertsChannel.Spec)
 
-	r.Log.Info("Updating list of policies attached to AlertsChannel", "policyIDs", IncomingPolicyIDs, "AppliedPolicyIDs", AppliedPolicyIDs)
+	r.Log.Info("Updating list of policies attached to AlertsChannel",
+		"policyIDs", IncomingPolicyIDs,
+		"AppliedPolicyIDs", AppliedPolicyIDs,
+	)
 
 	processedPolicyIDs := make(map[int]bool)
 
@@ -226,40 +226,41 @@ func (r *AlertsChannelReconciler) updateAlertsChannel(alertsChannel *nrv1.Alerts
 
 	for _, appliedPolicyID := range AppliedPolicyIDs {
 		if _, ok := processedPolicyIDs[appliedPolicyID]; ok {
-			r.Log.Info("Already had ", "", appliedPolicyID)
 			processedPolicyIDs[appliedPolicyID] = true
 		} else {
 			r.Log.Info("Need to delete", "", appliedPolicyID)
-			policyChannels, err := r.Alerts.DeletePolicyChannel(appliedPolicyID, alertsChannel.Status.ChannelID)
+			PolicyChannels, err := r.Alerts.DeletePolicyChannel(appliedPolicyID, alertsChannel.Status.ChannelID)
 			if err != nil {
-				r.Log.Error(err, "error updating policyAlertsChannels", "policyID", appliedPolicyID, "conditionID", alertsChannel.Status.ChannelID)
-				r.Log.Info("policyChannels", "", policyChannels)
-			} else {
-				alertsChannel.Status.AppliedPolicyIDs = append(alertsChannel.Status.AppliedPolicyIDs, appliedPolicyID)
-
+				r.Log.Error(err, "error updating policyAlertsChannels",
+					"policyID", appliedPolicyID,
+					"conditionID", alertsChannel.Status.ChannelID,
+					"PolicyChannels", PolicyChannels,
+				)
 			}
 		}
 	}
-	//TODO: iterate through map to find those that are still false and add them
+
+	//Clear out AppliedPolicyIds
+	alertsChannel.Status.AppliedPolicyIDs = []int{}
+
 	for policyID, processed := range processedPolicyIDs {
 		r.Log.Info("processing ", "policyID", policyID, ":processed", processed)
+		alertsChannel.Status.AppliedPolicyIDs = append(alertsChannel.Status.AppliedPolicyIDs, policyID)
 		if !processed {
 			r.Log.Info("need to add ", "policyID", policyID)
 			policyChannels, err := r.Alerts.UpdatePolicyChannels(policyID, []int{alertsChannel.Status.ChannelID})
 			if err != nil {
-				r.Log.Error(err, "error updating policyAlertsChannels", "policyID", policyID, "conditionID", alertsChannel.Status.ChannelID)
+				r.Log.Error(err, "error updating policyAlertsChannels",
+					"policyID", policyID,
+					"conditionID", alertsChannel.Status.ChannelID,
+					"policyChannels", policyChannels,
+				)
 				r.Log.Info("policyChannels", "", policyChannels)
 			}
 
 		}
 
 	}
-
-	//TODO: Need to add this work
-	// if AppliedPolicyIDs != IncomingPolicyIDs {
-	// 	r.Log.Info("Updating list of policies attached to AlertsChannel", "policyIDs", IncomingPolicyIDs)
-
-	// }
 
 	// Now update the AppliedSpec and the k8s object
 	alertsChannel.Status.AppliedSpec = &alertsChannel.Spec
@@ -310,8 +311,6 @@ func (r *AlertsChannelReconciler) getAllPolicyIDs(alertsChannelSpec *nrv1.Alerts
 			}
 		}
 
-		r.Log.Info("Retrieved policies", "", retrievedPolicies)
-
 		for _, policyName := range alertsChannelSpec.Links.PolicyNames {
 			for _, APIPolicy := range retrievedPolicies {
 				if policyName == APIPolicy.Name {
@@ -324,7 +323,9 @@ func (r *AlertsChannelReconciler) getAllPolicyIDs(alertsChannelSpec *nrv1.Alerts
 	}
 
 	if len(alertsChannelSpec.Links.PolicyKubernetesObjects) > 0 {
-		r.Log.Info("Getting PolicyIds from PolicyKubernetesObjects", "PolicyKubernetesObjects", alertsChannelSpec.Links.PolicyKubernetesObjects)
+		r.Log.Info("Getting PolicyIds from PolicyKubernetesObjects",
+			"PolicyKubernetesObjects", alertsChannelSpec.Links.PolicyKubernetesObjects,
+		)
 		for _, policyK8s := range alertsChannelSpec.Links.PolicyKubernetesObjects {
 
 			key := types.NamespacedName{
@@ -348,8 +349,6 @@ func (r *AlertsChannelReconciler) getAllPolicyIDs(alertsChannelSpec *nrv1.Alerts
 
 		}
 	}
-
-	r.Log.Info("Full list of PolicyIs to a to Channel", "policyIDs", policyIDs)
 
 	return
 }
