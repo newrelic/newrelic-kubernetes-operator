@@ -30,7 +30,7 @@ echo "Generating release for v${RELEASE_VERSION} using system user git user ${GI
 git checkout -b release/v${RELEASE_VERSION}
 
 # Update config/manager/kustomization.yaml to point to the docker tag for this release
-cd configs/manager && kustomize edit set image controller=newrelic/kubernetes-operator:${RELEASE_VERSION} && cd ../..
+cd configs/manager && kustomize edit set image controller=newrelic/kubernetes-operator:v${RELEASE_VERSION} && cd ../..
 
 # Auto-generate CHANGELOG updates
 git-chglog --next-tag v${RELEASE_VERSION} -o CHANGELOG.md
