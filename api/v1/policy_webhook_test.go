@@ -26,6 +26,7 @@ var _ = Describe("Policy_webhooks", func() {
 		}))
 		Expect(err).ToNot(HaveOccurred())
 	})
+
 	Describe("validateCreate", func() {
 		var (
 			r            Policy
@@ -96,6 +97,7 @@ var _ = Describe("Policy_webhooks", func() {
 				err := r.ValidateCreate()
 				Expect(err).ToNot(HaveOccurred())
 			})
+
 			AfterEach(func() {
 				k8Client.Delete(ctx, secret)
 			})
@@ -203,48 +205,49 @@ var _ = Describe("Policy_webhooks", func() {
 	})
 
 	Describe("Default", func() {
-		var (
-			r Policy
-		)
-		r = Policy{
-			Spec: PolicySpec{
-				Name:               "Test Policy",
-				IncidentPreference: "PER_POLICY",
-				APIKey:             "api-key",
-				Conditions: []PolicyCondition{
-					{
-						Spec: ConditionSpec{
-							GenericConditionSpec{
-								Terms: []AlertConditionTerm{
-									{
-										Duration:     "30",
-										Operator:     "above",
-										Priority:     "critical",
-										Threshold:    "5",
-										TimeFunction: "all",
+		var r Policy
+
+		BeforeEach(func() {
+			r = Policy{
+				Spec: PolicySpec{
+					Name:               "Test Policy",
+					IncidentPreference: "PER_POLICY",
+					APIKey:             "api-key",
+					Conditions: []PolicyCondition{
+						{
+							Spec: ConditionSpec{
+								GenericConditionSpec{
+									Terms: []AlertConditionTerm{
+										{
+											Duration:     "30",
+											Operator:     "above",
+											Priority:     "critical",
+											Threshold:    "5",
+											TimeFunction: "all",
+										},
 									},
+									Type:       "NRQL",
+									Name:       "NRQL Condition",
+									RunbookURL: "http://test.com/runbook",
+									Enabled:    true,
 								},
-								Type:       "NRQL",
-								Name:       "NRQL Condition",
-								RunbookURL: "http://test.com/runbook",
-								Enabled:    true,
-							},
-							NrqlSpecificSpec{
-								Nrql: NrqlQuery{
-									Query:      "SELECT 1 FROM MyEvents",
-									SinceValue: "5",
+								NrqlSpecificSpec{
+									Nrql: NrqlQuery{
+										Query:      "SELECT 1 FROM MyEvents",
+										SinceValue: "5",
+									},
+									ValueFunction:       "max",
+									ViolationCloseTimer: 60,
+									ExpectedGroups:      2,
+									IgnoreOverlap:       true,
 								},
-								ValueFunction:       "max",
-								ViolationCloseTimer: 60,
-								ExpectedGroups:      2,
-								IgnoreOverlap:       true,
+								APMSpecificSpec{},
 							},
-							APMSpecificSpec{},
 						},
 					},
 				},
-			},
-		}
+			}
+		})
 
 		Context("when given a policy with no incident_preference set", func() {
 			It("should set default value of PER_POLICY", func() {

@@ -133,6 +133,7 @@ func (r *AlertsPolicyReconciler) createAlertsPolicy(policy *nrv1.AlertsPolicy) e
 			"region", policy.Spec.Region,
 			"apiKey", interfaces.PartialAPIKey(r.apiKey),
 		)
+
 		return err
 	}
 
@@ -141,6 +142,7 @@ func (r *AlertsPolicyReconciler) createAlertsPolicy(policy *nrv1.AlertsPolicy) e
 	errConditions := r.createConditions(policy)
 	if errConditions != nil {
 		r.Log.Error(errConditions, "error creating or updating conditions")
+
 		return errConditions
 	}
 	r.Log.Info("policy after condition creation", "policyCondition", policy.Spec.Conditions, "pointer", &policy)
@@ -258,6 +260,7 @@ func (r *AlertsPolicyReconciler) updateNrqlCondition(policy *nrv1.AlertsPolicy, 
 	nrqlCondition.Spec.AccountID = policy.Spec.AccountID
 
 	err := r.Client.Update(r.ctx, &nrqlCondition)
+
 	return err
 }
 
@@ -290,6 +293,7 @@ func (r *AlertsPolicyReconciler) updateApmCondition(policy *nrv1.AlertsPolicy, c
 	r.Log.Info("updating existing condition", "alertsAPMCondition", apmCondition)
 
 	err := r.Client.Update(r.ctx, &apmCondition)
+
 	return err
 }
 
@@ -450,6 +454,7 @@ func (r *AlertsPolicyReconciler) getApmConditionFromAlertsPolicyCondition(condit
 	//throw away the error since empty conditions are expected
 	_ = r.Client.Get(r.ctx, condition.GetNamespace(), &apmCondition)
 	r.Log.Info("retrieved condition", "alertsAPMCondition", apmCondition, "namespace", condition.GetNamespace())
+
 	return
 }
 
@@ -573,6 +578,7 @@ func (r *AlertsPolicyReconciler) checkForExistingAlertsPolicy(policy *nrv1.Alert
 			if existingAlertsPolicy.Name == policy.Spec.Name {
 				r.Log.Info("matched on existing policy, updating PolicyId", "policyId", existingAlertsPolicy.ID)
 				policy.Status.PolicyID = existingAlertsPolicy.ID
+
 				break
 			}
 		}
@@ -607,8 +613,10 @@ func (r *AlertsPolicyReconciler) getAPIKeyOrSecret(policy nrv1.AlertsPolicy) str
 		getErr := r.Client.Get(context.Background(), key, &apiKeySecret)
 		if getErr != nil {
 			r.Log.Error(getErr, "Failed to retrieve secret", "secret", apiKeySecret)
+
 			return ""
 		}
+
 		return string(apiKeySecret.Data[policy.Spec.APIKeySecret.KeyName])
 	}
 

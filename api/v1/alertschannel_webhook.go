@@ -56,6 +56,7 @@ func (r *AlertsChannel) Default() {
 		log.Info("Setting null Applied Spec to empty interface")
 		r.Status.AppliedSpec = &AlertsChannelSpec{}
 	}
+
 	if r.Status.AppliedPolicyIDs == nil {
 		log.Info("Setting null AppliedPolicyIDs to empty interface")
 		r.Status.AppliedPolicyIDs = []int{}
@@ -107,13 +108,12 @@ func (r *AlertsChannel) ValidateAlertsChannel() error {
 	if len(invalidAttributes) > 0 {
 		return errors.New("error with invalid attributes: \n" + invalidAttributes.errorString())
 	}
-	return nil
 
+	return nil
 }
 
 //ValidateType - Validates the Type attribute
 func (r *AlertsChannel) ValidateType() InvalidAttributeSlice {
-
 	switch r.Spec.Type {
 	case string(alerts.ChannelTypes.Email),
 		string(alerts.ChannelTypes.OpsGenie),
@@ -122,9 +122,11 @@ func (r *AlertsChannel) ValidateType() InvalidAttributeSlice {
 		string(alerts.ChannelTypes.User),
 		string(alerts.ChannelTypes.VictorOps),
 		string(alerts.ChannelTypes.Webhook):
+
 		return []invalidAttribute{}
 	default:
 		alertschannellog.Info("Invalid Type attribute", "Type", r.Spec.Type)
+
 		return []invalidAttribute{{attribute: "Type", value: r.Spec.Type}}
 	}
 }

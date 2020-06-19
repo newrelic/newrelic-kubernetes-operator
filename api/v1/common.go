@@ -46,8 +46,8 @@ func ValidRegion(input string) bool {
 	} else if input == "" {
 		return false
 	}
-	return true
 
+	return true
 }
 
 //CheckForAPIKeyOrSecret - returns error if a API KEY or k8 secret is not passed in
@@ -55,10 +55,12 @@ func CheckForAPIKeyOrSecret(apiKey string, secret NewRelicAPIKeySecret) error {
 	if apiKey != "" {
 		return nil
 	}
+
 	if secret != (NewRelicAPIKeySecret{}) {
 		if secret.Name != "" && secret.Namespace != "" && secret.KeyName != "" {
 			return nil
 		}
 	}
+
 	return errors.New("either api_key or api_key_secret must be set")
 }

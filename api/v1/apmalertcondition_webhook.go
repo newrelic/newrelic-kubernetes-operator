@@ -132,6 +132,7 @@ func (r *ApmAlertCondition) ValidateUpdate(old runtime.Object) error {
 	if len(invalidAttributes) > 0 {
 		return errors.New("error with invalid attributes")
 	}
+
 	return r.CheckExistingPolicyID()
 }
 
@@ -150,9 +151,11 @@ func (r *ApmAlertCondition) ValidateType() InvalidAttributeSlice {
 		string(alerts.ConditionTypes.BrowserMetric),
 		string(alerts.ConditionTypes.MobileMetric),
 		string(alerts.ConditionTypes.ServersMetric):
+
 		return []invalidAttribute{}
 	default:
 		log.Info("Invalid Type attribute", "Type", r.Spec.Type)
+
 		return []invalidAttribute{{attribute: "Type", value: r.Spec.Type}}
 	}
 }
@@ -192,15 +195,18 @@ func (r *ApmAlertCondition) ValidateMetric() InvalidAttributeSlice {
 		alerts.MetricTypes.UserDefined,
 		alerts.MetricTypes.ViewLoading,
 		alerts.MetricTypes.WebApplication:
+
 		return []invalidAttribute{}
 	default:
 		log.Info("Invalid Metric attribute", "Metric", r.Spec.Metric)
+
 		return []invalidAttribute{{attribute: "Type", value: r.Spec.Metric}}
 	}
 }
 
 func (r *ApmAlertCondition) ValidateTerms() InvalidAttributeSlice {
 	var invalidTerms InvalidAttributeSlice
+
 	for _, term := range r.Spec.Terms {
 		switch alerts.TimeFunctionType(term.TimeFunction) {
 		case alerts.TimeFunctionTypes.All, alerts.TimeFunctionTypes.Any:
@@ -212,6 +218,7 @@ func (r *ApmAlertCondition) ValidateTerms() InvalidAttributeSlice {
 				value:     term.TimeFunction,
 			})
 		}
+
 		switch alerts.OperatorType(term.Operator) {
 		case alerts.OperatorTypes.Equal, alerts.OperatorTypes.Above, alerts.OperatorTypes.Below:
 			continue
@@ -222,6 +229,7 @@ func (r *ApmAlertCondition) ValidateTerms() InvalidAttributeSlice {
 				value:     term.Operator,
 			})
 		}
+
 		switch alerts.PriorityType(term.Priority) {
 		case alerts.PriorityTypes.Critical, alerts.PriorityTypes.Warning:
 			continue
@@ -246,9 +254,11 @@ func (r *ApmAlertCondition) ValidateUserDefinedValueFunction() InvalidAttributeS
 		alerts.ValueFunctionTypes.SampleSize,
 		alerts.ValueFunctionTypes.SingleValue,
 		alerts.ValueFunctionTypes.Total:
+
 		return []invalidAttribute{}
 	default:
 		log.Info("Invalid UserDefined.ValueFunction passed", "UserDefined.ValueFunction", r.Spec.UserDefined.ValueFunction)
+
 		return []invalidAttribute{{attribute: "UserDefined.ValueFunction: ", value: string(r.Spec.UserDefined.ValueFunction)}}
 	}
 }
@@ -257,16 +267,18 @@ func (r *ApmAlertCondition) CheckExistingPolicyID() error {
 	log.Info("Checking existing", "policyId", r.Spec.ExistingPolicyID)
 	ctx := context.Background()
 	var apiKey string
+
 	if r.Spec.APIKey == "" {
 		key := types.NamespacedName{Namespace: r.Spec.APIKeySecret.Namespace, Name: r.Spec.APIKeySecret.Name}
 		var apiKeySecret v1.Secret
+
 		getErr := k8Client.Get(ctx, key, &apiKeySecret)
 		if getErr != nil {
 			log.Error(getErr, "Error getting secret")
 			return getErr
 		}
-		apiKey = string(apiKeySecret.Data[r.Spec.APIKeySecret.KeyName])
 
+		apiKey = string(apiKeySecret.Data[r.Spec.APIKeySecret.KeyName])
 	} else {
 		apiKey = r.Spec.APIKey
 	}
@@ -278,28 +290,35 @@ func (r *ApmAlertCondition) CheckExistingPolicyID() error {
 			"API Key", interfaces.PartialAPIKey(apiKey),
 			"region", r.Spec.Region,
 		)
+
 		return errAlertClient
 	}
+
 	alertPolicy, errAlertPolicy := alertsClient.GetPolicy(r.Spec.ExistingPolicyID)
 	if errAlertPolicy != nil {
 		if r.GetDeletionTimestamp() != nil {
 			log.Info("Deleting resource", "errAlertPolicy", errAlertPolicy)
 			if strings.Contains(errAlertPolicy.Error(), "no alert policy found for id") {
 				log.Info("ExistingAlertPolicy not found but we are deleting the condition so this is ok")
+
 				return nil
 			}
 		}
+
 		log.Error(errAlertPolicy, "failed to get policy",
 			"policyId", r.Spec.ExistingPolicyID,
 			"API Key", interfaces.PartialAPIKey(apiKey),
 			"region", r.Spec.Region,
 		)
+
 		return errAlertPolicy
 	}
 	if alertPolicy.ID != r.Spec.ExistingPolicyID {
 		log.Info("Alert policy returned by the API failed to match provided policy ID")
+
 		return errors.New("alert policy returned by API did not match")
 	}
+
 	return nil
 }
 
@@ -307,25 +326,30 @@ func (r *ApmAlertCondition) CheckForAPIKeyOrSecret() error {
 	if r.Spec.APIKey != "" {
 		return nil
 	}
+
 	if r.Spec.APIKeySecret != (NewRelicAPIKeySecret{}) {
 		if r.Spec.APIKeySecret.Name != "" && r.Spec.APIKeySecret.Namespace != "" && r.Spec.APIKeySecret.KeyName != "" {
 			return nil
 		}
 	}
+
 	return errors.New("either api_key or api_key_secret must be set")
 }
 
 func (r *ApmAlertCondition) CheckRequiredFields() error {
-
 	missingFields := []string{}
+
 	if r.Spec.Region == "" {
 		missingFields = append(missingFields, "region")
 	}
+
 	if r.Spec.ExistingPolicyID == 0 {
 		missingFields = append(missingFields, "existing_policy_id")
 	}
+
 	if len(missingFields) > 0 {
 		return errors.New(strings.Join(missingFields, " and ") + " must be set")
 	}
+
 	return nil
 }

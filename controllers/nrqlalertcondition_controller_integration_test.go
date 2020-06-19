@@ -22,15 +22,6 @@ import (
 )
 
 var _ = Describe("NrqlCondition reconciliation", func() {
-	BeforeEach(func() {
-		err := ignoreAlreadyExists(k8sClient.Create(context.Background(), &v1.Namespace{
-			ObjectMeta: metav1.ObjectMeta{
-				Name: "my-namespace",
-			},
-		}))
-		Expect(err).ToNot(HaveOccurred())
-	})
-
 	var (
 		ctx            context.Context
 		r              *NrqlAlertConditionReconciler
@@ -40,7 +31,15 @@ var _ = Describe("NrqlCondition reconciliation", func() {
 		secret         *v1.Secret
 		fakeAlertFunc  func(string, string) (interfaces.NewRelicAlertsClient, error)
 	)
+
 	BeforeEach(func() {
+		err := ignoreAlreadyExists(k8sClient.Create(context.Background(), &v1.Namespace{
+			ObjectMeta: metav1.ObjectMeta{
+				Name: "my-namespace",
+			},
+		}))
+		Expect(err).ToNot(HaveOccurred())
+
 		ctx = context.Background()
 
 		alertsClient = &interfacesfakes.FakeNewRelicAlertsClient{}
@@ -49,10 +48,12 @@ var _ = Describe("NrqlCondition reconciliation", func() {
 			a.ID = 111
 			return &a, nil
 		}
+
 		alertsClient.UpdateNrqlConditionStub = func(a alerts.NrqlCondition) (*alerts.NrqlCondition, error) {
 			a.ID = 112
 			return &a, nil
 		}
+
 		alertsClient.ListNrqlConditionsStub = func(int) ([]*alerts.NrqlCondition, error) {
 			var a []*alerts.NrqlCondition
 			a = append(a, &alerts.NrqlCondition{
@@ -118,16 +119,16 @@ var _ = Describe("NrqlCondition reconciliation", func() {
 				ConditionID: 0,
 			},
 		}
+
 		namespacedName = types.NamespacedName{
 			Namespace: "default",
 			Name:      "test-condition",
 		}
-		request = ctrl.Request{NamespacedName: namespacedName}
 
+		request = ctrl.Request{NamespacedName: namespacedName}
 	})
 
 	Context("When starting with no conditions", func() {
-
 		Context("and given a new NrqlAlertCondition", func() {
 			Context("with a valid condition", func() {
 				It("should create that condition via the AlertClient", func() {
@@ -193,6 +194,7 @@ var _ = Describe("NrqlCondition reconciliation", func() {
 					}
 					Expect(ignoreAlreadyExists(k8sClient.Create(ctx, secret))).To(Succeed())
 				})
+
 				It("should create that condition via the AlertClient", func() {
 
 					err := k8sClient.Create(ctx, condition)
@@ -205,9 +207,9 @@ var _ = Describe("NrqlCondition reconciliation", func() {
 					Expect(alertsClient.CreateNrqlConditionCallCount()).To(Equal(1))
 					Expect(alertsClient.UpdateNrqlConditionCallCount()).To(Equal(0))
 				})
+
 				AfterEach(func() {
 					//k8sClient.Delete(ctx, secret)
-
 				})
 
 				It("updates the ConditionID on the kubernetes object", func() {
@@ -283,11 +285,9 @@ var _ = Describe("NrqlCondition reconciliation", func() {
 						ConditionID: 0,
 					},
 				}
-
 			})
 
 			Context("with a valid condition", func() {
-
 				It("does not create a new condition", func() {
 					err := k8sClient.Create(ctx, condition)
 					Expect(err).ToNot(HaveOccurred())
@@ -326,7 +326,6 @@ var _ = Describe("NrqlCondition reconciliation", func() {
 					Expect(err).To(BeNil())
 					Expect(endStateCondition.Status.AppliedSpec).To(Equal(&condition.Spec))
 				})
-
 			})
 		})
 
@@ -422,7 +421,6 @@ var _ = Describe("NrqlCondition reconciliation", func() {
 	})
 
 	Context("When starting with an existing condition", func() {
-
 		Context("and deleting a NrqlAlertCondition", func() {
 			BeforeEach(func() {
 				err := k8sClient.Create(ctx, condition)
@@ -437,6 +435,7 @@ var _ = Describe("NrqlCondition reconciliation", func() {
 				Expect(err).ToNot(HaveOccurred())
 
 			})
+
 			Context("with a valid condition", func() {
 				It("should delete that condition via the AlertClient", func() {
 					err := k8sClient.Delete(ctx, condition)
@@ -463,16 +462,16 @@ var _ = Describe("NrqlCondition reconciliation", func() {
 					err = k8sClient.Get(ctx, namespacedName, &endStateCondition)
 					Expect(err).To(HaveOccurred())
 				})
-
 			})
-			Context("with a condition with no condition ID", func() {
 
+			Context("with a condition with no condition ID", func() {
 				BeforeEach(func() {
 					condition.Status.ConditionID = 0
 					err := k8sClient.Update(ctx, condition)
 					Expect(err).ToNot(HaveOccurred())
 
 				})
+
 				It("should just remove the finalizer and delete", func() {
 					err := k8sClient.Delete(ctx, condition)
 					Expect(err).ToNot(HaveOccurred())
@@ -490,17 +489,15 @@ var _ = Describe("NrqlCondition reconciliation", func() {
 					Expect(err).To(HaveOccurred())
 					Expect(endStateCondition.Name).To(Equal(""))
 				})
-
 			})
 
 			Context("when the Alerts API reports no condition found ", func() {
-
 				BeforeEach(func() {
 					alertsClient.DeleteNrqlConditionStub = func(int) (*alerts.NrqlCondition, error) {
 						return &alerts.NrqlCondition{}, errors.New("resource not found")
 					}
-
 				})
+
 				It("should just remove the finalizer and delete", func() {
 					err := k8sClient.Delete(ctx, condition)
 					Expect(err).ToNot(HaveOccurred())
@@ -518,10 +515,7 @@ var _ = Describe("NrqlCondition reconciliation", func() {
 					Expect(err).To(HaveOccurred())
 					Expect(endStateCondition.Name).To(Equal(""))
 				})
-
 			})
-
 		})
 	})
-
 })

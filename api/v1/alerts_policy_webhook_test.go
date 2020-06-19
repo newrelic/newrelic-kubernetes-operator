@@ -86,6 +86,7 @@ var _ = Describe("AlertsPolicy_webhooks", func() {
 				err := r.ValidateCreate()
 				Expect(err).ToNot(HaveOccurred())
 			})
+
 			AfterEach(func() {
 				k8Client.Delete(context.Background(), secret)
 			})
@@ -179,9 +180,8 @@ var _ = Describe("AlertsPolicy_webhooks", func() {
 	})
 
 	Describe("Default", func() {
-		var (
-			r AlertsPolicy
-		)
+		var r AlertsPolicy
+
 		conditionSpec := AlertsPolicyConditionSpec{}
 		conditionSpec.Terms = []AlertsNrqlConditionTerm{
 			{

@@ -52,6 +52,7 @@ var _ = Describe("AlertsChannel_webhook", func() {
 			}, nil
 		}
 	})
+
 	Context("ValidateCreate", func() {
 		Context("With a valid Alert Channel", func() {
 			It("Should create the Alert Channel", func() {

@@ -60,6 +60,7 @@ func (r *AlertsNrqlConditionReconciler) Reconcile(req ctrl.Request) (ctrl.Result
 
 	r.Log.Info("starting reconcile action")
 	var condition nrv1.AlertsNrqlCondition
+
 	err := r.Client.Get(ctx, req.NamespacedName, &condition)
 	if err != nil {
 		if strings.Contains(err.Error(), " not found") {
@@ -213,6 +214,7 @@ func (r *AlertsNrqlConditionReconciler) checkForExistingCondition(condition *nrv
 
 func (r *AlertsNrqlConditionReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	r.AlertClientFunc = interfaces.InitializeAlertsClient
+
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&nrv1.AlertsNrqlCondition{}).
 		Complete(r)

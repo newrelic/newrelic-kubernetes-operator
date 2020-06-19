@@ -77,6 +77,7 @@ func (r *NrqlAlertCondition) ValidateCreate() error {
 	if err != nil {
 		return err
 	}
+
 	return r.CheckExistingPolicyID()
 }
 
@@ -92,6 +93,7 @@ func (r *NrqlAlertCondition) ValidateUpdate(old runtime.Object) error {
 	if err != nil {
 		return err
 	}
+
 	return r.CheckExistingPolicyID()
 }
 
@@ -107,6 +109,7 @@ func (r *NrqlAlertCondition) CheckExistingPolicyID() error {
 	log.Info("Checking existing", "policyId", r.Spec.ExistingPolicyID)
 	ctx := context.Background()
 	var apiKey string
+
 	if r.Spec.APIKey == "" {
 		key := types.NamespacedName{Namespace: r.Spec.APIKeySecret.Namespace, Name: r.Spec.APIKeySecret.Name}
 		var apiKeySecret v1.Secret
@@ -116,7 +119,6 @@ func (r *NrqlAlertCondition) CheckExistingPolicyID() error {
 			return getErr
 		}
 		apiKey = string(apiKeySecret.Data[r.Spec.APIKeySecret.KeyName])
-
 	} else {
 		apiKey = r.Spec.APIKey
 	}
@@ -130,6 +132,7 @@ func (r *NrqlAlertCondition) CheckExistingPolicyID() error {
 		)
 		return errAlertClient
 	}
+
 	alertPolicy, errAlertPolicy := alertsClient.GetPolicy(r.Spec.ExistingPolicyID)
 	if errAlertPolicy != nil {
 		if r.GetDeletionTimestamp() != nil {
@@ -146,10 +149,12 @@ func (r *NrqlAlertCondition) CheckExistingPolicyID() error {
 		)
 		return errAlertPolicy
 	}
+
 	if alertPolicy.ID != r.Spec.ExistingPolicyID {
 		log.Info("Alert policy returned by the API failed to match provided policy ID")
 		return errors.New("alert policy returned by API did not match")
 	}
+
 	return nil
 }
 
@@ -157,25 +162,30 @@ func (r *NrqlAlertCondition) CheckForAPIKeyOrSecret() error {
 	if r.Spec.APIKey != "" {
 		return nil
 	}
+
 	if r.Spec.APIKeySecret != (NewRelicAPIKeySecret{}) {
 		if r.Spec.APIKeySecret.Name != "" && r.Spec.APIKeySecret.Namespace != "" && r.Spec.APIKeySecret.KeyName != "" {
 			return nil
 		}
 	}
+
 	return errors.New("either api_key or api_key_secret must be set")
 }
 
 func (r *NrqlAlertCondition) CheckRequiredFields() error {
-
 	missingFields := []string{}
+
 	if r.Spec.Region == "" {
 		missingFields = append(missingFields, "region")
 	}
+
 	if r.Spec.ExistingPolicyID == 0 {
 		missingFields = append(missingFields, "existing_policy_id")
 	}
+
 	if len(missingFields) > 0 {
 		return errors.New(strings.Join(missingFields, " and ") + " must be set")
 	}
+
 	return nil
 }

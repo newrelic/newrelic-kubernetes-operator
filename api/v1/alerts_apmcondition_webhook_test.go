@@ -64,9 +64,9 @@ var _ = Describe("alertsAPMCondition_webhook", func() {
 			}, nil
 		}
 	})
+
 	Context("ValidateCreate", func() {
 		Context("With a valid Apm Condition", func() {
-
 			It("Should create the apm condition", func() {
 				err := r.ValidateCreate()
 				Expect(err).ToNot(HaveOccurred())
@@ -75,7 +75,6 @@ var _ = Describe("alertsAPMCondition_webhook", func() {
 		})
 
 		Context("With an invalid Type", func() {
-
 			BeforeEach(func() {
 				r.Spec.Type = "burritos"
 			})
@@ -88,7 +87,6 @@ var _ = Describe("alertsAPMCondition_webhook", func() {
 		})
 
 		Context("With an invalid Metric", func() {
-
 			BeforeEach(func() {
 				r.Spec.Type = "moar burritos"
 			})
@@ -99,8 +97,8 @@ var _ = Describe("alertsAPMCondition_webhook", func() {
 				Expect(err.Error()).To(ContainSubstring("moar burritos"))
 			})
 		})
-		Context("With an invalid APMTerms", func() {
 
+		Context("With an invalid APMTerms", func() {
 			BeforeEach(func() {
 				r.Spec.APMTerms[0].TimeFunction = "moar burritos"
 				r.Spec.APMTerms[0].Priority = "moar tacos"
@@ -118,7 +116,6 @@ var _ = Describe("alertsAPMCondition_webhook", func() {
 		})
 
 		Context("With an invalid userDefined type", func() {
-
 			BeforeEach(func() {
 				r.Spec.UserDefined = alerts.ConditionUserDefined{
 					Metric:        "Custom/foo",
@@ -132,12 +129,12 @@ var _ = Describe("alertsAPMCondition_webhook", func() {
 				Expect(err.Error()).To(ContainSubstring("invalid type"))
 			})
 		})
-
 	})
 
 	Context("ValidateUpdate", func() {
 		Context("When deleting an existing apm Condition with a delete policy", func() {
 			var update AlertsAPMCondition
+
 			BeforeEach(func() {
 				currentTime := v1.Time{Time: time.Now()}
 				//make copy of existing object to update

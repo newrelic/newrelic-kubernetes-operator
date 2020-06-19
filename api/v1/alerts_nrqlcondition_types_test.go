@@ -16,7 +16,6 @@ var _ = Describe("AlertsNrqlConditionSpec", func() {
 	var condition AlertsNrqlConditionSpec
 
 	BeforeEach(func() {
-
 		condition = AlertsNrqlConditionSpec{}
 		condition.Enabled = true
 		condition.ExistingPolicyID = "42"

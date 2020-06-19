@@ -170,8 +170,6 @@ var _ = Describe("ValidateCreate", func() {
 		})
 
 		Describe("CheckExistingPolicyID", func() {
-			BeforeEach(func() {})
-
 			Context("With a valid API Key", func() {
 				BeforeEach(func() {})
 
@@ -213,6 +211,7 @@ var _ = Describe("ValidateCreate", func() {
 	Context("ValidateUpdate", func() {
 		Context("When deleting an existing nrql Condition with a delete policy", func() {
 			var update NrqlAlertCondition
+
 			BeforeEach(func() {
 				currentTime := metav1.Time{Time: time.Now()}
 				//make copy of existing object to update

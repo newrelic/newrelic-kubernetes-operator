@@ -19,15 +19,6 @@ import (
 )
 
 var _ = Describe("AlertsChannel reconciliation", func() {
-	BeforeEach(func() {
-		err := ignoreAlreadyExists(k8sClient.Create(context.Background(), &v1.Namespace{
-			ObjectMeta: metav1.ObjectMeta{
-				Name: "my-namespace",
-			},
-		}))
-		Expect(err).ToNot(HaveOccurred())
-	})
-
 	var (
 		ctx            context.Context
 		r              *AlertsChannelReconciler
@@ -39,7 +30,15 @@ var _ = Describe("AlertsChannel reconciliation", func() {
 		fakeAlertFunc func(string, string) (interfaces.NewRelicAlertsClient, error)
 		testPolicy    nrv1.AlertsPolicy
 	)
+
 	BeforeEach(func() {
+		err = ignoreAlreadyExists(k8sClient.Create(context.Background(), &v1.Namespace{
+			ObjectMeta: metav1.ObjectMeta{
+				Name: "my-namespace",
+			},
+		}))
+		Expect(err).ToNot(HaveOccurred())
+
 		ctx = context.Background()
 
 		alertsClient = &interfacesfakes.FakeNewRelicAlertsClient{}
@@ -48,6 +47,7 @@ var _ = Describe("AlertsChannel reconciliation", func() {
 			a.ID = 543
 			return &a, nil
 		}
+
 		alertsClient.ListChannelsStub = func() ([]*alerts.Channel, error) {
 			return []*alerts.Channel{}, nil
 		}
@@ -131,11 +131,9 @@ var _ = Describe("AlertsChannel reconciliation", func() {
 		}
 		err = ignoreAlreadyExists(k8sClient.Create(ctx, &testPolicy))
 		Expect(err).ToNot(HaveOccurred())
-
 	})
 
 	Context("When starting with no alertsChannels", func() {
-
 		Context("and given a new alertsChannel", func() {
 			Context("with a valid alertsChannelSpec", func() {
 				BeforeEach(func() {
@@ -146,6 +144,7 @@ var _ = Describe("AlertsChannel reconciliation", func() {
 					_, err = r.Reconcile(request)
 					Expect(err).ToNot(HaveOccurred())
 				})
+
 				It("should create that alertsChannel via the AlertClient", func() {
 					Expect(alertsClient.CreateChannelCallCount()).To(Equal(1))
 				})
@@ -159,7 +158,6 @@ var _ = Describe("AlertsChannel reconciliation", func() {
 				})
 
 				It("updates the AppliedSpec on the kubernetes object for later comparison", func() {
-
 					var endStateAlertsChannel nrv1.AlertsChannel
 					err = k8sClient.Get(ctx, namespacedName, &endStateAlertsChannel)
 					Expect(err).To(BeNil())
@@ -180,6 +178,7 @@ var _ = Describe("AlertsChannel reconciliation", func() {
 					Expect(endStateAlertsChannel.Status.AppliedPolicyIDs).To(ContainElement(665544))
 				})
 			})
+
 			Context("and given a AlertsChannel with k8s policy reference that has no policyID", func() {
 				var existingPolicyID string
 
@@ -193,6 +192,7 @@ var _ = Describe("AlertsChannel reconciliation", func() {
 					err = k8sClient.Update(ctx, &testPolicy)
 					Expect(err).ToNot(HaveOccurred())
 				})
+
 				It("Should fail the reconcile loop", func() {
 					err := k8sClient.Create(ctx, alertsChannel)
 					Expect(err).ToNot(HaveOccurred())
@@ -200,6 +200,7 @@ var _ = Describe("AlertsChannel reconciliation", func() {
 					Expect(err).To(HaveOccurred())
 					Expect(err.Error()).To(ContainSubstring("Retrieved policy " + testPolicy.Name + " but ID was blank"))
 				})
+
 				AfterEach(func() {
 					key := types.NamespacedName{Name: "my-policy",
 						Namespace: "default"}
@@ -208,10 +209,8 @@ var _ = Describe("AlertsChannel reconciliation", func() {
 					testPolicy.Status.PolicyID = existingPolicyID
 					err = k8sClient.Update(ctx, &testPolicy)
 					Expect(err).ToNot(HaveOccurred())
-
 				})
 			})
-
 		})
 
 		Context("and given as new alertsChannel that exists in New Relic", func() {
@@ -230,8 +229,8 @@ var _ = Describe("AlertsChannel reconciliation", func() {
 						}, nil
 					}
 				})
-				It("Should not create a new AlertsChannel in New Relic", func() {
 
+				It("Should not create a new AlertsChannel in New Relic", func() {
 					err := k8sClient.Create(ctx, alertsChannel)
 					Expect(err).ToNot(HaveOccurred())
 
@@ -241,8 +240,8 @@ var _ = Describe("AlertsChannel reconciliation", func() {
 					Expect(alertsClient.ListChannelsCallCount()).To(Equal(1))
 					Expect(alertsClient.CreateChannelCallCount()).To(Equal(0))
 				})
-				It("Should update the ChannelId on the kubernetes object", func() {
 
+				It("Should update the ChannelId on the kubernetes object", func() {
 					err := k8sClient.Create(ctx, alertsChannel)
 					Expect(err).ToNot(HaveOccurred())
 
@@ -254,8 +253,8 @@ var _ = Describe("AlertsChannel reconciliation", func() {
 					Expect(err).To(BeNil())
 					Expect(endStateAlertsChannel.Status.ChannelID).To(Equal(112233))
 				})
-				It("Should update the AppliedSpec on the kubernetes object", func() {
 
+				It("Should update the AppliedSpec on the kubernetes object", func() {
 					err := k8sClient.Create(ctx, alertsChannel)
 					Expect(err).ToNot(HaveOccurred())
 
@@ -268,6 +267,7 @@ var _ = Describe("AlertsChannel reconciliation", func() {
 					Expect(endStateAlertsChannel.Status.AppliedSpec).To(Equal(&alertsChannel.Spec))
 				})
 			})
+
 			Context("when the existing Channel is different from the configuration", func() {
 				BeforeEach(func() {
 					alertsClient.ListChannelsStub = func() ([]*alerts.Channel, error) {
@@ -288,8 +288,8 @@ var _ = Describe("AlertsChannel reconciliation", func() {
 					}
 
 				})
-				It("Should delete and create a new AlertsChannel in New Relic", func() {
 
+				It("Should delete and create a new AlertsChannel in New Relic", func() {
 					err := k8sClient.Create(ctx, alertsChannel)
 					Expect(err).ToNot(HaveOccurred())
 
@@ -300,8 +300,8 @@ var _ = Describe("AlertsChannel reconciliation", func() {
 					Expect(alertsClient.CreateChannelCallCount()).To(Equal(1))
 					Expect(alertsClient.DeleteChannelCallCount()).To(Equal(1))
 				})
-				It("Should update the ChannelId on the kubernetes object", func() {
 
+				It("Should update the ChannelId on the kubernetes object", func() {
 					err := k8sClient.Create(ctx, alertsChannel)
 					Expect(err).ToNot(HaveOccurred())
 
@@ -313,8 +313,8 @@ var _ = Describe("AlertsChannel reconciliation", func() {
 					Expect(err).To(BeNil())
 					Expect(endStateAlertsChannel.Status.ChannelID).To(Equal(112244))
 				})
-				It("Should update the AppliedSpec on the kubernetes object", func() {
 
+				It("Should update the AppliedSpec on the kubernetes object", func() {
 					err := k8sClient.Create(ctx, alertsChannel)
 					Expect(err).ToNot(HaveOccurred())
 
@@ -354,10 +354,9 @@ var _ = Describe("AlertsChannel reconciliation", func() {
 						a.ID = 112234
 						return &a, nil
 					}
-
 				})
-				It("Should delete both and create a new AlertsChannel in New Relic", func() {
 
+				It("Should delete both and create a new AlertsChannel in New Relic", func() {
 					err := k8sClient.Create(ctx, alertsChannel)
 					Expect(err).ToNot(HaveOccurred())
 
@@ -368,8 +367,8 @@ var _ = Describe("AlertsChannel reconciliation", func() {
 					Expect(alertsClient.CreateChannelCallCount()).To(Equal(1))
 					Expect(alertsClient.DeleteChannelCallCount()).To(Equal(2))
 				})
-				It("Should update the ChannelId on the kubernetes object", func() {
 
+				It("Should update the ChannelId on the kubernetes object", func() {
 					err := k8sClient.Create(ctx, alertsChannel)
 					Expect(err).ToNot(HaveOccurred())
 
@@ -381,8 +380,8 @@ var _ = Describe("AlertsChannel reconciliation", func() {
 					Expect(err).To(BeNil())
 					Expect(endStateAlertsChannel.Status.ChannelID).To(Equal(112234))
 				})
-				It("Should update the AppliedSpec on the kubernetes object", func() {
 
+				It("Should update the AppliedSpec on the kubernetes object", func() {
 					err := k8sClient.Create(ctx, alertsChannel)
 					Expect(err).ToNot(HaveOccurred())
 
@@ -395,7 +394,6 @@ var _ = Describe("AlertsChannel reconciliation", func() {
 					Expect(endStateAlertsChannel.Status.AppliedSpec).To(Equal(&alertsChannel.Spec))
 				})
 			})
-
 		})
 
 		AfterEach(func() {
@@ -451,7 +449,6 @@ var _ = Describe("AlertsChannel reconciliation", func() {
 			})
 
 			Context("When adding a new policyID to the list of policyIds", func() {
-
 				BeforeEach(func() {
 					alertsChannel.Spec.Links.PolicyIDs = append(alertsChannel.Spec.Links.PolicyIDs, 4)
 					err := k8sClient.Update(ctx, alertsChannel)
@@ -461,11 +458,11 @@ var _ = Describe("AlertsChannel reconciliation", func() {
 				})
 
 				It("Should call the NR API", func() {
-
 					Expect(alertsClient.UpdatePolicyChannelsCallCount()).To(Equal(5)) //4 existing plus 1 new policy
 					policyID, _ := alertsClient.UpdatePolicyChannelsArgsForCall(4)
 					Expect(policyID).To(Equal(4))
 				})
+
 				It("Should update the appliedPolicyIDs", func() {
 					var endStateAlertsChannel nrv1.AlertsChannel
 					err := k8sClient.Get(ctx, namespacedName, &endStateAlertsChannel)
@@ -475,7 +472,6 @@ var _ = Describe("AlertsChannel reconciliation", func() {
 			})
 
 			Context("When removing a policyID to the list of policyIds", func() {
-
 				BeforeEach(func() {
 					alertsChannel.Spec.Links.PolicyIDs = []int{1}
 					err := k8sClient.Update(ctx, alertsChannel)
@@ -487,6 +483,7 @@ var _ = Describe("AlertsChannel reconciliation", func() {
 				It("Should call the NR API", func() {
 					Expect(alertsClient.DeletePolicyChannelCallCount()).To(Equal(1))
 				})
+
 				It("Should update the appliedPolicyIDs", func() {
 					var endStateAlertsChannel nrv1.AlertsChannel
 					err := k8sClient.Get(ctx, namespacedName, &endStateAlertsChannel)
@@ -501,9 +498,6 @@ var _ = Describe("AlertsChannel reconciliation", func() {
 				_, err = r.Reconcile(request)
 				Expect(err).ToNot(HaveOccurred())
 			})
-
 		})
-
 	})
-
 })

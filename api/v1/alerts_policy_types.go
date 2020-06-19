@@ -116,6 +116,7 @@ func (p *AlertsPolicyCondition) SpecHash() uint32 {
 	strippedAlertsPolicy.Spec.ExistingPolicyID = ""
 	conditionTemplateSpecHasher := fnv.New32a()
 	DeepHashObject(conditionTemplateSpecHasher, strippedAlertsPolicy)
+
 	return conditionTemplateSpecHasher.Sum32()
 }
 
@@ -158,6 +159,7 @@ func (in AlertsPolicySpec) Equals(policyToCompare AlertsPolicySpec) bool {
 			return false
 		}
 	}
+
 	return true
 }
 
@@ -166,6 +168,7 @@ func GetAlertsConditionType(condition AlertsPolicyCondition) string {
 	if condition.Spec.Type == "NRQL" {
 		return "AlertsNrqlCondition"
 	}
+
 	return "AlertsAPMCondition"
 }
 
@@ -182,11 +185,13 @@ func (p *AlertsPolicyCondition) GenerateSpecFromApmConditionSpec(apmConditionSpe
 func (p *AlertsPolicyCondition) ReturnNrqlConditionSpec() (nrqlConditionSpec AlertsNrqlConditionSpec) {
 	jsonString, _ := json.Marshal(p.Spec)
 	json.Unmarshal(jsonString, &nrqlConditionSpec) //nolint
+
 	return
 }
 
 func (p *AlertsPolicyCondition) ReturnApmConditionSpec() (apmConditionSpec AlertsAPMConditionSpec) {
 	jsonString, _ := json.Marshal(p.Spec)
 	json.Unmarshal(jsonString, &apmConditionSpec) //nolint
+
 	return
 }

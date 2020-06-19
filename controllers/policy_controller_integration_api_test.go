@@ -37,6 +37,7 @@ func newIntegrationTestClient(t *testing.T) newrelic.NewRelic {
 	}
 
 	client, _ := interfaces.NewClient(envAPIKey, envRegion)
+
 	return *client
 }
 

@@ -235,7 +235,6 @@ var _ = Describe("AlertsNrqlCondition reconciliation", func() {
 						ConditionID: "0",
 					},
 				}
-
 			})
 
 			Context("with a valid condition", func() {
@@ -441,7 +440,6 @@ var _ = Describe("AlertsNrqlCondition reconciliation", func() {
 					Expect(err).To(HaveOccurred())
 					Expect(endStateCondition.Name).To(Equal(""))
 				})
-
 			})
 		})
 	})
