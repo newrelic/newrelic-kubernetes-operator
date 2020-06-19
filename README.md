@@ -221,7 +221,7 @@ The operator will create and update alert policies and NRQL alert conditions as 
         region:       "US"
         type:         "email"
         links:
-          # Policy links can be by NR PolicyID, NR PolicyName OR K8s AlertPolicy object reference 
+          # Policy links can be by NR PolicyID, NR PolicyName AND/OR K8s AlertPolicy object reference 
           policy_ids: 
             - 1
           policy_names: 
@@ -232,6 +232,9 @@ The operator will create and update alert policies and NRQL alert conditions as 
         configuration: 
           recipients: "me@email.com"
     ```
+
+    > <small>**Note:** The New Relic Alerts API does not allow updating Alerts Channels. In order to change a channel, you will need to either rename the k8s AlertsChannel object to create a new one and delete the old one or manually delete the k8s AlertsChannel object and create a new one. </small>
+
 
 
 ### Uninstall the operator

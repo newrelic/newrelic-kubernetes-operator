@@ -84,5 +84,6 @@ func (in AlertsChannelSpec) APIChannel() alerts.Channel {
 	jsonString, _ := json.Marshal(in)
 	var APIChannel alerts.Channel
 	json.Unmarshal(jsonString, &APIChannel) //nolint
+	APIChannel.Links = alerts.ChannelLinks{}
 	return APIChannel
 }

@@ -37,6 +37,7 @@ var _ = Describe("AlertsChannel reconciliation", func() {
 		err            error
 		// secret         *v1.Secret
 		fakeAlertFunc func(string, string) (interfaces.NewRelicAlertsClient, error)
+		testPolicy    nrv1.AlertsPolicy
 	)
 	BeforeEach(func() {
 		ctx = context.Background()
@@ -118,7 +119,7 @@ var _ = Describe("AlertsChannel reconciliation", func() {
 		}
 		request = ctrl.Request{NamespacedName: namespacedName}
 
-		testPolicy := nrv1.AlertsPolicy{
+		testPolicy = nrv1.AlertsPolicy{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      "my-policy",
 				Namespace: "default",
@@ -179,59 +180,222 @@ var _ = Describe("AlertsChannel reconciliation", func() {
 					Expect(endStateAlertsChannel.Status.AppliedPolicyIDs).To(ContainElement(665544))
 				})
 			})
+			Context("and given a AlertsChannel with k8s policy reference that has no policyID", func() {
+				var existingPolicyID string
+
+				BeforeEach(func() {
+					key := types.NamespacedName{Name: "my-policy",
+						Namespace: "default"}
+					err := k8sClient.Get(ctx, key, &testPolicy)
+					Expect(err).ToNot(HaveOccurred())
+					existingPolicyID = testPolicy.Status.PolicyID
+					testPolicy.Status.PolicyID = ""
+					err = k8sClient.Update(ctx, &testPolicy)
+					Expect(err).ToNot(HaveOccurred())
+				})
+				It("Should fail the reconcile loop", func() {
+					err := k8sClient.Create(ctx, alertsChannel)
+					Expect(err).ToNot(HaveOccurred())
+					_, err = r.Reconcile(request)
+					Expect(err).To(HaveOccurred())
+					Expect(err.Error()).To(ContainSubstring("Retrieved policy " + testPolicy.Name + " but ID was blank"))
+				})
+				AfterEach(func() {
+					key := types.NamespacedName{Name: "my-policy",
+						Namespace: "default"}
+					err := k8sClient.Get(ctx, key, &testPolicy)
+					Expect(err).ToNot(HaveOccurred())
+					testPolicy.Status.PolicyID = existingPolicyID
+					err = k8sClient.Update(ctx, &testPolicy)
+					Expect(err).ToNot(HaveOccurred())
+
+				})
+			})
 
 		})
 
 		Context("and given as new alertsChannel that exists in New Relic", func() {
-			BeforeEach(func() {
-				alertsClient.ListChannelsStub = func() ([]*alerts.Channel, error) {
-					return []*alerts.Channel{
-						{
-							ID:   112233,
-							Name: "my alert channel",
-						},
-					}, nil
-				}
+			Context("when the existing Channel is the same as the configuration", func() {
+				BeforeEach(func() {
+					alertsClient.ListChannelsStub = func() ([]*alerts.Channel, error) {
+						return []*alerts.Channel{
+							{
+								ID:   112233,
+								Name: "my alert channel",
+								Type: "email",
+								Configuration: alerts.ChannelConfiguration{
+									Recipients: "me@email.com",
+								},
+							},
+						}, nil
+					}
+				})
+				It("Should not create a new AlertsChannel in New Relic", func() {
 
+					err := k8sClient.Create(ctx, alertsChannel)
+					Expect(err).ToNot(HaveOccurred())
+
+					// call reconcile
+					_, err = r.Reconcile(request)
+					Expect(err).ToNot(HaveOccurred())
+					Expect(alertsClient.ListChannelsCallCount()).To(Equal(1))
+					Expect(alertsClient.CreateChannelCallCount()).To(Equal(0))
+				})
+				It("Should update the ChannelId on the kubernetes object", func() {
+
+					err := k8sClient.Create(ctx, alertsChannel)
+					Expect(err).ToNot(HaveOccurred())
+
+					// call reconcile
+					_, err = r.Reconcile(request)
+					Expect(err).ToNot(HaveOccurred())
+					var endStateAlertsChannel nrv1.AlertsChannel
+					err = k8sClient.Get(ctx, namespacedName, &endStateAlertsChannel)
+					Expect(err).To(BeNil())
+					Expect(endStateAlertsChannel.Status.ChannelID).To(Equal(112233))
+				})
+				It("Should update the AppliedSpec on the kubernetes object", func() {
+
+					err := k8sClient.Create(ctx, alertsChannel)
+					Expect(err).ToNot(HaveOccurred())
+
+					// call reconcile
+					_, err = r.Reconcile(request)
+					Expect(err).ToNot(HaveOccurred())
+					var endStateAlertsChannel nrv1.AlertsChannel
+					err = k8sClient.Get(ctx, namespacedName, &endStateAlertsChannel)
+					Expect(err).To(BeNil())
+					Expect(endStateAlertsChannel.Status.AppliedSpec).To(Equal(&alertsChannel.Spec))
+				})
 			})
-			It("Should not create a new AlertsChannel in New Relic", func() {
+			Context("when the existing Channel is different from the configuration", func() {
+				BeforeEach(func() {
+					alertsClient.ListChannelsStub = func() ([]*alerts.Channel, error) {
+						return []*alerts.Channel{
+							{
+								ID:   112233,
+								Name: "my alert channel",
+								Type: "email",
+								Configuration: alerts.ChannelConfiguration{
+									Recipients: "me@stuff.com",
+								},
+							},
+						}, nil
+					}
+					alertsClient.CreateChannelStub = func(a alerts.Channel) (*alerts.Channel, error) {
+						a.ID = 112244
+						return &a, nil
+					}
 
-				err := k8sClient.Create(ctx, alertsChannel)
-				Expect(err).ToNot(HaveOccurred())
+				})
+				It("Should delete and create a new AlertsChannel in New Relic", func() {
 
-				// call reconcile
-				_, err = r.Reconcile(request)
-				Expect(err).ToNot(HaveOccurred())
-				Expect(alertsClient.ListChannelsCallCount()).To(Equal(1))
-				Expect(alertsClient.CreateChannelCallCount()).To(Equal(0))
+					err := k8sClient.Create(ctx, alertsChannel)
+					Expect(err).ToNot(HaveOccurred())
 
+					// call reconcile
+					_, err = r.Reconcile(request)
+					Expect(err).ToNot(HaveOccurred())
+					Expect(alertsClient.ListChannelsCallCount()).To(Equal(1))
+					Expect(alertsClient.CreateChannelCallCount()).To(Equal(1))
+					Expect(alertsClient.DeleteChannelCallCount()).To(Equal(1))
+				})
+				It("Should update the ChannelId on the kubernetes object", func() {
+
+					err := k8sClient.Create(ctx, alertsChannel)
+					Expect(err).ToNot(HaveOccurred())
+
+					// call reconcile
+					_, err = r.Reconcile(request)
+					Expect(err).ToNot(HaveOccurred())
+					var endStateAlertsChannel nrv1.AlertsChannel
+					err = k8sClient.Get(ctx, namespacedName, &endStateAlertsChannel)
+					Expect(err).To(BeNil())
+					Expect(endStateAlertsChannel.Status.ChannelID).To(Equal(112244))
+				})
+				It("Should update the AppliedSpec on the kubernetes object", func() {
+
+					err := k8sClient.Create(ctx, alertsChannel)
+					Expect(err).ToNot(HaveOccurred())
+
+					// call reconcile
+					_, err = r.Reconcile(request)
+					Expect(err).ToNot(HaveOccurred())
+					var endStateAlertsChannel nrv1.AlertsChannel
+					err = k8sClient.Get(ctx, namespacedName, &endStateAlertsChannel)
+					Expect(err).To(BeNil())
+					Expect(endStateAlertsChannel.Status.AppliedSpec).To(Equal(&alertsChannel.Spec))
+				})
 			})
-			It("Should update the ChannelId on the kubernetes object", func() {
 
-				err := k8sClient.Create(ctx, alertsChannel)
-				Expect(err).ToNot(HaveOccurred())
+			Context("when multiple existing Channels are returned from the alerts API", func() {
+				BeforeEach(func() {
+					alertsClient.ListChannelsStub = func() ([]*alerts.Channel, error) {
+						return []*alerts.Channel{
+							{
+								ID:   112233,
+								Name: "my alert channel",
+								Type: "email",
+								Configuration: alerts.ChannelConfiguration{
+									Recipients: "me@stuff.com",
+								},
+							},
+							{
+								ID:   112245,
+								Name: "my alert channel",
+								Type: "email",
+								Configuration: alerts.ChannelConfiguration{
+									Recipients: "me2@stuff.com",
+								},
+							},
+						}, nil
+					}
+					alertsClient.CreateChannelStub = func(a alerts.Channel) (*alerts.Channel, error) {
+						a.ID = 112234
+						return &a, nil
+					}
 
-				// call reconcile
-				_, err = r.Reconcile(request)
-				Expect(err).ToNot(HaveOccurred())
-				var endStateAlertsChannel nrv1.AlertsChannel
-				err = k8sClient.Get(ctx, namespacedName, &endStateAlertsChannel)
-				Expect(err).To(BeNil())
-				Expect(endStateAlertsChannel.Status.ChannelID).To(Equal(112233))
+				})
+				It("Should delete both and create a new AlertsChannel in New Relic", func() {
+
+					err := k8sClient.Create(ctx, alertsChannel)
+					Expect(err).ToNot(HaveOccurred())
+
+					// call reconcile
+					_, err = r.Reconcile(request)
+					Expect(err).ToNot(HaveOccurred())
+					Expect(alertsClient.ListChannelsCallCount()).To(Equal(1))
+					Expect(alertsClient.CreateChannelCallCount()).To(Equal(1))
+					Expect(alertsClient.DeleteChannelCallCount()).To(Equal(2))
+				})
+				It("Should update the ChannelId on the kubernetes object", func() {
+
+					err := k8sClient.Create(ctx, alertsChannel)
+					Expect(err).ToNot(HaveOccurred())
+
+					// call reconcile
+					_, err = r.Reconcile(request)
+					Expect(err).ToNot(HaveOccurred())
+					var endStateAlertsChannel nrv1.AlertsChannel
+					err = k8sClient.Get(ctx, namespacedName, &endStateAlertsChannel)
+					Expect(err).To(BeNil())
+					Expect(endStateAlertsChannel.Status.ChannelID).To(Equal(112234))
+				})
+				It("Should update the AppliedSpec on the kubernetes object", func() {
+
+					err := k8sClient.Create(ctx, alertsChannel)
+					Expect(err).ToNot(HaveOccurred())
+
+					// call reconcile
+					_, err = r.Reconcile(request)
+					Expect(err).ToNot(HaveOccurred())
+					var endStateAlertsChannel nrv1.AlertsChannel
+					err = k8sClient.Get(ctx, namespacedName, &endStateAlertsChannel)
+					Expect(err).To(BeNil())
+					Expect(endStateAlertsChannel.Status.AppliedSpec).To(Equal(&alertsChannel.Spec))
+				})
 			})
-			It("Should update the AppliedSpec on the kubernetes object", func() {
 
-				err := k8sClient.Create(ctx, alertsChannel)
-				Expect(err).ToNot(HaveOccurred())
-
-				// call reconcile
-				_, err = r.Reconcile(request)
-				Expect(err).ToNot(HaveOccurred())
-				var endStateAlertsChannel nrv1.AlertsChannel
-				err = k8sClient.Get(ctx, namespacedName, &endStateAlertsChannel)
-				Expect(err).To(BeNil())
-				Expect(endStateAlertsChannel.Status.AppliedSpec).To(Equal(&alertsChannel.Spec))
-			})
 		})
 
 		AfterEach(func() {
@@ -243,10 +407,9 @@ var _ = Describe("AlertsChannel reconciliation", func() {
 			_, err = r.Reconcile(request)
 			Expect(err).ToNot(HaveOccurred())
 		})
-
 	})
 
-	Context("When starting with an existinng alertsChannel", func() {
+	Context("When starting with an existing alertsChannel", func() {
 		BeforeEach(func() {
 			err := k8sClient.Create(ctx, alertsChannel)
 			Expect(err).ToNot(HaveOccurred())
@@ -254,7 +417,6 @@ var _ = Describe("AlertsChannel reconciliation", func() {
 			// call reconcile
 			_, err = r.Reconcile(request)
 			Expect(err).ToNot(HaveOccurred())
-
 		})
 
 		Context("and deleting that alertsChannel", func() {

@@ -21,7 +21,6 @@ import (
 	"reflect"
 	"strconv"
 	"strings"
-	"time"
 
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/types"
@@ -183,7 +182,11 @@ func (r *AlertsChannelReconciler) createAlertsChannel(alertsChannel *nrv1.Alerts
 	alertsChannel.Status.ChannelID = createdChannel.ID
 
 	// Now create the links to policies
-	allPolicyIDs := r.getAllPolicyIDs(&alertsChannel.Spec)
+	allPolicyIDs, err := r.getAllPolicyIDs(&alertsChannel.Spec)
+	if err != nil {
+		r.Log.Error(err, "Error getting list of policyIds")
+		return err
+	}
 
 	for _, policyID := range allPolicyIDs {
 
@@ -209,9 +212,19 @@ func (r *AlertsChannelReconciler) updateAlertsChannel(alertsChannel *nrv1.Alerts
 	r.Log.Info("Updating AlertsChannel", "name", alertsChannel.Name, "ChannelName", alertsChannel.Spec.Name)
 
 	//Check to see if update is needed
-	AppliedPolicyIDs := r.getAllPolicyIDs(alertsChannel.Status.AppliedSpec)
+	AppliedPolicyIDs, AppliedErr := r.getAllPolicyIDs(alertsChannel.Status.AppliedSpec)
 
-	IncomingPolicyIDs := r.getAllPolicyIDs(&alertsChannel.Spec)
+	if AppliedErr != nil {
+		r.Log.Error(AppliedErr, "Error getting list of AppliedPolicyIds")
+		return AppliedErr
+	}
+
+	IncomingPolicyIDs, incomingErr := r.getAllPolicyIDs(&alertsChannel.Spec)
+
+	if incomingErr != nil {
+		r.Log.Error(incomingErr, "Error getting list of AppliedPolicyIds")
+		return incomingErr
+	}
 
 	r.Log.Info("Updating list of policies attached to AlertsChannel",
 		"policyIDs", IncomingPolicyIDs,
@@ -228,7 +241,7 @@ func (r *AlertsChannelReconciler) updateAlertsChannel(alertsChannel *nrv1.Alerts
 		if _, ok := processedPolicyIDs[appliedPolicyID]; ok {
 			processedPolicyIDs[appliedPolicyID] = true
 		} else {
-			r.Log.Info("Need to delete", "", appliedPolicyID)
+			r.Log.Info("Need to delete link to", "policyId", appliedPolicyID)
 			PolicyChannels, err := r.Alerts.DeletePolicyChannel(appliedPolicyID, alertsChannel.Status.ChannelID)
 			if err != nil {
 				r.Log.Error(err, "error updating policyAlertsChannels",
@@ -280,38 +293,46 @@ func (r *AlertsChannelReconciler) checkForExistingAlertsChannel(alertsChannel *n
 		r.Log.Error(err, "error retrieving list of Channels")
 		return
 	}
+	// need to delete all non-matching spec channels
+
 	for _, channel := range retrievedChannels {
 		if channel.Name == alertsChannel.Spec.Name {
-			r.Log.Info("Found matching Alerts Channel name from the New Relic API", "ID", channel.ID)
-			alertsChannel.Status.ChannelID = channel.ID
-			return
+			channelID := channel.ID
+			channel.ID = 0
+			APIChannel := alertsChannel.Spec.APIChannel()
+			if reflect.DeepEqual(&APIChannel, channel) {
+				r.Log.Info("Found matching Alerts Channel name from the New Relic API", "ID", channel.ID)
+				alertsChannel.Status.ChannelID = channelID
+
+				alertsChannel.Status.AppliedSpec = &alertsChannel.Spec
+			}
+
+			r.Log.Info("Found non matching channel so need to delete and create channel")
+			_, err = r.Alerts.DeleteChannel(channelID)
+			if err != nil {
+				r.Log.Error(err, "Error deleting non-matching AlertsChannel via New Relic API")
+				continue
+			}
 		}
 	}
+	return
 }
 
-func (r *AlertsChannelReconciler) getAllPolicyIDs(alertsChannelSpec *nrv1.AlertsChannelSpec) (policyIDs []int) {
+func (r *AlertsChannelReconciler) getAllPolicyIDs(alertsChannelSpec *nrv1.AlertsChannelSpec) (policyIDs []int, err error) {
 	policyIDs = append(policyIDs, alertsChannelSpec.Links.PolicyIDs...)
-
+	var retrievedPolicies []alerts.Policy
 	if len(alertsChannelSpec.Links.PolicyNames) > 0 {
-		r.Log.Info("Getting PolicyIds from PolicyNames", "PolicyNames", alertsChannelSpec.Links.PolicyNames)
-		alertParams := &alerts.ListPoliciesParams{
-			Name: alertsChannelSpec.Links.PolicyNames[0],
-		}
-		retrievedPolicies, err := r.Alerts.ListPolicies(alertParams)
-		if err != nil {
-			r.Log.Error(err, "Error getting list of policies")
-		}
 
-		if len(retrievedPolicies) == 0 {
-			r.Log.Info("Failed to get list of policies, sleep 5 seconds and try again")
-			time.Sleep(5 * time.Second)
+		for _, policyName := range alertsChannelSpec.Links.PolicyNames {
+			alertParams := &alerts.ListPoliciesParams{
+				Name: policyName,
+			}
 			retrievedPolicies, err = r.Alerts.ListPolicies(alertParams)
 			if err != nil {
 				r.Log.Error(err, "Error getting list of policies")
+				return
 			}
-		}
 
-		for _, policyName := range alertsChannelSpec.Links.PolicyNames {
 			for _, APIPolicy := range retrievedPolicies {
 				if policyName == APIPolicy.Name {
 					r.Log.Info("Found match of "+policyName, "policyId", APIPolicy.ID)
@@ -333,18 +354,22 @@ func (r *AlertsChannelReconciler) getAllPolicyIDs(alertsChannelSpec *nrv1.Alerts
 				Name:      policyK8s.Name,
 			}
 			var k8sPolicy nrv1.AlertsPolicy
-			getErr := r.Client.Get(context.Background(), key, &k8sPolicy)
-			if getErr != nil {
-				r.Log.Error(getErr, "Failed to retrieve policy", "k8sPolicy", key)
+			err = r.Client.Get(context.Background(), key, &k8sPolicy)
+			if err != nil {
+				r.Log.Error(err, "Failed to retrieve policy", "k8sPolicy", key)
+				return
 			}
 			policyID, errInt := strconv.Atoi(k8sPolicy.Status.PolicyID)
 			if errInt != nil {
 				r.Log.Error(errInt, "Failed to parse policyID as an int")
+				err = errInt
 			}
 			if policyID != 0 {
 				policyIDs = append(policyIDs, policyID)
 			} else {
-				r.Log.Info("Retrieved policy " + policyK8s.Name + "but ID was blank")
+				r.Log.Info("Retrieved policy " + policyK8s.Name + " but ID was blank")
+				err = errors.New("Retrieved policy " + policyK8s.Name + " but ID was blank")
+				return
 			}
 
 		}

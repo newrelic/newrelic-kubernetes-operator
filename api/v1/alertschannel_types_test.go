@@ -42,9 +42,6 @@ var _ = Describe("AlertsChannelSpec", func() {
 			Expect(apiChannel.ID).To(Equal(88))
 			Expect(apiChannel.Type).To(Equal(alerts.ChannelTypes.Email))
 			Expect(apiChannel.Name).To(Equal("my alert channel"))
-			apiLinks := apiChannel.Links
-			Expect(apiLinks.PolicyIDs[0]).To(Equal(1))
-			Expect(apiLinks.PolicyIDs[1]).To(Equal(2))
 			apiConfiguration := apiChannel.Configuration
 			Expect(apiConfiguration.Recipients).To(Equal("me@email.com"))
 		})
