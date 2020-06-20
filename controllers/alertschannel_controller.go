@@ -19,6 +19,7 @@ import (
 	"context"
 	"errors"
 	"reflect"
+	"sort"
 	"strconv"
 	"strings"
 
@@ -333,8 +334,11 @@ func (r *AlertsChannelReconciler) checkForExistingAlertsChannel(alertsChannel *n
 
 func (r *AlertsChannelReconciler) getAllPolicyIDs(alertsChannelSpec *nrv1.AlertsChannelSpec) (policyIDs []int, err error) {
 	var retrievedPolicies []alerts.Policy
+	policyIDMap := make(map[int]bool)
 
-	policyIDs = append(policyIDs, alertsChannelSpec.Links.PolicyIDs...)
+	for _, policyID := range alertsChannelSpec.Links.PolicyIDs {
+		policyIDMap[policyID] = true
+	}
 
 	if len(alertsChannelSpec.Links.PolicyNames) > 0 {
 		for _, policyName := range alertsChannelSpec.Links.PolicyNames {
@@ -351,7 +355,7 @@ func (r *AlertsChannelReconciler) getAllPolicyIDs(alertsChannelSpec *nrv1.Alerts
 			for _, APIPolicy := range retrievedPolicies {
 				if policyName == APIPolicy.Name {
 					r.Log.Info("Found match of "+policyName, "policyId", APIPolicy.ID)
-					policyIDs = append(policyIDs, APIPolicy.ID)
+					policyIDMap[APIPolicy.ID] = true
 				}
 			}
 		}
@@ -383,7 +387,7 @@ func (r *AlertsChannelReconciler) getAllPolicyIDs(alertsChannelSpec *nrv1.Alerts
 			}
 
 			if policyID != 0 {
-				policyIDs = append(policyIDs, policyID)
+				policyIDMap[policyID] = true
 			} else {
 				r.Log.Info("Retrieved policy " + policyK8s.Name + " but ID was blank")
 				err = errors.New("Retrieved policy " + policyK8s.Name + " but ID was blank")
@@ -391,6 +395,11 @@ func (r *AlertsChannelReconciler) getAllPolicyIDs(alertsChannelSpec *nrv1.Alerts
 			}
 		}
 	}
+
+	for policyID := range policyIDMap {
+		policyIDs = append(policyIDs, policyID)
+	}
+	sort.Ints(policyIDs)
 
 	return
 }

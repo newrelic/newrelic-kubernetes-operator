@@ -150,7 +150,6 @@ var _ = Describe("AlertsChannel reconciliation", func() {
 				})
 
 				It("updates the ChannelID on the kubernetes object", func() {
-
 					var endStateAlertsChannel nrv1.AlertsChannel
 					err = k8sClient.Get(ctx, namespacedName, &endStateAlertsChannel)
 					Expect(err).To(BeNil())
@@ -176,6 +175,27 @@ var _ = Describe("AlertsChannel reconciliation", func() {
 					err = k8sClient.Get(ctx, namespacedName, &endStateAlertsChannel)
 					Expect(err).To(BeNil())
 					Expect(endStateAlertsChannel.Status.AppliedPolicyIDs).To(ContainElement(665544))
+				})
+			})
+
+			Context("and given the same policy via policyID and policy name", func() {
+				BeforeEach(func() {
+					alertsChannel.Spec.Links = nrv1.ChannelLinks{
+						PolicyIDs: []int{
+							1122,
+						},
+						PolicyNames: []string{
+							"my-policy-name",
+						},
+					}
+				})
+
+				It("should only create a single link object", func() {
+					err := k8sClient.Create(ctx, alertsChannel)
+					Expect(err).ToNot(HaveOccurred())
+					_, err = r.Reconcile(request)
+					Expect(err).ToNot(HaveOccurred())
+					Expect(alertsClient.UpdatePolicyChannelsCallCount()).To(Equal(1))
 				})
 			})
 
