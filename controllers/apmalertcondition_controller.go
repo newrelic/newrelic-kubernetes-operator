@@ -181,6 +181,7 @@ func (r *ApmAlertConditionReconciler) Reconcile(req ctrl.Request) (ctrl.Result, 
 
 func (r *ApmAlertConditionReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	r.AlertClientFunc = interfaces.InitializeAlertsClient
+
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&nralertsv1.ApmAlertCondition{}).
 		Complete(r)
@@ -220,14 +221,15 @@ func (r *ApmAlertConditionReconciler) deleteNewRelicAlertCondition(condition nra
 		)
 		return err
 	}
+
 	return nil
 }
 
 func (r *ApmAlertConditionReconciler) getAPIKeyOrSecret(condition nralertsv1.ApmAlertCondition) string {
-
 	if condition.Spec.APIKey != "" {
 		return condition.Spec.APIKey
 	}
+
 	if condition.Spec.APIKeySecret != (nralertsv1.NewRelicAPIKeySecret{}) {
 		key := types.NamespacedName{Namespace: condition.Spec.APIKeySecret.Namespace, Name: condition.Spec.APIKeySecret.Name}
 		var apiKeySecret v1.Secret
@@ -235,7 +237,9 @@ func (r *ApmAlertConditionReconciler) getAPIKeyOrSecret(condition nralertsv1.Apm
 			r.Log.Error(getErr, "Error retrieving secret", "secret", apiKeySecret)
 			return ""
 		}
+
 		return string(apiKeySecret.Data[condition.Spec.APIKeySecret.KeyName])
 	}
+
 	return ""
 }

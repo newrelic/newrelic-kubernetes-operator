@@ -1,5 +1,3 @@
-// +build integration
-
 /*
 
 Licensed under the Apache License, Version 2.0 (the "License");
@@ -90,5 +88,6 @@ func ignoreAlreadyExists(err error) error {
 	if apierrors.IsAlreadyExists(err) {
 		return nil
 	}
+
 	return err
 }

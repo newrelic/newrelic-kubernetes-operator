@@ -11,6 +11,9 @@ resources:
   kind: ApmAlertCondition
   version: v1
 - group: nr
+  kind: AlertsChannel
+  version: v1
+- group: nr
   kind: AlertsNrqlCondition
   version: v1
 - group: nr

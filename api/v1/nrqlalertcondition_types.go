@@ -76,5 +76,6 @@ func (in NrqlAlertConditionSpec) APICondition() alerts.NrqlCondition {
 	jsonString, _ := json.Marshal(in)
 	var APICondition alerts.NrqlCondition
 	json.Unmarshal(jsonString, &APICondition) //nolint
+
 	return APICondition
 }

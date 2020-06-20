@@ -295,6 +295,7 @@ var _ = Describe("GetNrqlConditionSpec", func() {
 				APMSpecificSpec{},
 			},
 		}
+
 		It("Should return a matching NrqlConditionSpec", func() {
 			nrqlConditionSpec := condition.ReturnNrqlConditionSpec()
 			Expect(nrqlConditionSpec.Type).To(Equal("NRQL"))
@@ -363,6 +364,7 @@ var _ = Describe("GetApmConditionSpec", func() {
 				},
 			},
 		}
+
 		It("Should return a matching ApmConditionSpec", func() {
 			apmConditionSpec := condition.ReturnApmConditionSpec()
 			Expect(apmConditionSpec.Type).To(Equal("apm_app_metric"))

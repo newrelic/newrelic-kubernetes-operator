@@ -65,8 +65,8 @@ var _ = Describe("policy reconciliation", func() {
 			Namespace: "default",
 			Name:      "test-policy",
 		}
-		request = ctrl.Request{NamespacedName: namespacedName}
 
+		request = ctrl.Request{NamespacedName: namespacedName}
 	})
 
 	Context("When starting with no policies", func() {
@@ -151,23 +151,21 @@ var _ = Describe("policy reconciliation", func() {
 				Namespace: "default",
 				Name:      "test-policy",
 			}
-			request = ctrl.Request{NamespacedName: namespacedName}
 
+			request = ctrl.Request{NamespacedName: namespacedName}
 		})
+
 		Context("when creating a valid policy", func() {
 			It("should create that policy", func() {
-
 				err := k8sClient.Create(ctx, policy)
 				Expect(err).ToNot(HaveOccurred())
 
 				// call reconcile
 				_, err = r.Reconcile(request)
 				Expect(err).ToNot(HaveOccurred())
-
 			})
 
 			It("updates the policyId on the Policy resource", func() {
-
 				err := k8sClient.Create(ctx, policy)
 				Expect(err).ToNot(HaveOccurred())
 
@@ -179,10 +177,9 @@ var _ = Describe("policy reconciliation", func() {
 				err = k8sClient.Get(ctx, namespacedName, &endStatePolicy)
 				Expect(err).To(BeNil())
 				Expect(endStatePolicy.Status.PolicyID).To(Equal(333))
-
 			})
-			It("creates the NRQL condition with attributes from the Policy", func() {
 
+			It("creates the NRQL condition with attributes from the Policy", func() {
 				err := k8sClient.Create(ctx, policy)
 				Expect(err).ToNot(HaveOccurred())
 
@@ -203,11 +200,9 @@ var _ = Describe("policy reconciliation", func() {
 				Expect(endStateCondition.Spec.Nrql.Query).To(Equal("SELECT 1 FROM MyEvents"))
 				Expect(endStateCondition.Spec.Terms[0].Priority).To(Equal("critical"))
 				Expect(endStateCondition.Spec.Enabled).To(BeTrue())
-
 			})
 
 			It("creates the NRQL condition with inherited attributes from the Policy resource", func() {
-
 				err := k8sClient.Create(ctx, policy)
 				Expect(err).ToNot(HaveOccurred())
 
@@ -229,9 +224,9 @@ var _ = Describe("policy reconciliation", func() {
 				Expect(endStateCondition.Spec.ExistingPolicyID).To(Equal(333))
 				Expect(endStateCondition.Spec.Region).To(Equal(policy.Spec.Region))
 				Expect(endStateCondition.Spec.APIKey).To(Equal(policy.Spec.APIKey))
-
 			})
 		})
+
 		Context("when the New Relic API returns an error", func() {
 			BeforeEach(func() {
 				alertsClient.CreatePolicyStub = func(alerts.Policy) (*alerts.Policy, error) {
@@ -240,7 +235,6 @@ var _ = Describe("policy reconciliation", func() {
 			})
 
 			It("should not update the PolicyID", func() {
-
 				createErr := k8sClient.Create(ctx, policy)
 				Expect(createErr).ToNot(HaveOccurred())
 
@@ -253,14 +247,12 @@ var _ = Describe("policy reconciliation", func() {
 				getErr := k8sClient.Get(ctx, namespacedName, &endStatePolicy)
 				Expect(getErr).ToNot(HaveOccurred())
 				Expect(endStatePolicy.Status.PolicyID).To(Equal(0))
-
 			})
 		})
 
 		Context("when creating a valid policy with apm conditions", func() {
 			It("should create the conditions", func() {
 				conditionSpec = &nrv1.ConditionSpec{
-
 					GenericConditionSpec: nrv1.GenericConditionSpec{
 						Terms: []nrv1.AlertConditionTerm{
 							{
@@ -286,6 +278,7 @@ var _ = Describe("policy reconciliation", func() {
 						ViolationCloseTimer: 60,
 					},
 				}
+
 				policy.Spec.Conditions[0] = nrv1.PolicyCondition{
 					Spec: *conditionSpec,
 				}
@@ -310,12 +303,10 @@ var _ = Describe("policy reconciliation", func() {
 				err = k8sClient.Get(ctx, conditionNameType, &endStateCondition)
 				Expect(err).To(BeNil())
 				Expect(endStateCondition.Spec.Name).To(Equal("APM Condition"))
-
 			})
 
 			Context("when creating a valid policy with conditions with k8 resource name set", func() {
 				It("should create the conditions with an auto-generated name ignoring the manual name", func() {
-
 					policy.Spec.Conditions[0].Name = "my custom name"
 
 					err := k8sClient.Create(ctx, policy)
@@ -341,7 +332,6 @@ var _ = Describe("policy reconciliation", func() {
 					Expect(endStateCondition.Name).ToNot(Equal("my custom name"))
 				})
 			})
-
 		})
 
 		AfterEach(func() {
@@ -353,12 +343,10 @@ var _ = Describe("policy reconciliation", func() {
 			_, err = r.Reconcile(request)
 			Expect(err).ToNot(HaveOccurred())
 		})
-
 	})
 
 	Context("When starting with an existing policy with a NRQL condition", func() {
 		BeforeEach(func() {
-
 			conditionSpec = &nrv1.ConditionSpec{
 				nrv1.GenericConditionSpec{
 					Terms: []nrv1.AlertConditionTerm{
@@ -423,6 +411,7 @@ var _ = Describe("policy reconciliation", func() {
 			err = k8sClient.Get(ctx, namespacedName, policy)
 			Expect(err).ToNot(HaveOccurred())
 		})
+
 		Context("and deleting that policy", func() {
 			It("should successfully delete", func() {
 				err := k8sClient.Delete(ctx, policy)
@@ -435,8 +424,8 @@ var _ = Describe("policy reconciliation", func() {
 				var endStatePolicy nrv1.Policy
 				err = k8sClient.Get(ctx, namespacedName, &endStatePolicy)
 				Expect(err).NotTo(BeNil())
-
 			})
+
 			It("should delete the condition", func() {
 				err := k8sClient.Delete(ctx, policy)
 				Expect(err).ToNot(HaveOccurred())
@@ -450,17 +439,19 @@ var _ = Describe("policy reconciliation", func() {
 
 				Expect(err).To(HaveOccurred())
 				Expect(endStateCondition.Spec.Name).ToNot(Equal(policy.Spec.Conditions[0].Spec.Name))
-
 			})
 		})
+
 		Context("and New Relic API returns a 404", func() {
 			BeforeEach(func() {
 				alertsClient.DeletePolicyStub = func(int) (*alerts.Policy, error) {
 					return &alerts.Policy{}, errors.New("Imaginary 404 Failure")
 				}
 			})
+
 			It("should succeed as if a previous reconcile already deleted the policy", func() {
 			})
+
 			AfterEach(func() {
 				alertsClient.DeletePolicyStub = func(int) (*alerts.Policy, error) {
 					return &alerts.Policy{}, nil
@@ -544,7 +535,6 @@ var _ = Describe("policy reconciliation", func() {
 		})
 
 		Context("and making no changes ", func() {
-
 			It("should not try to update or create new conditions", func() {
 				initialConditionName := policy.Spec.Conditions[0].Name
 				policy.Spec.Conditions[0].Name = ""
@@ -573,7 +563,6 @@ var _ = Describe("policy reconciliation", func() {
 				Expect(err).To(BeNil())
 				Expect(endStateCondition.Name).To(Equal(initialConditionName))
 			})
-
 		})
 
 		Context("and updating that policy", func() {
@@ -593,9 +582,7 @@ var _ = Describe("policy reconciliation", func() {
 				err = k8sClient.Get(ctx, namespacedName, &endStatePolicy)
 				Expect(err).To(BeNil())
 				Expect(alertsClient.UpdatePolicyCallCount()).To(Equal(1))
-
 			})
-
 		})
 
 		Context("and updating a condition name", func() {
@@ -653,7 +640,6 @@ var _ = Describe("policy reconciliation", func() {
 				Expect(err).ToNot(BeNil())
 				Expect(originalCondition.Spec.Name).To(Equal(""))
 			})
-
 		})
 
 		Context("and updating a condition ", func() {
@@ -686,7 +672,6 @@ var _ = Describe("policy reconciliation", func() {
 				Expect(err).To(BeNil())
 				Expect(endStateCondition.Spec.Nrql.Query).To(Equal("SELECT count(*) FROM MyEvent"))
 				Expect(endStateCondition.Name).To(Equal(originalConditionName))
-
 			})
 
 			It("should set the inherited values on the updated condition", func() {
@@ -713,9 +698,7 @@ var _ = Describe("policy reconciliation", func() {
 				Expect(endStateCondition.Name).To(Equal(originalConditionName))
 				Expect(endStateCondition.Spec.Region).To(Equal("us"))
 				Expect(endStateCondition.Spec.APIKey).To(Equal("112233"))
-
 			})
-
 		})
 
 		Context("and adding another condition ", func() {
@@ -777,7 +760,6 @@ var _ = Describe("policy reconciliation", func() {
 				Expect(endStateCondition.Spec.Region).To(Equal("us"))
 				Expect(endStateCondition.Spec.APIKey).To(Equal("112233"))
 			})
-
 		})
 
 		Context("and when the alerts client returns an error", func() {
@@ -787,6 +769,7 @@ var _ = Describe("policy reconciliation", func() {
 				}
 				policy.Spec.IncidentPreference = "PER_CONDITION_AND_TARGET"
 			})
+
 			It("should return an error", func() {
 				err := k8sClient.Update(ctx, policy)
 				Expect(err).ToNot(HaveOccurred())
@@ -805,7 +788,6 @@ var _ = Describe("policy reconciliation", func() {
 			_, err = r.Reconcile(request)
 			Expect(err).ToNot(HaveOccurred())
 		})
-
 	})
 
 	Context("When starting with an existing policy with an APM condition", func() {
@@ -875,7 +857,6 @@ var _ = Describe("policy reconciliation", func() {
 		})
 
 		Context("and making no changes ", func() {
-
 			It("should not try to update or create new conditions", func() {
 				initialConditionName := policy.Spec.Conditions[0].Name
 				policy.Spec.Conditions[0].Name = ""
@@ -905,7 +886,6 @@ var _ = Describe("policy reconciliation", func() {
 				Expect(endStateCondition.Name).To(Equal(initialConditionName))
 				Expect(endStateCondition.Spec.Name).To(Equal("APM Condition"))
 			})
-
 		})
 
 		Context("and updating that policy", func() {
@@ -927,7 +907,6 @@ var _ = Describe("policy reconciliation", func() {
 				Expect(alertsClient.UpdatePolicyCallCount()).To(Equal(1))
 
 			})
-
 		})
 
 		Context("and updating a condition name", func() {
@@ -985,7 +964,6 @@ var _ = Describe("policy reconciliation", func() {
 				Expect(err).ToNot(BeNil())
 				Expect(originalCondition.Spec.Name).To(Equal(""))
 			})
-
 		})
 
 		Context("and updating a condition ", func() {
@@ -1018,7 +996,6 @@ var _ = Describe("policy reconciliation", func() {
 				Expect(err).To(BeNil())
 				Expect(endStateCondition.Spec.Metric).To(Equal("Custom/bar"))
 				Expect(endStateCondition.Name).To(Equal(originalConditionName))
-
 			})
 
 			It("should set the inherited values on the updated condition", func() {
@@ -1044,15 +1021,12 @@ var _ = Describe("policy reconciliation", func() {
 				Expect(endStateCondition.Name).To(Equal(originalConditionName))
 				Expect(endStateCondition.Spec.Region).To(Equal("us"))
 				Expect(endStateCondition.Spec.APIKey).To(Equal("112233"))
-
 			})
-
 		})
 
 		Context("and adding another apm condition ", func() {
 			BeforeEach(func() {
 				secondConditionSpec := nrv1.ConditionSpec{
-
 					GenericConditionSpec: nrv1.GenericConditionSpec{
 						Terms: []nrv1.AlertConditionTerm{
 							{
@@ -1078,6 +1052,7 @@ var _ = Describe("policy reconciliation", func() {
 						ViolationCloseTimer: 60,
 					},
 				}
+
 				secondCondition := nrv1.PolicyCondition{
 					Spec: secondConditionSpec,
 				}
@@ -1107,7 +1082,6 @@ var _ = Describe("policy reconciliation", func() {
 				Expect(endStateCondition.Spec.Region).To(Equal("us"))
 				Expect(endStateCondition.Spec.APIKey).To(Equal("112233"))
 			})
-
 		})
 
 		Context("and when the alerts client returns an error", func() {
@@ -1117,6 +1091,7 @@ var _ = Describe("policy reconciliation", func() {
 				}
 				policy.Spec.IncidentPreference = "PER_CONDITION_AND_TARGET"
 			})
+
 			It("should return an error", func() {
 				err := k8sClient.Update(ctx, policy)
 				Expect(err).ToNot(HaveOccurred())
@@ -1135,7 +1110,6 @@ var _ = Describe("policy reconciliation", func() {
 			_, err = r.Reconcile(request)
 			Expect(err).ToNot(HaveOccurred())
 		})
-
 	})
 
 	Context("When starting with an existing policy with two NRQL conditions", func() {
@@ -1246,9 +1220,7 @@ var _ = Describe("policy reconciliation", func() {
 
 		Context("and removing the second condition ", func() {
 			BeforeEach(func() {
-
 				policy.Spec.Conditions = []nrv1.PolicyCondition{policy.Spec.Conditions[0]}
-
 			})
 
 			It("should remove second condition ", func() {
@@ -1279,7 +1251,6 @@ var _ = Describe("policy reconciliation", func() {
 				err = k8sClient.Get(ctx, deletedConditionNamespace, &deletedCondition)
 				Expect(err).ToNot(BeNil())
 				Expect(deletedCondition.Name).To(Equal(""))
-
 			})
 
 			It("should not call the alerts API ", func() {
@@ -1291,7 +1262,6 @@ var _ = Describe("policy reconciliation", func() {
 				Expect(err).ToNot(HaveOccurred())
 				Expect(alertsClient.UpdatePolicyCallCount()).To(Equal(0))
 			})
-
 		})
 
 		Context("and removing the first condition ", func() {
@@ -1320,7 +1290,6 @@ var _ = Describe("policy reconciliation", func() {
 				Expect(err).To(BeNil())
 				Expect(endStateCondition.Spec.Name).To(Equal("second alert condition"))
 			})
-
 		})
 
 		Context("and when the alerts client returns an error", func() {
@@ -1330,6 +1299,7 @@ var _ = Describe("policy reconciliation", func() {
 				}
 				policy.Spec.IncidentPreference = "PER_CONDITION_AND_TARGET"
 			})
+
 			It("should return an error", func() {
 				err := k8sClient.Update(ctx, policy)
 				Expect(err).ToNot(HaveOccurred())
@@ -1348,7 +1318,5 @@ var _ = Describe("policy reconciliation", func() {
 			_, err = r.Reconcile(request)
 			Expect(err).ToNot(HaveOccurred())
 		})
-
 	})
-
 })

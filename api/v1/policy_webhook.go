@@ -64,8 +64,8 @@ func (r *Policy) ValidateCreate() error {
 	Log.Info("validate create", "name", r.Name)
 
 	collectedErrors := new(customErrors.ErrorCollector)
-	err := r.CheckForAPIKeyOrSecret()
 
+	err := r.CheckForAPIKeyOrSecret()
 	if err != nil {
 		collectedErrors.Collect(err)
 	}
@@ -74,15 +74,17 @@ func (r *Policy) ValidateCreate() error {
 	if err != nil {
 		collectedErrors.Collect(err)
 	}
-	err = r.ValidateIncidentPreference()
 
+	err = r.ValidateIncidentPreference()
 	if err != nil {
 		collectedErrors.Collect(err)
 	}
+
 	if len(*collectedErrors) > 0 {
 		Log.Info("Errors encountered validating policy", "collectedErrors", collectedErrors)
 		return collectedErrors
 	}
+
 	return nil
 }
 
@@ -123,6 +125,7 @@ func (r *Policy) ValidateDelete() error {
 	if err != nil {
 		return err
 	}
+
 	return nil
 }
 
@@ -130,18 +133,20 @@ func (r *Policy) DefaultIncidentPreference() {
 	if r.Spec.IncidentPreference == "" {
 		r.Spec.IncidentPreference = defaultPolicyIncidentPreference
 	}
-	r.Spec.IncidentPreference = strings.ToUpper(r.Spec.IncidentPreference)
 
+	r.Spec.IncidentPreference = strings.ToUpper(r.Spec.IncidentPreference)
 }
 
 func (r *Policy) CheckForDuplicateConditions() error {
-
 	var conditionHashMap = make(map[uint32]bool)
+
 	for _, condition := range r.Spec.Conditions {
 		conditionHashMap[condition.SpecHash()] = true
 	}
+
 	if len(conditionHashMap) != len(r.Spec.Conditions) {
 		log.Info("duplicate conditions detected or hash collision", "conditionHash", conditionHashMap)
+
 		return errors.New("duplicate conditions detected or hash collision")
 	}
 
@@ -153,7 +158,9 @@ func (r *Policy) ValidateIncidentPreference() error {
 	case "PER_POLICY", "PER_CONDITION", "PER_CONDITION_AND_TARGET":
 		return nil
 	}
+
 	log.Info("Incident preference must be PER_POLICY, PER_CONDITION, or PER_CONDITION_AND_TARGET", "IncidentPreference value", r.Spec.IncidentPreference)
+
 	return errors.New("incident preference must be PER_POLICY, PER_CONDITION, or PER_CONDITION_AND_TARGET")
 }
 
@@ -161,10 +168,12 @@ func (r *Policy) CheckForAPIKeyOrSecret() error {
 	if r.Spec.APIKey != "" {
 		return nil
 	}
+
 	if r.Spec.APIKeySecret != (NewRelicAPIKeySecret{}) {
 		if r.Spec.APIKeySecret.Name != "" && r.Spec.APIKeySecret.Namespace != "" && r.Spec.APIKeySecret.KeyName != "" {
 			return nil
 		}
 	}
+
 	return errors.New("either api_key or api_key_secret must be set")
 }

@@ -68,7 +68,6 @@ var _ = Describe("alertspolicy reconciliation", func() {
 			Name:      "test-alertspolicy",
 		}
 		request = ctrl.Request{NamespacedName: namespacedName}
-
 	})
 
 	Context("When starting with no policies", func() {
@@ -155,8 +154,8 @@ var _ = Describe("alertspolicy reconciliation", func() {
 				Name:      "test-alertspolicy",
 			}
 			request = ctrl.Request{NamespacedName: namespacedName}
-
 		})
+
 		Context("when creating a valid alertspolicy", func() {
 			It("should create that alertspolicy", func() {
 
@@ -184,6 +183,7 @@ var _ = Describe("alertspolicy reconciliation", func() {
 				Expect(endStateAlertsPolicy.Status.PolicyID).To(Equal("333"))
 
 			})
+
 			It("creates the NRQL condition with attributes from the AlertsPolicy", func() {
 				err := k8sClient.Create(ctx, alertspolicy)
 				Expect(err).ToNot(HaveOccurred())
@@ -205,11 +205,9 @@ var _ = Describe("alertspolicy reconciliation", func() {
 				Expect(endStateCondition.Spec.Nrql.Query).To(Equal("SELECT 1 FROM MyEvents"))
 				Expect(string(endStateCondition.Spec.Terms[0].Priority)).To(Equal("critical"))
 				Expect(endStateCondition.Spec.Enabled).To(BeTrue())
-
 			})
 
 			It("creates the NRQL condition with inherited attributes from the AlertsPolicy resource", func() {
-
 				err := k8sClient.Create(ctx, alertspolicy)
 				Expect(err).ToNot(HaveOccurred())
 
@@ -231,9 +229,9 @@ var _ = Describe("alertspolicy reconciliation", func() {
 				Expect(endStateCondition.Spec.ExistingPolicyID).To(Equal("333"))
 				Expect(endStateCondition.Spec.Region).To(Equal(alertspolicy.Spec.Region))
 				Expect(endStateCondition.Spec.APIKey).To(Equal(alertspolicy.Spec.APIKey))
-
 			})
 		})
+
 		Context("when the New Relic API returns an error", func() {
 			BeforeEach(func() {
 				mockAlertsClient.CreatePolicyMutationStub = func(int, alerts.AlertsPolicyInput) (*alerts.AlertsPolicy, error) {
@@ -309,12 +307,10 @@ var _ = Describe("alertspolicy reconciliation", func() {
 				err = k8sClient.Get(ctx, conditionNameType, &endStateCondition)
 				Expect(err).To(BeNil())
 				Expect(endStateCondition.Spec.Name).To(Equal("APM Condition"))
-
 			})
 
 			Context("when creating a valid alertspolicy with conditions with k8 resource name set", func() {
 				It("should create the conditions with an auto-generated name ignoring the manual name", func() {
-
 					alertspolicy.Spec.Conditions[0].Name = "my custom name"
 
 					err := k8sClient.Create(ctx, alertspolicy)
@@ -340,7 +336,6 @@ var _ = Describe("alertspolicy reconciliation", func() {
 					Expect(endStateCondition.Name).ToNot(Equal("my custom name"))
 				})
 			})
-
 		})
 
 		AfterEach(func() {
@@ -352,12 +347,10 @@ var _ = Describe("alertspolicy reconciliation", func() {
 			_, err = r.Reconcile(request)
 			Expect(err).ToNot(HaveOccurred())
 		})
-
 	})
 
 	Context("When starting with an existing alertspolicy with a NRQL condition", func() {
 		BeforeEach(func() {
-
 			conditionSpec = &nrv1.AlertsPolicyConditionSpec{
 				nrv1.AlertsGenericConditionSpec{
 					Terms: []nrv1.AlertsNrqlConditionTerm{
@@ -422,6 +415,7 @@ var _ = Describe("alertspolicy reconciliation", func() {
 			err = k8sClient.Get(ctx, namespacedName, alertspolicy)
 			Expect(err).ToNot(HaveOccurred())
 		})
+
 		Context("and deleting that alertspolicy", func() {
 			It("should successfully delete", func() {
 				err := k8sClient.Delete(ctx, alertspolicy)
@@ -434,8 +428,8 @@ var _ = Describe("alertspolicy reconciliation", func() {
 				var endStateAlertsPolicy nrv1.AlertsPolicy
 				err = k8sClient.Get(ctx, namespacedName, &endStateAlertsPolicy)
 				Expect(err).NotTo(BeNil())
-
 			})
+
 			It("should delete the condition", func() {
 				err := k8sClient.Delete(ctx, alertspolicy)
 				Expect(err).ToNot(HaveOccurred())
@@ -449,17 +443,19 @@ var _ = Describe("alertspolicy reconciliation", func() {
 
 				Expect(err).To(HaveOccurred())
 				Expect(endStateCondition.Spec.Name).ToNot(Equal(alertspolicy.Spec.Conditions[0].Spec.Name))
-
 			})
 		})
+
 		Context("and New Relic API returns a 404", func() {
 			BeforeEach(func() {
 				mockAlertsClient.DeletePolicyMutationStub = func(int, string) (*alerts.AlertsPolicy, error) {
 					return &alerts.AlertsPolicy{}, errors.New("Imaginary 404 Failure")
 				}
 			})
+
 			It("should succeed as if a previous reconcile already deleted the alertspolicy", func() {
 			})
+
 			AfterEach(func() {
 				mockAlertsClient.DeletePolicyMutationStub = func(int, string) (*alerts.AlertsPolicy, error) {
 					return &alerts.AlertsPolicy{}, nil
@@ -571,7 +567,6 @@ var _ = Describe("alertspolicy reconciliation", func() {
 				Expect(err).To(BeNil())
 				Expect(endStateCondition.Name).To(Equal(initialConditionName))
 			})
-
 		})
 
 		Context("and updating that alertspolicy", func() {
@@ -593,7 +588,6 @@ var _ = Describe("alertspolicy reconciliation", func() {
 				Expect(mockAlertsClient.UpdatePolicyMutationCallCount()).To(Equal(1))
 
 			})
-
 		})
 
 		Context("and updating a condition name", func() {
@@ -651,7 +645,6 @@ var _ = Describe("alertspolicy reconciliation", func() {
 				Expect(err).ToNot(BeNil())
 				Expect(originalCondition.Spec.Name).To(Equal(""))
 			})
-
 		})
 
 		Context("and updating a condition ", func() {
@@ -684,7 +677,6 @@ var _ = Describe("alertspolicy reconciliation", func() {
 				Expect(err).To(BeNil())
 				Expect(endStateCondition.Spec.Nrql.Query).To(Equal("SELECT count(*) FROM MyEvent"))
 				Expect(endStateCondition.Name).To(Equal(originalConditionName))
-
 			})
 
 			It("should set the inherited values on the updated condition", func() {
@@ -711,9 +703,7 @@ var _ = Describe("alertspolicy reconciliation", func() {
 				Expect(endStateCondition.Name).To(Equal(originalConditionName))
 				Expect(endStateCondition.Spec.Region).To(Equal("us"))
 				Expect(endStateCondition.Spec.APIKey).To(Equal("112233"))
-
 			})
-
 		})
 
 		Context("and adding another condition ", func() {
@@ -775,7 +765,6 @@ var _ = Describe("alertspolicy reconciliation", func() {
 				Expect(endStateCondition.Spec.Region).To(Equal("us"))
 				Expect(endStateCondition.Spec.APIKey).To(Equal("112233"))
 			})
-
 		})
 
 		Context("and when the alerts client returns an error", func() {
@@ -785,6 +774,7 @@ var _ = Describe("alertspolicy reconciliation", func() {
 				}
 				alertspolicy.Spec.IncidentPreference = "PER_CONDITION_AND_TARGET"
 			})
+
 			It("should return an error", func() {
 				err := k8sClient.Update(ctx, alertspolicy)
 				Expect(err).ToNot(HaveOccurred())
@@ -803,7 +793,6 @@ var _ = Describe("alertspolicy reconciliation", func() {
 			_, err = r.Reconcile(request)
 			Expect(err).ToNot(HaveOccurred())
 		})
-
 	})
 
 	Context("When starting with an existing alertspolicy with an APM condition", func() {
@@ -872,7 +861,6 @@ var _ = Describe("alertspolicy reconciliation", func() {
 		})
 
 		Context("and making no changes ", func() {
-
 			It("should not try to update or create new conditions", func() {
 				initialConditionName := alertspolicy.Spec.Conditions[0].Name
 				alertspolicy.Spec.Conditions[0].Name = ""
@@ -902,7 +890,6 @@ var _ = Describe("alertspolicy reconciliation", func() {
 				Expect(endStateCondition.Name).To(Equal(initialConditionName))
 				Expect(endStateCondition.Spec.Name).To(Equal("APM Condition"))
 			})
-
 		})
 
 		Context("and updating that alertspolicy", func() {
@@ -922,9 +909,7 @@ var _ = Describe("alertspolicy reconciliation", func() {
 				err = k8sClient.Get(ctx, namespacedName, &endStateAlertsPolicy)
 				Expect(err).To(BeNil())
 				Expect(mockAlertsClient.UpdatePolicyMutationCallCount()).To(Equal(1))
-
 			})
-
 		})
 
 		Context("and updating a condition name", func() {
@@ -982,7 +967,6 @@ var _ = Describe("alertspolicy reconciliation", func() {
 				Expect(err).ToNot(BeNil())
 				Expect(originalCondition.Spec.Name).To(Equal(""))
 			})
-
 		})
 
 		Context("and updating a condition ", func() {
@@ -1015,7 +999,6 @@ var _ = Describe("alertspolicy reconciliation", func() {
 				Expect(err).To(BeNil())
 				Expect(endStateCondition.Spec.Metric).To(Equal("Custom/bar"))
 				Expect(endStateCondition.Name).To(Equal(originalConditionName))
-
 			})
 
 			It("should set the inherited values on the updated condition", func() {
@@ -1041,9 +1024,7 @@ var _ = Describe("alertspolicy reconciliation", func() {
 				Expect(endStateCondition.Name).To(Equal(originalConditionName))
 				Expect(endStateCondition.Spec.Region).To(Equal("us"))
 				Expect(endStateCondition.Spec.APIKey).To(Equal("112233"))
-
 			})
-
 		})
 
 		Context("and adding another apm condition ", func() {
@@ -1103,7 +1084,6 @@ var _ = Describe("alertspolicy reconciliation", func() {
 				Expect(endStateCondition.Spec.Region).To(Equal("us"))
 				Expect(endStateCondition.Spec.APIKey).To(Equal("112233"))
 			})
-
 		})
 
 		Context("and when the alerts client returns an error", func() {
@@ -1113,6 +1093,7 @@ var _ = Describe("alertspolicy reconciliation", func() {
 				}
 				alertspolicy.Spec.IncidentPreference = "PER_CONDITION_AND_TARGET"
 			})
+
 			It("should return an error", func() {
 				err := k8sClient.Update(ctx, alertspolicy)
 				Expect(err).ToNot(HaveOccurred())
@@ -1131,7 +1112,6 @@ var _ = Describe("alertspolicy reconciliation", func() {
 			_, err = r.Reconcile(request)
 			Expect(err).ToNot(HaveOccurred())
 		})
-
 	})
 
 	Context("When starting with an existing alertspolicy with two NRQL conditions", func() {
@@ -1242,9 +1222,7 @@ var _ = Describe("alertspolicy reconciliation", func() {
 
 		Context("and removing the second condition ", func() {
 			BeforeEach(func() {
-
 				alertspolicy.Spec.Conditions = []nrv1.AlertsPolicyCondition{alertspolicy.Spec.Conditions[0]}
-
 			})
 
 			It("should remove second condition ", func() {
@@ -1275,7 +1253,6 @@ var _ = Describe("alertspolicy reconciliation", func() {
 				err = k8sClient.Get(ctx, deletedConditionNamespace, &deletedCondition)
 				Expect(err).ToNot(BeNil())
 				Expect(deletedCondition.Name).To(Equal(""))
-
 			})
 
 			It("should not call the alerts API ", func() {
@@ -1287,7 +1264,6 @@ var _ = Describe("alertspolicy reconciliation", func() {
 				Expect(err).ToNot(HaveOccurred())
 				Expect(mockAlertsClient.UpdatePolicyMutationCallCount()).To(Equal(0))
 			})
-
 		})
 
 		Context("and removing the first condition ", func() {
@@ -1316,7 +1292,6 @@ var _ = Describe("alertspolicy reconciliation", func() {
 				Expect(err).To(BeNil())
 				Expect(endStateCondition.Spec.Name).To(Equal("second alert condition"))
 			})
-
 		})
 
 		Context("and when the alerts client returns an error", func() {
@@ -1326,6 +1301,7 @@ var _ = Describe("alertspolicy reconciliation", func() {
 				}
 				alertspolicy.Spec.IncidentPreference = "PER_CONDITION_AND_TARGET"
 			})
+
 			It("should return an error", func() {
 				err := k8sClient.Update(ctx, alertspolicy)
 				Expect(err).ToNot(HaveOccurred())
@@ -1344,7 +1320,5 @@ var _ = Describe("alertspolicy reconciliation", func() {
 			_, err = r.Reconcile(request)
 			Expect(err).ToNot(HaveOccurred())
 		})
-
 	})
-
 })

@@ -123,6 +123,25 @@ func registerAlerts(mgr *ctrl.Manager) error {
 		os.Exit(1)
 	}
 
+	//alertsChannel
+	alertsChannelReconciler := &controllers.AlertsChannelReconciler{
+		Client:          (*mgr).GetClient(),
+		Log:             ctrl.Log.WithName("controllers").WithName("alertsChannel"),
+		Scheme:          (*mgr).GetScheme(),
+		AlertClientFunc: interfaces.InitializeAlertsClient,
+	}
+
+	if err := alertsChannelReconciler.SetupWithManager(*mgr); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "alertsChannel")
+		os.Exit(1)
+	}
+
+	alertsChannel := &nrv1.AlertsChannel{}
+	if err := alertsChannel.SetupWebhookWithManager(*mgr); err != nil {
+		setupLog.Error(err, "unable to create webhook", "webhook", "AlertsChannel")
+		os.Exit(1)
+	}
+
 	// alertspolicy
 	alertsPolicyReconciler := &controllers.AlertsPolicyReconciler{
 		Client:          (*mgr).GetClient(),
@@ -130,7 +149,6 @@ func registerAlerts(mgr *ctrl.Manager) error {
 		Scheme:          (*mgr).GetScheme(),
 		AlertClientFunc: interfaces.InitializeAlertsClient,
 	}
-
 	if err := alertsPolicyReconciler.SetupWithManager(*mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "AlertsPolicy")
 		os.Exit(1)

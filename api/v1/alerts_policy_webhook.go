@@ -77,15 +77,17 @@ func (r *AlertsPolicy) ValidateCreate() error {
 	if err != nil {
 		collectedErrors.Collect(err)
 	}
-	err = r.ValidateIncidentPreference()
 
+	err = r.ValidateIncidentPreference()
 	if err != nil {
 		collectedErrors.Collect(err)
 	}
+
 	if len(*collectedErrors) > 0 {
 		AlertsPolicyLog.Info("Errors encountered validating policy", "collectedErrors", collectedErrors)
 		return collectedErrors
 	}
+
 	return nil
 }
 
@@ -126,6 +128,7 @@ func (r *AlertsPolicy) ValidateDelete() error {
 	if err != nil {
 		return err
 	}
+
 	return nil
 }
 
@@ -133,16 +136,17 @@ func (r *AlertsPolicy) DefaultIncidentPreference() {
 	if r.Spec.IncidentPreference == "" {
 		r.Spec.IncidentPreference = string(defaultAlertsPolicyIncidentPreference)
 	}
-	r.Spec.IncidentPreference = strings.ToUpper(r.Spec.IncidentPreference)
 
+	r.Spec.IncidentPreference = strings.ToUpper(r.Spec.IncidentPreference)
 }
 
 func (r *AlertsPolicy) CheckForDuplicateConditions() error {
-
 	var conditionHashMap = make(map[uint32]bool)
+
 	for _, condition := range r.Spec.Conditions {
 		conditionHashMap[condition.SpecHash()] = true
 	}
+
 	if len(conditionHashMap) != len(r.Spec.Conditions) {
 		AlertsPolicyLog.Info("duplicate conditions detected or hash collision", "conditionHash", conditionHashMap)
 		return errors.New("duplicate conditions detected or hash collision")
@@ -156,7 +160,9 @@ func (r *AlertsPolicy) ValidateIncidentPreference() error {
 	case "PER_POLICY", "PER_CONDITION", "PER_CONDITION_AND_TARGET":
 		return nil
 	}
+
 	AlertsPolicyLog.Info("Incident preference must be PER_POLICY, PER_CONDITION, or PER_CONDITION_AND_TARGET", "IncidentPreference value", r.Spec.IncidentPreference)
+
 	return errors.New("incident preference must be PER_POLICY, PER_CONDITION, or PER_CONDITION_AND_TARGET")
 }
 
@@ -164,10 +170,12 @@ func (r *AlertsPolicy) CheckForAPIKeyOrSecret() error {
 	if r.Spec.APIKey != "" {
 		return nil
 	}
+
 	if r.Spec.APIKeySecret != (NewRelicAPIKeySecret{}) {
 		if r.Spec.APIKeySecret.Name != "" && r.Spec.APIKeySecret.Namespace != "" && r.Spec.APIKeySecret.KeyName != "" {
 			return nil
 		}
 	}
+
 	return errors.New("either api_key or api_key_secret must be set")
 }

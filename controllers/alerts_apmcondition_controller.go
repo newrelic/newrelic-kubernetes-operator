@@ -189,6 +189,7 @@ func (r *AlertsAPMConditionReconciler) Reconcile(req ctrl.Request) (ctrl.Result,
 
 func (r *AlertsAPMConditionReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	r.AlertClientFunc = interfaces.InitializeAlertsClient
+
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&nralertsv1.AlertsAPMCondition{}).
 		Complete(r)
@@ -197,6 +198,7 @@ func (r *AlertsAPMConditionReconciler) SetupWithManager(mgr ctrl.Manager) error 
 func (r *AlertsAPMConditionReconciler) checkForExistingCondition(condition *nralertsv1.AlertsAPMCondition) {
 	if condition.Status.ConditionID == 0 {
 		r.Log.Info("Checking for existing condition", "conditionName", condition.Name)
+
 		//if no conditionId, get list of conditions and compare name
 		existingPolicyIDInt, err := strconv.Atoi(condition.Spec.ExistingPolicyID)
 		if err != nil {
@@ -225,6 +227,7 @@ func (r *AlertsAPMConditionReconciler) checkForExistingCondition(condition *nral
 
 func (r *AlertsAPMConditionReconciler) deleteNewRelicAlertCondition(condition nralertsv1.AlertsAPMCondition) error {
 	r.Log.Info("Deleting condition", "conditionName", condition.Spec.Name)
+
 	_, err := r.Alerts.DeleteCondition(condition.Status.ConditionID)
 	if err != nil {
 		r.Log.Error(err, "Error deleting condition",
@@ -232,24 +235,30 @@ func (r *AlertsAPMConditionReconciler) deleteNewRelicAlertCondition(condition nr
 			"region", condition.Spec.Region,
 			"Api Key", interfaces.PartialAPIKey(r.apiKey),
 		)
+
 		return err
 	}
+
 	return nil
 }
 
 func (r *AlertsAPMConditionReconciler) getAPIKeyOrSecret(condition nralertsv1.AlertsAPMCondition) string {
-
 	if condition.Spec.APIKey != "" {
 		return condition.Spec.APIKey
 	}
+
 	if condition.Spec.APIKeySecret != (nralertsv1.NewRelicAPIKeySecret{}) {
-		key := types.NamespacedName{Namespace: condition.Spec.APIKeySecret.Namespace, Name: condition.Spec.APIKeySecret.Name}
 		var apiKeySecret v1.Secret
+
+		key := types.NamespacedName{Namespace: condition.Spec.APIKeySecret.Namespace, Name: condition.Spec.APIKeySecret.Name}
+
 		if getErr := r.Client.Get(context.Background(), key, &apiKeySecret); getErr != nil {
 			r.Log.Error(getErr, "Error retrieving secret", "secret", apiKeySecret)
 			return ""
 		}
+
 		return string(apiKeySecret.Data[condition.Spec.APIKeySecret.KeyName])
 	}
+
 	return ""
 }

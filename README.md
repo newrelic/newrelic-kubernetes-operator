@@ -31,6 +31,7 @@ Currently the operator supports managing the following resources:
 - Alert Policies
 - NRQL Alert Conditions.
 - Alert Conditions for APM, Browser and mobile
+- Alert Channels
 
 
 # Quick Start
@@ -197,6 +198,44 @@ The operator will create and update alert policies and NRQL alert conditions as 
       existing_policy_id: "26458245" # Note: must match an existing policy in your account
       region: "US"
     ```
+
+
+### Create an Alerts Channel
+
+1. We'll be using the following [example alerts channel](/examples/example_alerts_channel.yaml) configuration file. You will need to update the [`api_key`](/examples/example_alerts_channel.yaml#6) field with your New Relic [personal API key](https://docs.newrelic.com/docs/apis/get-started/intro-apis/types-new-relic-api-keys#personal-api-key). <br>
+
+    **examples/example_alerts_channel.yaml**
+
+    ```yaml
+    apiVersion: nr.k8s.newrelic.com/v1
+    kind: AlertsChannel
+    metadata:
+      name: my-channel1
+      spec:
+        api_key: <your New Relic personal API key>
+        # api_key_secret:
+        #   name: nr-api-key
+        #   namespace: default
+        #   key_name: api-key
+        name:         "my alert channel"
+        region:       "US"
+        type:         "email"
+        links:
+          # Policy links can be by NR PolicyID, NR PolicyName AND/OR K8s AlertPolicy object reference 
+          policy_ids: 
+            - 1
+          policy_names: 
+            - "k8s created policy"
+          policy_kubernetes_objects: 
+            - name: "my-policy"
+              namespace: "default"
+        configuration: 
+          recipients: "me@email.com"
+    ```
+
+    > <small>**Note:** The New Relic Alerts API does not allow updating Alerts Channels. In order to change a channel, you will need to either rename the k8s AlertsChannel object to create a new one and delete the old one or manually delete the k8s AlertsChannel object and create a new one. </small>
+
+
 
 ### Uninstall the operator
 

@@ -5,6 +5,7 @@ resources:
 - bases/nr.k8s.newrelic.com_nrqlalertconditions.yaml
 - bases/nr.k8s.newrelic.com_policies.yaml
 - bases/nr.k8s.newrelic.com_apmalertconditions.yaml
+- bases/nr.k8s.newrelic.com_alertschannels.yaml
 - bases/nr.k8s.newrelic.com_alertsnrqlconditions.yaml
 - bases/nr.k8s.newrelic.com_alertspolicies.yaml
 - bases/nr.k8s.newrelic.com_alertsapmconditions.yaml

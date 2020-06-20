@@ -23,14 +23,6 @@ import (
 )
 
 var _ = Describe("ApmCondition reconciliation", func() {
-	BeforeEach(func() {
-		err := ignoreAlreadyExists(k8sClient.Create(context.Background(), &v1.Namespace{
-			ObjectMeta: metav1.ObjectMeta{
-				Name: "my-namespace",
-			},
-		}))
-		Expect(err).ToNot(HaveOccurred())
-	})
 	var (
 		ctx            context.Context
 		r              *AlertsAPMConditionReconciler
@@ -40,7 +32,15 @@ var _ = Describe("ApmCondition reconciliation", func() {
 		secret         *v1.Secret
 		fakeAlertFunc  func(string, string) (interfaces.NewRelicAlertsClient, error)
 	)
+
 	BeforeEach(func() {
+		err := ignoreAlreadyExists(k8sClient.Create(context.Background(), &v1.Namespace{
+			ObjectMeta: metav1.ObjectMeta{
+				Name: "my-namespace",
+			},
+		}))
+		Expect(err).ToNot(HaveOccurred())
+
 		ctx = context.Background()
 
 		alertsClient = &interfacesfakes.FakeNewRelicAlertsClient{}
@@ -49,10 +49,12 @@ var _ = Describe("ApmCondition reconciliation", func() {
 			a.ID = 111
 			return &a, nil
 		}
+
 		alertsClient.UpdateConditionStub = func(a alerts.Condition) (*alerts.Condition, error) {
 			a.ID = 112
 			return &a, nil
 		}
+
 		alertsClient.ListConditionsStub = func(int) ([]*alerts.Condition, error) {
 			var a []*alerts.Condition
 			a = append(a, &alerts.Condition{
@@ -118,16 +120,16 @@ var _ = Describe("ApmCondition reconciliation", func() {
 				ConditionID: 0,
 			},
 		}
+
 		namespacedName = types.NamespacedName{
 			Namespace: "default",
 			Name:      "test-condition",
 		}
-		request = ctrl.Request{NamespacedName: namespacedName}
 
+		request = ctrl.Request{NamespacedName: namespacedName}
 	})
 
 	Context("When starting with no conditions", func() {
-
 		Context("and given a new AlertsAPMCondition", func() {
 			Context("with a valid condition", func() {
 				It("should create that condition via the AlertClient", func() {
@@ -193,8 +195,8 @@ var _ = Describe("ApmCondition reconciliation", func() {
 					}
 					Expect(ignoreAlreadyExists(k8sClient.Create(ctx, secret))).To(Succeed())
 				})
-				It("should create that condition via the AlertClient", func() {
 
+				It("should create that condition via the AlertClient", func() {
 					err := k8sClient.Create(ctx, condition)
 					Expect(err).ToNot(HaveOccurred())
 
@@ -283,7 +285,6 @@ var _ = Describe("ApmCondition reconciliation", func() {
 			})
 
 			Context("with a valid condition", func() {
-
 				It("does not create a new condition", func() {
 					err := k8sClient.Create(ctx, condition)
 					Expect(err).ToNot(HaveOccurred())
@@ -322,7 +323,6 @@ var _ = Describe("ApmCondition reconciliation", func() {
 					Expect(err).To(BeNil())
 					Expect(endStateCondition.Status.AppliedSpec).To(Equal(&condition.Spec))
 				})
-
 			})
 		})
 
@@ -419,7 +419,6 @@ var _ = Describe("ApmCondition reconciliation", func() {
 	})
 
 	Context("When starting with an existing condition", func() {
-
 		Context("and deleting a AlertsAPMCondition", func() {
 			BeforeEach(func() {
 				err := k8sClient.Create(ctx, condition)
@@ -434,6 +433,7 @@ var _ = Describe("ApmCondition reconciliation", func() {
 				Expect(err).ToNot(HaveOccurred())
 
 			})
+
 			Context("with a valid condition", func() {
 				It("should delete that condition via the AlertClient", func() {
 					err := k8sClient.Delete(ctx, condition)
@@ -462,14 +462,15 @@ var _ = Describe("ApmCondition reconciliation", func() {
 				})
 
 			})
-			Context("with a condition with no condition ID", func() {
 
+			Context("with a condition with no condition ID", func() {
 				BeforeEach(func() {
 					condition.Status.ConditionID = 0
 					err := k8sClient.Update(ctx, condition)
 					Expect(err).ToNot(HaveOccurred())
 
 				})
+
 				It("should just remove the finalizer and delete", func() {
 					err := k8sClient.Delete(ctx, condition)
 					Expect(err).ToNot(HaveOccurred())
@@ -487,17 +488,15 @@ var _ = Describe("ApmCondition reconciliation", func() {
 					Expect(err).To(HaveOccurred())
 					Expect(endStateCondition.Name).To(Equal(""))
 				})
-
 			})
 
 			Context("when the Alerts API reports no condition found ", func() {
-
 				BeforeEach(func() {
 					alertsClient.DeleteConditionStub = func(int) (*alerts.Condition, error) {
 						return &alerts.Condition{}, errors.New("resource not found")
 					}
-
 				})
+
 				It("should just remove the finalizer and delete", func() {
 					err := k8sClient.Delete(ctx, condition)
 					Expect(err).ToNot(HaveOccurred())
@@ -515,9 +514,7 @@ var _ = Describe("ApmCondition reconciliation", func() {
 					Expect(err).To(HaveOccurred())
 					Expect(endStateCondition.Name).To(Equal(""))
 				})
-
 			})
-
 		})
 	})
 })

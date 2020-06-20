@@ -1,233 +1,283 @@
 
 ---
-apiVersion: admissionregistration.k8s.io/v1beta1
-kind: MutatingWebhookConfiguration
-metadata:
-  creationTimestamp: null
-  name: mutating-webhook-configuration
-webhooks:
-- clientConfig:
-    caBundle: Cg==
-    service:
-      name: webhook-service
-      namespace: system
-      path: /mutate-nr-k8s-newrelic-com-v1-apmalertcondition
-  failurePolicy: Fail
-  name: mapmalertcondition.kb.io
-  rules:
-  - apiGroups:
-    - nr.k8s.newrelic.com
-    apiVersions:
-    - v1
-    operations:
-    - CREATE
-    - UPDATE
-    resources:
-    - apmalertconditions
-- clientConfig:
-    caBundle: Cg==
-    service:
-      name: webhook-service
-      namespace: system
-      path: /mutate-nr-k8s-newrelic-com-v1-nrqlalertcondition
-  failurePolicy: Fail
-  name: mnrqlalertcondition.kb.io
-  rules:
-  - apiGroups:
-    - nr.k8s.newrelic.com
-    apiVersions:
-    - v1
-    operations:
-    - CREATE
-    - UPDATE
-    resources:
-    - nrqlalertconditions
-- clientConfig:
-    caBundle: Cg==
-    service:
-      name: webhook-service
-      namespace: system
-      path: /mutate-nr-k8s-newrelic-com-v1-policy
-  failurePolicy: Fail
-  name: mpolicy.kb.io
-  rules:
-  - apiGroups:
-    - nr.k8s.newrelic.com
-    apiVersions:
-    - v1
-    operations:
-    - CREATE
-    - UPDATE
-    resources:
-    - policies
-- clientConfig:
-    caBundle: Cg==
-    service:
-      name: webhook-service
-      namespace: system
-      path: /mutate-nr-k8s-newrelic-com-v1-alertsapmcondition
-  failurePolicy: Fail
-  name: malertsapmcondition.kb.io
-  rules:
-  - apiGroups:
-    - nr.k8s.newrelic.com
-    apiVersions:
-    - v1
-    operations:
-    - CREATE
-    - UPDATE
-    resources:
-    - alertsapmconditions
-- clientConfig:
-    caBundle: Cg==
-    service:
-      name: webhook-service
-      namespace: system
-      path: /mutate-nr-k8s-newrelic-com-v1-alertsnrqlcondition
-  failurePolicy: Fail
-  name: malertsnrqlcondition.kb.io
-  rules:
-  - apiGroups:
-    - nr.k8s.newrelic.com
-    apiVersions:
-    - v1
-    operations:
-    - CREATE
-    - UPDATE
-    resources:
-    - alertsnrqlconditions
-- clientConfig:
-    caBundle: Cg==
-    service:
-      name: webhook-service
-      namespace: system
-      path: /mutate-nr-k8s-newrelic-com-v1-alertspolicy
-  failurePolicy: Fail
-  name: malertspolicy.kb.io
-  rules:
-  - apiGroups:
-    - nr.k8s.newrelic.com
-    apiVersions:
-    - v1
-    operations:
-    - CREATE
-    - UPDATE
-    resources:
-    - alertspolicies
-
-
----
-apiVersion: admissionregistration.k8s.io/v1beta1
-kind: ValidatingWebhookConfiguration
-metadata:
-  creationTimestamp: null
-  name: validating-webhook-configuration
-webhooks:
-- clientConfig:
-    caBundle: Cg==
-    service:
-      name: webhook-service
-      namespace: system
-      path: /validate-nr-k8s-newrelic-com-v1-apmalertcondition
-  failurePolicy: Fail
-  name: vapmalertcondition.kb.io
-  rules:
-  - apiGroups:
-    - nr.k8s.newrelic.com
-    apiVersions:
-    - v1
-    operations:
-    - CREATE
-    - UPDATE
-    resources:
-    - apmalertconditions
-- clientConfig:
-    caBundle: Cg==
-    service:
-      name: webhook-service
-      namespace: system
-      path: /validate-nr-k8s-newrelic-com-v1-nrqlalertcondition
-  failurePolicy: Fail
-  name: vnrqlalertcondition.kb.io
-  rules:
-  - apiGroups:
-    - nr.k8s.newrelic.com
-    apiVersions:
-    - v1
-    operations:
-    - CREATE
-    - UPDATE
-    resources:
-    - nrqlalertconditions
-- clientConfig:
-    caBundle: Cg==
-    service:
-      name: webhook-service
-      namespace: system
-      path: /validate-nr-k8s-newrelic-com-v1-policy
-  failurePolicy: Fail
-  name: vpolicy.kb.io
-  rules:
-  - apiGroups:
-    - nr.k8s.newrelic.com
-    apiVersions:
-    - v1
-    operations:
-    - CREATE
-    - UPDATE
-    resources:
-    - policies
-- clientConfig:
-    caBundle: Cg==
-    service:
-      name: webhook-service
-      namespace: system
-      path: /validate-nr-k8s-newrelic-com-v1-alertsapmcondition
-  failurePolicy: Fail
-  name: valertsapmcondition.kb.io
-  rules:
-  - apiGroups:
-    - nr.k8s.newrelic.com
-    apiVersions:
-    - v1
-    operations:
-    - CREATE
-    - UPDATE
-    resources:
-    - alertsapmconditions
-- clientConfig:
-    caBundle: Cg==
-    service:
-      name: webhook-service
-      namespace: system
-      path: /validate-nr-k8s-newrelic-com-v1-alertsnrqlcondition
-  failurePolicy: Fail
-  name: valertsnrqlcondition.kb.io
-  rules:
-  - apiGroups:
-    - nr.k8s.newrelic.com
-    apiVersions:
-    - v1
-    operations:
-    - CREATE
-    - UPDATE
-    resources:
-    - alertsnrqlconditions
-- clientConfig:
-    caBundle: Cg==
-    service:
-      name: webhook-service
-      namespace: system
-      path: /validate-nr-k8s-newrelic-com-v1-alertspolicy
-  failurePolicy: Fail
-  name: valertspolicy.kb.io
-  rules:
-  - apiGroups:
-    - nr.k8s.newrelic.com
-    apiVersions:
-    - v1
-    operations:
-    - CREATE
-    - UPDATE
-    resources:
-    - alertspolicies
+  apiVersion: admissionregistration.k8s.io/v1beta1
+  kind: MutatingWebhookConfiguration
+  metadata:
+    creationTimestamp: null
+    name: mutating-webhook-configuration
+  webhooks:
+  - clientConfig:
+      caBundle: Cg==
+      service:
+        name: webhook-service
+        namespace: system
+        path: /mutate-nr-k8s-newrelic-com-v1-alertsapmcondition
+    failurePolicy: Fail
+    name: malertsapmcondition.kb.io
+    rules:
+    - apiGroups:
+      - nr.k8s.newrelic.com
+      apiVersions:
+      - v1
+      operations:
+      - CREATE
+      - UPDATE
+      resources:
+      - alertsapmconditions
+    sideEffects: None
+  - clientConfig:
+      caBundle: Cg==
+      service:
+        name: webhook-service
+        namespace: system
+        path: /mutate-nr-k8s-newrelic-com-v1-alertsnrqlcondition
+    failurePolicy: Fail
+    name: malertsnrqlcondition.kb.io
+    rules:
+    - apiGroups:
+      - nr.k8s.newrelic.com
+      apiVersions:
+      - v1
+      operations:
+      - CREATE
+      - UPDATE
+      resources:
+      - alertsnrqlconditions
+    sideEffects: None
+  - clientConfig:
+      caBundle: Cg==
+      service:
+        name: webhook-service
+        namespace: system
+        path: /mutate-nr-k8s-newrelic-com-v1-alertspolicy
+    failurePolicy: Fail
+    name: malertspolicy.kb.io
+    rules:
+    - apiGroups:
+      - nr.k8s.newrelic.com
+      apiVersions:
+      - v1
+      operations:
+      - CREATE
+      - UPDATE
+      resources:
+      - alertspolicies
+    sideEffects: None
+  - clientConfig:
+      caBundle: Cg==
+      service:
+        name: webhook-service
+        namespace: system
+        path: /mutate-nr-k8s-newrelic-com-v1-alertschannel
+    failurePolicy: Fail
+    name: malertschannel.kb.io
+    rules:
+    - apiGroups:
+      - nr.k8s.newrelic.com
+      apiVersions:
+      - v1
+      operations:
+      - CREATE
+      - UPDATE
+      resources:
+      - alertschannels
+    sideEffects: None
+  - clientConfig:
+      caBundle: Cg==
+      service:
+        name: webhook-service
+        namespace: system
+        path: /mutate-nr-k8s-newrelic-com-v1-apmalertcondition
+    failurePolicy: Fail
+    name: mapmalertcondition.kb.io
+    rules:
+    - apiGroups:
+      - nr.k8s.newrelic.com
+      apiVersions:
+      - v1
+      operations:
+      - CREATE
+      - UPDATE
+      resources:
+      - apmalertconditions
+    sideEffects: None
+  - clientConfig:
+      caBundle: Cg==
+      service:
+        name: webhook-service
+        namespace: system
+        path: /mutate-nr-k8s-newrelic-com-v1-nrqlalertcondition
+    failurePolicy: Fail
+    name: mnrqlalertcondition.kb.io
+    rules:
+    - apiGroups:
+      - nr.k8s.newrelic.com
+      apiVersions:
+      - v1
+      operations:
+      - CREATE
+      - UPDATE
+      resources:
+      - nrqlalertconditions
+    sideEffects: None
+  - clientConfig:
+      caBundle: Cg==
+      service:
+        name: webhook-service
+        namespace: system
+        path: /mutate-nr-k8s-newrelic-com-v1-policy
+    failurePolicy: Fail
+    name: mpolicy.kb.io
+    rules:
+    - apiGroups:
+      - nr.k8s.newrelic.com
+      apiVersions:
+      - v1
+      operations:
+      - CREATE
+      - UPDATE
+      resources:
+      - policies
+    sideEffects: None
+  
+  ---
+  apiVersion: admissionregistration.k8s.io/v1beta1
+  kind: ValidatingWebhookConfiguration
+  metadata:
+    creationTimestamp: null
+    name: validating-webhook-configuration
+  webhooks:
+  - clientConfig:
+      caBundle: Cg==
+      service:
+        name: webhook-service
+        namespace: system
+        path: /validate-nr-k8s-newrelic-com-v1-alertsapmcondition
+    failurePolicy: Fail
+    name: valertsapmcondition.kb.io
+    rules:
+    - apiGroups:
+      - nr.k8s.newrelic.com
+      apiVersions:
+      - v1
+      operations:
+      - CREATE
+      - UPDATE
+      resources:
+      - alertsapmconditions
+    sideEffects: None
+  - clientConfig:
+      caBundle: Cg==
+      service:
+        name: webhook-service
+        namespace: system
+        path: /validate-nr-k8s-newrelic-com-v1-alertsnrqlcondition
+    failurePolicy: Fail
+    name: valertsnrqlcondition.kb.io
+    rules:
+    - apiGroups:
+      - nr.k8s.newrelic.com
+      apiVersions:
+      - v1
+      operations:
+      - CREATE
+      - UPDATE
+      resources:
+      - alertsnrqlconditions
+    sideEffects: None
+  - clientConfig:
+      caBundle: Cg==
+      service:
+        name: webhook-service
+        namespace: system
+        path: /validate-nr-k8s-newrelic-com-v1-alertspolicy
+    failurePolicy: Fail
+    name: valertspolicy.kb.io
+    rules:
+    - apiGroups:
+      - nr.k8s.newrelic.com
+      apiVersions:
+      - v1
+      operations:
+      - CREATE
+      - UPDATE
+      resources:
+      - alertspolicies
+    sideEffects: None
+  - clientConfig:
+      caBundle: Cg==
+      service:
+        name: webhook-service
+        namespace: system
+        path: /validate-nr-k8s-newrelic-com-v1-alertschannel
+    failurePolicy: Fail
+    name: valertschannel.kb.io
+    rules:
+    - apiGroups:
+      - nr.k8s.newrelic.com
+      apiVersions:
+      - v1
+      operations:
+      - CREATE
+      - UPDATE
+      resources:
+      - alertschannels
+    sideEffects: None
+  - clientConfig:
+      caBundle: Cg==
+      service:
+        name: webhook-service
+        namespace: system
+        path: /validate-nr-k8s-newrelic-com-v1-apmalertcondition
+    failurePolicy: Fail
+    name: vapmalertcondition.kb.io
+    rules:
+    - apiGroups:
+      - nr.k8s.newrelic.com
+      apiVersions:
+      - v1
+      operations:
+      - CREATE
+      - UPDATE
+      resources:
+      - apmalertconditions
+    sideEffects: None
+  - clientConfig:
+      caBundle: Cg==
+      service:
+        name: webhook-service
+        namespace: system
+        path: /validate-nr-k8s-newrelic-com-v1-nrqlalertcondition
+    failurePolicy: Fail
+    name: vnrqlalertcondition.kb.io
+    rules:
+    - apiGroups:
+      - nr.k8s.newrelic.com
+      apiVersions:
+      - v1
+      operations:
+      - CREATE
+      - UPDATE
+      resources:
+      - nrqlalertconditions
+    sideEffects: None
+  - clientConfig:
+      caBundle: Cg==
+      service:
+        name: webhook-service
+        namespace: system
+        path: /validate-nr-k8s-newrelic-com-v1-policy
+    failurePolicy: Fail
+    name: vpolicy.kb.io
+    rules:
+    - apiGroups:
+      - nr.k8s.newrelic.com
+      apiVersions:
+      - v1
+      operations:
+      - CREATE
+      - UPDATE
+      resources:
+      - policies
+    sideEffects: None
+  

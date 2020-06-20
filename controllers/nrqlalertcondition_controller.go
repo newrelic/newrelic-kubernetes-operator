@@ -205,6 +205,7 @@ func (r *NrqlAlertConditionReconciler) checkForExistingCondition(condition *nral
 
 func (r *NrqlAlertConditionReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	r.AlertClientFunc = interfaces.InitializeAlertsClient
+
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&nralertsv1.NrqlAlertCondition{}).
 		Complete(r)
@@ -216,6 +217,7 @@ func containsString(slice []string, s string) bool {
 			return true
 		}
 	}
+
 	return false
 }
 
@@ -228,8 +230,10 @@ func (r *NrqlAlertConditionReconciler) deleteNewRelicAlertCondition(condition nr
 			"region", condition.Spec.Region,
 			"Api Key", interfaces.PartialAPIKey(r.apiKey),
 		)
+
 		return err
 	}
+
 	return nil
 }
 
@@ -240,22 +244,26 @@ func removeString(slice []string, s string) (result []string) {
 		}
 		result = append(result, item)
 	}
+
 	return
 }
 
 func (r *NrqlAlertConditionReconciler) getAPIKeyOrSecret(condition nralertsv1.NrqlAlertCondition) string {
-
 	if condition.Spec.APIKey != "" {
 		return condition.Spec.APIKey
 	}
+
 	if condition.Spec.APIKeySecret != (nralertsv1.NewRelicAPIKeySecret{}) {
 		key := types.NamespacedName{Namespace: condition.Spec.APIKeySecret.Namespace, Name: condition.Spec.APIKeySecret.Name}
 		var apiKeySecret v1.Secret
 		if getErr := r.Client.Get(context.Background(), key, &apiKeySecret); getErr != nil {
 			r.Log.Error(getErr, "Error retrieving secret", "secret", apiKeySecret)
+
 			return ""
 		}
+
 		return string(apiKeySecret.Data[condition.Spec.APIKeySecret.KeyName])
 	}
+
 	return ""
 }

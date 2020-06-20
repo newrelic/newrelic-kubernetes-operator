@@ -66,16 +66,13 @@ var _ = Describe("apmAlertCondition_webhook", func() {
 	})
 	Context("ValidateCreate", func() {
 		Context("With a valid Apm Condition", func() {
-
 			It("Should create the apm condition", func() {
 				err := r.ValidateCreate()
 				Expect(err).ToNot(HaveOccurred())
-
 			})
 		})
 
 		Context("With an invalid Type", func() {
-
 			BeforeEach(func() {
 				r.Spec.Type = "burritos"
 			})
@@ -88,7 +85,6 @@ var _ = Describe("apmAlertCondition_webhook", func() {
 		})
 
 		Context("With an invalid Metric", func() {
-
 			BeforeEach(func() {
 				r.Spec.Type = "moar burritos"
 			})
@@ -99,13 +95,12 @@ var _ = Describe("apmAlertCondition_webhook", func() {
 				Expect(err.Error()).To(ContainSubstring("moar burritos"))
 			})
 		})
-		Context("With an invalid Terms", func() {
 
+		Context("With an invalid Terms", func() {
 			BeforeEach(func() {
 				r.Spec.Terms[0].TimeFunction = "moar burritos"
 				r.Spec.Terms[0].Priority = "moar tacos"
 				r.Spec.Terms[0].Operator = "moar hamburgers"
-
 			})
 
 			It("Should reject the apm condition creation", func() {
@@ -118,7 +113,6 @@ var _ = Describe("apmAlertCondition_webhook", func() {
 		})
 
 		Context("With an invalid userDefined type", func() {
-
 			BeforeEach(func() {
 				r.Spec.UserDefined = alerts.ConditionUserDefined{
 					Metric:        "Custom/foo",
@@ -155,5 +149,4 @@ var _ = Describe("apmAlertCondition_webhook", func() {
 			})
 		})
 	})
-
 })

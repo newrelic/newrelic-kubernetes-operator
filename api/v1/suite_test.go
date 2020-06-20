@@ -66,5 +66,6 @@ func ignoreAlreadyExists(err error) error {
 	if apierrors.IsAlreadyExists(err) {
 		return nil
 	}
+
 	return err
 }

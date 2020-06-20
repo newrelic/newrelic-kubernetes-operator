@@ -1,0 +1,218 @@
+
+---
+apiVersion: apiextensions.k8s.io/v1beta1
+kind: CustomResourceDefinition
+metadata:
+  annotations:
+    controller-gen.kubebuilder.io/version: v0.3.0
+  creationTimestamp: null
+  name: alertschannels.nr.k8s.newrelic.com
+spec:
+  additionalPrinterColumns:
+  - JSONPath: .status.created
+    name: Created
+    type: boolean
+  group: nr.k8s.newrelic.com
+  names:
+    kind: AlertsChannel
+    listKind: AlertsChannelList
+    plural: alertschannels
+    singular: alertschannel
+  scope: Namespaced
+  subresources: {}
+  validation:
+    openAPIV3Schema:
+      description: AlertsChannel is the Schema for the AlertsChannel API
+      properties:
+        apiVersion:
+          description: 'APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+          type: string
+        kind:
+          description: 'Kind is a string value representing the REST resource this object represents. Servers may infer this from the endpoint the client submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+          type: string
+        metadata:
+          type: object
+        spec:
+          description: AlertsChannelSpec defines the desired state of AlertsChannel
+          properties:
+            api_key:
+              type: string
+            api_key_secret:
+              properties:
+                key_name:
+                  type: string
+                name:
+                  type: string
+                namespace:
+                  type: string
+              type: object
+            configuration:
+              description: AlertsChannelConfiguration - copy of alerts.ChannelConfiguration
+              properties:
+                api_key:
+                  type: string
+                auth_password:
+                  type: string
+                auth_token:
+                  type: string
+                auth_username:
+                  type: string
+                base_url:
+                  type: string
+                channel:
+                  type: string
+                include_json_attachment:
+                  type: string
+                key:
+                  type: string
+                payload_type:
+                  type: string
+                recipients:
+                  type: string
+                region:
+                  type: string
+                route_key:
+                  type: string
+                service_key:
+                  type: string
+                tags:
+                  type: string
+                teams:
+                  type: string
+                url:
+                  type: string
+                user_id:
+                  type: string
+              type: object
+            id:
+              type: integer
+            links:
+              description: ChannelLinks - copy of alerts.ChannelLinks
+              properties:
+                policy_ids:
+                  items:
+                    type: integer
+                  type: array
+                policy_kubernetes_objects:
+                  items:
+                    type: object
+                  type: array
+                policy_names:
+                  items:
+                    type: string
+                  type: array
+              type: object
+            name:
+              type: string
+            region:
+              type: string
+            type:
+              type: string
+          required:
+          - name
+          type: object
+        status:
+          description: AlertsChannelStatus defines the observed state of AlertsChannel
+          properties:
+            applied_spec:
+              description: AlertsChannelSpec defines the desired state of AlertsChannel
+              properties:
+                api_key:
+                  type: string
+                api_key_secret:
+                  properties:
+                    key_name:
+                      type: string
+                    name:
+                      type: string
+                    namespace:
+                      type: string
+                  type: object
+                configuration:
+                  description: AlertsChannelConfiguration - copy of alerts.ChannelConfiguration
+                  properties:
+                    api_key:
+                      type: string
+                    auth_password:
+                      type: string
+                    auth_token:
+                      type: string
+                    auth_username:
+                      type: string
+                    base_url:
+                      type: string
+                    channel:
+                      type: string
+                    include_json_attachment:
+                      type: string
+                    key:
+                      type: string
+                    payload_type:
+                      type: string
+                    recipients:
+                      type: string
+                    region:
+                      type: string
+                    route_key:
+                      type: string
+                    service_key:
+                      type: string
+                    tags:
+                      type: string
+                    teams:
+                      type: string
+                    url:
+                      type: string
+                    user_id:
+                      type: string
+                  type: object
+                id:
+                  type: integer
+                links:
+                  description: ChannelLinks - copy of alerts.ChannelLinks
+                  properties:
+                    policy_ids:
+                      items:
+                        type: integer
+                      type: array
+                    policy_kubernetes_objects:
+                      items:
+                        type: object
+                      type: array
+                    policy_names:
+                      items:
+                        type: string
+                      type: array
+                  type: object
+                name:
+                  type: string
+                region:
+                  type: string
+                type:
+                  type: string
+              required:
+              - name
+              type: object
+            appliedPolicyIDs:
+              items:
+                type: integer
+              type: array
+            channel_id:
+              type: integer
+          required:
+          - appliedPolicyIDs
+          - applied_spec
+          - channel_id
+          type: object
+      type: object
+  version: v1
+  versions:
+  - name: v1
+    served: true
+    storage: true
+status:
+  acceptedNames:
+    kind: ""
+    plural: ""
+  conditions: []
+  storedVersions: []
