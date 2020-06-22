@@ -5,3 +5,5 @@ resources:
 images:
 - name: newrelic/kubernetes-operator
   newTag: dev
+patchesStrategicMerge:
+- new_relic_license_key_patch.yaml
