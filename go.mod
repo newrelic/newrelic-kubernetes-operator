@@ -15,12 +15,12 @@ require (
 	github.com/goreleaser/goreleaser v0.137.0
 	github.com/hashicorp/golang-lru v0.5.4 // indirect
 	github.com/maxbrunsfeld/counterfeiter/v6 v6.2.3
+	github.com/newrelic/go-agent/v3 v3.7.0
 	github.com/newrelic/newrelic-client-go v0.28.1
 	github.com/onsi/ginkgo v1.12.0
 	github.com/onsi/gomega v1.10.0
 	github.com/prometheus/client_golang v1.6.0 // indirect
 	github.com/prometheus/common v0.10.0 // indirect
-	github.com/securego/gosec v0.0.0-20200316084457-7da9f46445fd // indirect
 	github.com/stretchr/testify v1.6.0
 	golang.org/x/crypto v0.0.0-20200510223506-06a226fb4e37 // indirect
 	golang.org/x/net v0.0.0-20200528225125-3c3fba18258b // indirect
