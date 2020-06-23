@@ -31,6 +31,7 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
+	newrelic "github.com/newrelic/go-agent/v3/newrelic"
 	"github.com/newrelic/newrelic-client-go/pkg/alerts"
 
 	nrv1 "github.com/newrelic/newrelic-kubernetes-operator/api/v1"
@@ -46,6 +47,8 @@ type AlertsChannelReconciler struct {
 	apiKey          string
 	Alerts          interfaces.NewRelicAlertsClient
 	ctx             context.Context
+	NewRelicAgent   newrelic.Application
+	txn             newrelic.Transaction
 }
 
 // +kubebuilder:rbac:groups=nr.k8s.newrelic.com,resources=alertschannel,verbs=get;list;watch;create;update;patch;delete
@@ -57,6 +60,9 @@ func (r *AlertsChannelReconciler) Reconcile(req ctrl.Request) (ctrl.Result, erro
 
 	r.ctx = context.Background()
 	r.Log.WithValues("alertsChannel", req.NamespacedName)
+
+	r.txn = *r.NewRelicAgent.StartTransaction("Reconcile/Alerts/Channel")
+	defer r.txn.End()
 
 	err := r.Client.Get(r.ctx, req.NamespacedName, &alertsChannel)
 	if err != nil {
@@ -133,6 +139,7 @@ func (r *AlertsChannelReconciler) SetupWithManager(mgr ctrl.Manager) error {
 }
 
 func (r *AlertsChannelReconciler) getAPIKeyOrSecret(alertschannel nrv1.AlertsChannel) string {
+	defer r.txn.StartSegment("getAPIKeyOrSecret").End()
 	if alertschannel.Spec.APIKey != "" {
 		return alertschannel.Spec.APIKey
 	}
@@ -155,6 +162,7 @@ func (r *AlertsChannelReconciler) getAPIKeyOrSecret(alertschannel nrv1.AlertsCha
 }
 
 func (r *AlertsChannelReconciler) deleteAlertsChannel(alertsChannel *nrv1.AlertsChannel, deleteFinalizer string) (err error) {
+	defer r.txn.StartSegment("deleteAlertsChannel").End()
 	r.Log.Info("Deleting AlertsChannel", "name", alertsChannel.Name, "ChannelName", alertsChannel.Spec.Name)
 
 	if alertsChannel.Status.ChannelID != 0 {
@@ -178,6 +186,7 @@ func (r *AlertsChannelReconciler) deleteAlertsChannel(alertsChannel *nrv1.Alerts
 }
 
 func (r *AlertsChannelReconciler) createAlertsChannel(alertsChannel *nrv1.AlertsChannel) error {
+	defer r.txn.StartSegment("createAlertsChannel").End()
 	r.Log.Info("Creating AlertsChannel", "name", alertsChannel.Name, "ChannelName", alertsChannel.Spec.Name)
 	APIChannel := alertsChannel.Spec.APIChannel()
 
@@ -220,6 +229,7 @@ func (r *AlertsChannelReconciler) createAlertsChannel(alertsChannel *nrv1.Alerts
 }
 
 func (r *AlertsChannelReconciler) updateAlertsChannel(alertsChannel *nrv1.AlertsChannel) error {
+	defer r.txn.StartSegment("updateAlertsChannel").End()
 	r.Log.Info("Updating AlertsChannel", "name", alertsChannel.Name, "ChannelName", alertsChannel.Spec.Name)
 
 	//Check to see if update is needed
@@ -299,6 +309,7 @@ func (r *AlertsChannelReconciler) updateAlertsChannel(alertsChannel *nrv1.Alerts
 }
 
 func (r *AlertsChannelReconciler) checkForExistingAlertsChannel(alertsChannel *nrv1.AlertsChannel) {
+	defer r.txn.StartSegment("checkForExistingAlertsChannel").End()
 	r.Log.Info("Checking for existing Channels matching name: " + alertsChannel.Spec.Name)
 	retrievedChannels, err := r.Alerts.ListChannels()
 
@@ -333,6 +344,7 @@ func (r *AlertsChannelReconciler) checkForExistingAlertsChannel(alertsChannel *n
 }
 
 func (r *AlertsChannelReconciler) getAllPolicyIDs(alertsChannelSpec *nrv1.AlertsChannelSpec) (policyIDs []int, err error) {
+	defer r.txn.StartSegment("getAllPolicyIDs").End()
 	var retrievedPolicies []alerts.Policy
 	policyIDMap := make(map[int]bool)
 

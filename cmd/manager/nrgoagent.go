@@ -7,7 +7,7 @@ import (
 )
 
 //InitializeNRAgent - Initializes the NR Agent
-func InitializeNRAgent() *newrelic.Application {
+func InitializeNRAgent() newrelic.Application {
 
 	app, err := newrelic.NewApplication(
 		//Set a default name which will be overridden by ENV values if provided
@@ -20,5 +20,5 @@ func InitializeNRAgent() *newrelic.Application {
 		fmt.Println("unable to create New Relic Application", err)
 	}
 
-	return app
+	return *app
 }

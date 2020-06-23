@@ -40,6 +40,7 @@ func registerAlerts(mgr *ctrl.Manager) error {
 		Log:             ctrl.Log.WithName("controllers").WithName("NrqlAlertCondition"),
 		Scheme:          (*mgr).GetScheme(),
 		AlertClientFunc: interfaces.InitializeAlertsClient,
+		NewRelicAgent:   nrApp,
 	}
 
 	if err := nrqlAlertConditionReconciler.SetupWithManager(*mgr); err != nil {
@@ -59,6 +60,7 @@ func registerAlerts(mgr *ctrl.Manager) error {
 		Log:             ctrl.Log.WithName("controllers").WithName("AlertsNrqlCondition"),
 		Scheme:          (*mgr).GetScheme(),
 		AlertClientFunc: interfaces.InitializeAlertsClient,
+		NewRelicAgent:   nrApp,
 	}
 
 	if err := alertsNrqlConditionReconciler.SetupWithManager(*mgr); err != nil {
@@ -78,6 +80,7 @@ func registerAlerts(mgr *ctrl.Manager) error {
 		Log:             ctrl.Log.WithName("controllers").WithName("ApmAlertCondition"),
 		Scheme:          (*mgr).GetScheme(),
 		AlertClientFunc: interfaces.InitializeAlertsClient,
+		NewRelicAgent:   nrApp,
 	}
 
 	if err := apmReconciler.SetupWithManager(*mgr); err != nil {
@@ -97,6 +100,7 @@ func registerAlerts(mgr *ctrl.Manager) error {
 		Log:             ctrl.Log.WithName("controllers").WithName("AlertsAPMCondition"),
 		Scheme:          (*mgr).GetScheme(),
 		AlertClientFunc: interfaces.InitializeAlertsClient,
+		NewRelicAgent:   nrApp,
 	}
 
 	if err := alertsAPMReconciler.SetupWithManager(*mgr); err != nil {
@@ -116,6 +120,7 @@ func registerAlerts(mgr *ctrl.Manager) error {
 		Log:             ctrl.Log.WithName("controllers").WithName("Policy"),
 		Scheme:          (*mgr).GetScheme(),
 		AlertClientFunc: interfaces.InitializeAlertsClient,
+		NewRelicAgent:   nrApp,
 	}
 
 	if err := policyReconciler.SetupWithManager(*mgr); err != nil {
@@ -135,6 +140,7 @@ func registerAlerts(mgr *ctrl.Manager) error {
 		Log:             ctrl.Log.WithName("controllers").WithName("alertsChannel"),
 		Scheme:          (*mgr).GetScheme(),
 		AlertClientFunc: interfaces.InitializeAlertsClient,
+		NewRelicAgent:   nrApp,
 	}
 
 	if err := alertsChannelReconciler.SetupWithManager(*mgr); err != nil {
@@ -154,6 +160,7 @@ func registerAlerts(mgr *ctrl.Manager) error {
 		Log:             ctrl.Log.WithName("controllers").WithName("AlertsPolicy"),
 		Scheme:          (*mgr).GetScheme(),
 		AlertClientFunc: interfaces.InitializeAlertsClient,
+		NewRelicAgent:   nrApp,
 	}
 	if err := alertsPolicyReconciler.SetupWithManager(*mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "AlertsPolicy")
