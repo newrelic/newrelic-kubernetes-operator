@@ -536,6 +536,9 @@ github.com/nakabonne/nestif v0.3.0 h1:+yOViDGhg8ygGrmII72nV9B/zGxY188TYpfolntsaP
 github.com/nakabonne/nestif v0.3.0/go.mod h1:dI314BppzXjJ4HsCnbo7XzrJHPszZsjnk5wEBSYHI2c=
 github.com/nbutton23/zxcvbn-go v0.0.0-20180912185939-ae427f1e4c1d h1:AREM5mwr4u1ORQBMvzfzBgpsctsbQikCVpvC+tX285E=
 github.com/nbutton23/zxcvbn-go v0.0.0-20180912185939-ae427f1e4c1d/go.mod h1:o96djdrsSGy3AWPyBgZMAGfxZNfgntdJG+11KU4QvbU=
+github.com/newrelic/go-agent v1.11.0 h1:jnd8+H6dB+93UTJHFT1wJoij5spKNN/xZ0nkw0kvt7o=
+github.com/newrelic/go-agent v3.7.0+incompatible h1:tH/g5xbCBhhEAaqUgdNEXVdK5Ah3YSXQWCoz6x61Vro=
+github.com/newrelic/go-agent v3.7.0+incompatible/go.mod h1:a8Fv1b/fYhFSReoTU6HDkTYIMZeSVNffmoS726Y0LzQ=
 github.com/newrelic/go-agent/v3 v3.7.0 h1:cPpvzLDfQZ0p0/nAIOKiojoAgiHi9MiLlLloJ9sQR2M=
 github.com/newrelic/go-agent/v3 v3.7.0/go.mod h1:1A1dssWBwzB7UemzRU6ZVaGDsI+cEn5/bNxI0wiYlIc=
 github.com/newrelic/newrelic-client-go v0.28.1 h1:kr1M8XGLjb4exzbl1NIa67Q4LAYalr/EWeKKd2wpbw8=

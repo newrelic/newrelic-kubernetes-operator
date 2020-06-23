@@ -25,6 +25,7 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 
 	newrelic "github.com/newrelic/go-agent/v3/newrelic"
+
 	"github.com/newrelic/newrelic-kubernetes-operator/interfaces"
 
 	"github.com/go-logr/logr"
