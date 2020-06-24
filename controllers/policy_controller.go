@@ -46,7 +46,7 @@ type PolicyReconciler struct {
 	Alerts          interfaces.NewRelicAlertsClient
 	ctx             context.Context
 	NewRelicAgent   newrelic.Application
-	txn             newrelic.Transaction
+	txn             *newrelic.Transaction
 }
 
 // +kubebuilder:rbac:groups=nr.k8s.newrelic.com,resources=policies,verbs=get;list;watch;create;update;patch;delete
@@ -56,7 +56,7 @@ func (r *PolicyReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 	r.ctx = context.Background()
 	_ = r.Log.WithValues("policy", req.NamespacedName)
 
-	r.txn = *r.NewRelicAgent.StartTransaction("Reconcile/Policy")
+	r.txn = r.NewRelicAgent.StartTransaction("Reconcile/Policy")
 	defer r.txn.End()
 
 	var policy nrv1.Policy

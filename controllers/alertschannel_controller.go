@@ -48,7 +48,7 @@ type AlertsChannelReconciler struct {
 	Alerts          interfaces.NewRelicAlertsClient
 	ctx             context.Context
 	NewRelicAgent   newrelic.Application
-	txn             newrelic.Transaction
+	txn             *newrelic.Transaction
 }
 
 // +kubebuilder:rbac:groups=nr.k8s.newrelic.com,resources=alertschannel,verbs=get;list;watch;create;update;patch;delete
@@ -61,7 +61,7 @@ func (r *AlertsChannelReconciler) Reconcile(req ctrl.Request) (ctrl.Result, erro
 	r.ctx = context.Background()
 	r.Log.WithValues("alertsChannel", req.NamespacedName)
 
-	r.txn = *r.NewRelicAgent.StartTransaction("Reconcile/Alerts/Channel")
+	r.txn = r.NewRelicAgent.StartTransaction("Reconcile/Alerts/AlertsPolicy")
 	defer r.txn.End()
 
 	err := r.Client.Get(r.ctx, req.NamespacedName, &alertsChannel)

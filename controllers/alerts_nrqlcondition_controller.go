@@ -50,7 +50,7 @@ type AlertsNrqlConditionReconciler struct {
 	AlertClientFunc func(string, string) (interfaces.NewRelicAlertsClient, error)
 	apiKey          string
 	NewRelicAgent   newrelic.Application
-	txn             newrelic.Transaction
+	txn             *newrelic.Transaction
 }
 
 // +kubebuilder:rbac:groups=nr.k8s.newrelic.com,resources=alertsnrqlconditions,verbs=get;list;watch;create;update;patch;delete
@@ -60,7 +60,7 @@ type AlertsNrqlConditionReconciler struct {
 func (r *AlertsNrqlConditionReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) { //nolint: gocyclo
 	ctx := context.Background()
 	_ = r.Log.WithValues("alertsnrqlcondition", req.NamespacedName)
-	r.txn = *r.NewRelicAgent.StartTransaction("Reconcile/Alerts/NrqlCondition")
+	r.txn = r.NewRelicAgent.StartTransaction("Reconcile/Alerts/NrqlCondition")
 	defer r.txn.End()
 
 	r.Log.Info("starting reconcile action")

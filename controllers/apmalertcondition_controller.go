@@ -44,7 +44,7 @@ type ApmAlertConditionReconciler struct {
 	apiKey          string
 	Alerts          interfaces.NewRelicAlertsClient
 	NewRelicAgent   newrelic.Application
-	txn             newrelic.Transaction
+	txn             *newrelic.Transaction
 }
 
 // +kubebuilder:rbac:groups=nr.k8s.newrelic.com,resources=apmalertconditions,verbs=get;list;watch;create;update;patch;delete
@@ -54,7 +54,7 @@ func (r *ApmAlertConditionReconciler) Reconcile(req ctrl.Request) (ctrl.Result, 
 	ctx := context.Background()
 	_ = r.Log.WithValues("apmalertcondition", req.NamespacedName)
 
-	r.txn = *r.NewRelicAgent.StartTransaction("Reconcile/ApmCondition")
+	r.txn = r.NewRelicAgent.StartTransaction("Reconcile/ApmCondition")
 	defer r.txn.End()
 
 	r.Log.Info("Starting reconcile action")

@@ -45,7 +45,7 @@ type AlertsAPMConditionReconciler struct {
 	apiKey          string
 	Alerts          interfaces.NewRelicAlertsClient
 	NewRelicAgent   newrelic.Application
-	txn             newrelic.Transaction
+	txn             *newrelic.Transaction
 }
 
 // +kubebuilder:rbac:groups=nr.k8s.newrelic.com,resources=alertsapmconditions,verbs=get;list;watch;create;update;patch;delete
@@ -53,8 +53,9 @@ type AlertsAPMConditionReconciler struct {
 
 // nolint:gocyclo
 func (r *AlertsAPMConditionReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
-	r.txn = *r.NewRelicAgent.StartTransaction("Reconcile/Alerts/apmCondition")
+	r.txn = r.NewRelicAgent.StartTransaction("Reconcile/Alerts/apmCondition")
 	defer r.txn.End()
+
 	ctx := context.Background()
 	_ = r.Log.WithValues("alertsapmcondition", req.NamespacedName)
 
