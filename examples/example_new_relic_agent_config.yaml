@@ -13,11 +13,11 @@ kind: ConfigMap
 metadata:
   name: nr-agent
   namespace: newrelic-kubernetes-operator-system
-  data:
-    # defaults to New Relic Kubernetes Operator
-    app-name: <your desired New Relic App name for the Operator>
-    # Defaults to collector.newrelic.com
-    host: <New Relic endpoint>
-    # Defaults to false
-    log-level: debug
+data:
+  # defaults to New Relic Kubernetes Operator
+  app-name: <your desired New Relic App name for the Operator>
+  # Defaults to collector.newrelic.com
+  host: <New Relic endpoint>
+  # Defaults to false
+  log-level: debug
     
