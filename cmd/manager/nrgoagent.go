@@ -18,6 +18,7 @@ func InitializeNRAgent() newrelic.Application {
 	// If an application could not be created then err will reveal why.
 	if err != nil {
 		fmt.Println("unable to create New Relic Application", err)
+		return newrelic.Application{}
 	}
 
 	return *app
