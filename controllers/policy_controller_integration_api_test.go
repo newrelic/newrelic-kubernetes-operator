@@ -44,7 +44,7 @@ func newIntegrationTestClient(t *testing.T) newrelic.NewRelic {
 func testSetup(t *testing.T, policy *nrv1.Policy) client.Client {
 	ctx := context.Background()
 	testEnv := &envtest.Environment{
-		CRDDirectoryPaths: []string{filepath.Join("..", "configs", "crd", "bases")},
+		CRDDirectoryPaths: []string{filepath.Join("..", "config", "crd", "bases")},
 	}
 
 	// var err error

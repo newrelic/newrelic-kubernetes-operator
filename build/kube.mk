@@ -6,7 +6,7 @@
 DOCKER_IMAGE   ?= newrelic/kubernetes-operator:snapshot
 # Produce CRDs that work back to Kubernetes 1.11 (no version conversion)
 CRD_OPTIONS    ?= "crd:trivialVersions=true"
-CONFIG_ROOT    ?= $(SRCDIR)/configs
+CONFIG_ROOT    ?= $(SRCDIR)/config
 RBAC_ROLE_NAME ?= manager-role
 
 # Install CRDs into a cluster
@@ -28,4 +28,4 @@ deploy: manifests docker-build
 # Generate manifests e.g. CRD, RBAC etc.
 manifests: tools
 	@echo "=== $(PROJECT_NAME) === [ manifests        ]: Generating manifests..."
-	@$(CONTROLLER_GEN) $(CRD_OPTIONS) rbac:roleName=$(RBAC_ROLE_NAME) webhook output:dir=$(CONFIG_ROOT) paths="./..." output:crd:artifacts:config=$(CONFIG_ROOT)/crd/bases
+	@$(CONTROLLER_GEN) $(CRD_OPTIONS) rbac:roleName=$(RBAC_ROLE_NAME) webhook paths="./..." output:crd:artifacts:config=$(CONFIG_ROOT)/crd/bases output:rbac:artifacts:config=$(CONFIG_ROOT)/rbac  output:webhook:artifacts:config=$(CONFIG_ROOT)/webhook
