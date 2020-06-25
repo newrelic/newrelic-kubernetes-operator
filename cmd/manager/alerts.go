@@ -31,9 +31,6 @@ func registerAlerts(mgr *ctrl.Manager) error {
 
 	// initialize NR go agent
 	nrApp := InitializeNRAgent()
-	myMap := make(map[string]interface{})
-	myMap["stuff"] = "thing"
-	nrApp.RecordCustomEvent("myEvent", myMap)
 	// nrqlalertcondition
 	nrqlAlertConditionReconciler := &controllers.NrqlAlertConditionReconciler{
 		Client:          (*mgr).GetClient(),
