@@ -12,7 +12,7 @@ rules:
 - apiGroups:
   - nr.k8s.newrelic.com
   resources:
-  - alertsapmconditionss
+  - alertsapmcondition
   verbs:
   - create
   - delete
