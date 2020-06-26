@@ -11,6 +11,7 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 
+	"github.com/newrelic/go-agent/v3/newrelic"
 	"github.com/newrelic/newrelic-client-go/pkg/alerts"
 
 	nrv1 "github.com/newrelic/newrelic-kubernetes-operator/api/v1"
@@ -64,11 +65,13 @@ var _ = Describe("AlertsChannel reconciliation", func() {
 		fakeAlertFunc = func(string, string) (interfaces.NewRelicAlertsClient, error) {
 			return alertsClient, nil
 		}
+		newRelicAgent := newrelic.Application{}
 
 		r = &AlertsChannelReconciler{
 			Client:          k8sClient,
 			Log:             logf.Log,
 			AlertClientFunc: fakeAlertFunc,
+			NewRelicAgent:   newRelicAgent,
 		}
 
 		namespacedName = types.NamespacedName{

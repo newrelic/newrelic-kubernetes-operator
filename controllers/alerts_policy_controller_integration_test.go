@@ -6,6 +6,7 @@ import (
 	"context"
 	"errors"
 
+	newrelic "github.com/newrelic/go-agent/v3/newrelic"
 	"github.com/newrelic/newrelic-client-go/pkg/alerts"
 	ctrl "sigs.k8s.io/controller-runtime"
 
@@ -57,10 +58,13 @@ var _ = Describe("alertspolicy reconciliation", func() {
 			}, nil
 		}
 
+		newRelicAgent := newrelic.Application{}
+
 		r = &AlertsPolicyReconciler{
 			Client:          k8sClient,
 			Log:             logf.Log,
 			AlertClientFunc: fakeAlertFunc,
+			NewRelicAgent:   newRelicAgent,
 		}
 
 		namespacedName = types.NamespacedName{
@@ -96,6 +100,7 @@ var _ = Describe("alertspolicy reconciliation", func() {
 				Client:          k8sClient,
 				Log:             logf.Log,
 				AlertClientFunc: fakeAlertFunc,
+				NewRelicAgent:   newrelic.Application{},
 			}
 
 			conditionSpec = &nrv1.AlertsPolicyConditionSpec{

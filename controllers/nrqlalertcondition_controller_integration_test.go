@@ -14,6 +14,7 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 
+	newrelic "github.com/newrelic/go-agent/v3/newrelic"
 	"github.com/newrelic/newrelic-client-go/pkg/alerts"
 
 	nrv1 "github.com/newrelic/newrelic-kubernetes-operator/api/v1"
@@ -71,10 +72,13 @@ var _ = Describe("NrqlCondition reconciliation", func() {
 			return alertsClient, nil
 		}
 
+		newRelicAgent := newrelic.Application{}
+
 		r = &NrqlAlertConditionReconciler{
 			Client:          k8sClient,
 			Log:             logf.Log,
 			AlertClientFunc: fakeAlertFunc,
+			NewRelicAgent:   newRelicAgent,
 		}
 
 		condition = &nrv1.NrqlAlertCondition{

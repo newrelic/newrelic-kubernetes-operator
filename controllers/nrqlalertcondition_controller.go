@@ -24,6 +24,8 @@ import (
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/types"
 
+	newrelic "github.com/newrelic/go-agent/v3/newrelic"
+
 	"github.com/newrelic/newrelic-kubernetes-operator/interfaces"
 
 	"github.com/go-logr/logr"
@@ -42,6 +44,8 @@ type NrqlAlertConditionReconciler struct {
 	Scheme          *runtime.Scheme
 	AlertClientFunc func(string, string) (interfaces.NewRelicAlertsClient, error)
 	apiKey          string
+	NewRelicAgent   newrelic.Application
+	txn             *newrelic.Transaction
 }
 
 // +kubebuilder:rbac:groups=nr.k8s.newrelic.com,resources=nrqlalertconditions,verbs=get;list;watch;create;update;patch;delete
@@ -50,6 +54,9 @@ type NrqlAlertConditionReconciler struct {
 func (r *NrqlAlertConditionReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 	ctx := context.Background()
 	_ = r.Log.WithValues("nrqlalertcondition", req.NamespacedName)
+
+	r.txn = r.NewRelicAgent.StartTransaction("Reconcile/NrqlCondition")
+	defer r.txn.End()
 
 	r.Log.Info("Starting reconcile action")
 	var condition nralertsv1.NrqlAlertCondition
@@ -181,6 +188,7 @@ func (r *NrqlAlertConditionReconciler) Reconcile(req ctrl.Request) (ctrl.Result,
 }
 
 func (r *NrqlAlertConditionReconciler) checkForExistingCondition(condition *nralertsv1.NrqlAlertCondition) {
+	defer r.txn.StartSegment("checkForExistingCondition").End()
 	if condition.Status.ConditionID == 0 {
 		r.Log.Info("Checking for existing condition", "conditionName", condition.Name)
 		//if no conditionId, get list of conditions and compare name
@@ -222,6 +230,7 @@ func containsString(slice []string, s string) bool {
 }
 
 func (r *NrqlAlertConditionReconciler) deleteNewRelicAlertCondition(condition nralertsv1.NrqlAlertCondition) error {
+	defer r.txn.StartSegment("deleteNewRelicAlertCondition").End()
 	r.Log.Info("Deleting condition", "conditionName", condition.Spec.Name)
 	_, err := r.Alerts.DeleteNrqlCondition(condition.Status.ConditionID)
 	if err != nil {
@@ -249,6 +258,7 @@ func removeString(slice []string, s string) (result []string) {
 }
 
 func (r *NrqlAlertConditionReconciler) getAPIKeyOrSecret(condition nralertsv1.NrqlAlertCondition) string {
+	defer r.txn.StartSegment("getAPIKeyOrSecret").End()
 	if condition.Spec.APIKey != "" {
 		return condition.Spec.APIKey
 	}

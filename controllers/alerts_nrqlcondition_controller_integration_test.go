@@ -10,6 +10,7 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 
+	newrelic "github.com/newrelic/go-agent/v3/newrelic"
 	"github.com/newrelic/newrelic-client-go/pkg/alerts"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -95,10 +96,13 @@ var _ = Describe("AlertsNrqlCondition reconciliation", func() {
 		}))
 		Expect(err).ToNot(HaveOccurred())
 
+		newrelicAgent := newrelic.Application{}
+
 		r = &AlertsNrqlConditionReconciler{
 			Client:          k8sClient,
 			Log:             logf.Log,
 			AlertClientFunc: mockAlertsClientFunc,
+			NewRelicAgent:   newrelicAgent,
 		}
 	})
 

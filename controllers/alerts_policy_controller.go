@@ -21,6 +21,7 @@ import (
 	"reflect"
 	"strings"
 
+	newrelic "github.com/newrelic/go-agent/v3/newrelic"
 	"github.com/newrelic/newrelic-client-go/pkg/alerts"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/types"
@@ -48,6 +49,8 @@ type AlertsPolicyReconciler struct {
 	apiKey          string
 	Alerts          interfaces.NewRelicAlertsClient
 	ctx             context.Context
+	NewRelicAgent   newrelic.Application
+	txn             *newrelic.Transaction
 }
 
 // +kubebuilder:rbac:groups=nr.k8s.newrelic.com,resources=alertspolicies,verbs=get;list;watch;create;update;patch;delete
@@ -56,6 +59,8 @@ type AlertsPolicyReconciler struct {
 func (r *AlertsPolicyReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 	r.ctx = context.Background()
 	_ = r.Log.WithValues("policy", req.NamespacedName)
+	r.txn = r.NewRelicAgent.StartTransaction("Reconcile/Alerts/AlertsPolicy")
+	defer r.txn.End()
 
 	var policy nrv1.AlertsPolicy
 	err := r.Client.Get(r.ctx, req.NamespacedName, &policy)
@@ -121,6 +126,7 @@ func (r *AlertsPolicyReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error
 }
 
 func (r *AlertsPolicyReconciler) createAlertsPolicy(policy *nrv1.AlertsPolicy) error {
+	defer r.txn.StartSegment("createAlertsPolicy").End()
 	p := alerts.AlertsPolicyInput{}
 	p.IncidentPreference = alerts.AlertsIncidentPreference(policy.Spec.IncidentPreference)
 	p.Name = policy.Spec.Name
@@ -159,6 +165,7 @@ func (r *AlertsPolicyReconciler) createAlertsPolicy(policy *nrv1.AlertsPolicy) e
 }
 
 func (r *AlertsPolicyReconciler) createConditions(policy *nrv1.AlertsPolicy) error {
+	defer r.txn.StartSegment("createConditions").End()
 	r.Log.Info("creating conditions for policy")
 
 	collectedErrors := new(customErrors.ErrorCollector)
@@ -194,6 +201,7 @@ type processedAlertsConditions struct {
 }
 
 func (r *AlertsPolicyReconciler) createOrUpdateCondition(policy *nrv1.AlertsPolicy, condition *nrv1.AlertsPolicyCondition) (*nrv1.AlertsPolicyCondition, error) {
+	defer r.txn.StartSegment("createOrUpdateCondition").End()
 	//loop through the policies, creating/updating as needed
 	r.Log.Info("Checking on condition", "resourceName", condition.Name, "conditionName", condition.Spec.Name)
 	//first we check to see if the name is set
@@ -235,6 +243,7 @@ func (r *AlertsPolicyReconciler) createOrUpdateCondition(policy *nrv1.AlertsPoli
 }
 
 func (r *AlertsPolicyReconciler) updateNrqlCondition(policy *nrv1.AlertsPolicy, condition *nrv1.AlertsPolicyCondition) error {
+	defer r.txn.StartSegment("updateNrqlCondition").End()
 	nrqlCondition := r.getAlertsNrqlConditionFromAlertsPolicyCondition(condition)
 
 	r.Log.Info("Found nrql condition to update", "retrievedCondition", nrqlCondition)
@@ -265,6 +274,7 @@ func (r *AlertsPolicyReconciler) updateNrqlCondition(policy *nrv1.AlertsPolicy, 
 }
 
 func (r *AlertsPolicyReconciler) updateApmCondition(policy *nrv1.AlertsPolicy, condition *nrv1.AlertsPolicyCondition) error {
+	defer r.txn.StartSegment("updateApmCondition").End()
 	apmCondition := r.getApmConditionFromAlertsPolicyCondition(condition)
 
 	r.Log.Info("Found apm condition to update", "retrievedCondition", apmCondition)
@@ -298,6 +308,7 @@ func (r *AlertsPolicyReconciler) updateApmCondition(policy *nrv1.AlertsPolicy, c
 }
 
 func (r *AlertsPolicyReconciler) createOrUpdateConditions(policy *nrv1.AlertsPolicy) error {
+	defer r.txn.StartSegment("createOrUpdateConditions").End()
 	if reflect.DeepEqual(policy.Spec.Conditions, policy.Status.AppliedSpec.Conditions) {
 		return nil
 	}
@@ -356,6 +367,7 @@ func (r *AlertsPolicyReconciler) createOrUpdateConditions(policy *nrv1.AlertsPol
 }
 
 func (r *AlertsPolicyReconciler) createNrqlCondition(policy *nrv1.AlertsPolicy, condition *nrv1.AlertsPolicyCondition) error {
+	defer r.txn.StartSegment("createNrqlCondition").End()
 	var alertsNrqlCondition nrv1.AlertsNrqlCondition
 	alertsNrqlCondition.GenerateName = policy.Name + "-condition-"
 	alertsNrqlCondition.Namespace = policy.Namespace
@@ -385,6 +397,7 @@ func (r *AlertsPolicyReconciler) createNrqlCondition(policy *nrv1.AlertsPolicy, 
 }
 
 func (r *AlertsPolicyReconciler) createApmCondition(policy *nrv1.AlertsPolicy, condition *nrv1.AlertsPolicyCondition) error {
+	defer r.txn.StartSegment("createApmCondition").End()
 	var apmCondition nrv1.AlertsAPMCondition
 	apmCondition.GenerateName = policy.Name + "-condition-"
 	apmCondition.Namespace = policy.Namespace
@@ -415,6 +428,7 @@ func (r *AlertsPolicyReconciler) createApmCondition(policy *nrv1.AlertsPolicy, c
 }
 
 func (r *AlertsPolicyReconciler) deleteCondition(condition *nrv1.AlertsPolicyCondition) error {
+	defer r.txn.StartSegment("deleteCondition").End()
 	r.Log.Info("Deleting condition", "condition", condition.Name, "conditionName", condition.Spec.Name)
 
 	var retrievedCondition runtime.Object
@@ -439,6 +453,7 @@ func (r *AlertsPolicyReconciler) deleteCondition(condition *nrv1.AlertsPolicyCon
 }
 
 func (r *AlertsPolicyReconciler) getAlertsNrqlConditionFromAlertsPolicyCondition(condition *nrv1.AlertsPolicyCondition) (nrqlCondition nrv1.AlertsNrqlCondition) {
+	defer r.txn.StartSegment("getAlertsNrqlConditionFromAlertsPolicyCondition").End()
 	r.Log.Info("condition before retrieval", "condition", condition)
 
 	//throw away the error since empty conditions are expected
@@ -449,6 +464,7 @@ func (r *AlertsPolicyReconciler) getAlertsNrqlConditionFromAlertsPolicyCondition
 }
 
 func (r *AlertsPolicyReconciler) getApmConditionFromAlertsPolicyCondition(condition *nrv1.AlertsPolicyCondition) (apmCondition nrv1.AlertsAPMCondition) {
+	defer r.txn.StartSegment("getApmConditionFromAlertsPolicyCondition").End()
 	r.Log.Info("apm condition before retrieval", "condition", condition)
 
 	//throw away the error since empty conditions are expected
@@ -459,6 +475,7 @@ func (r *AlertsPolicyReconciler) getApmConditionFromAlertsPolicyCondition(condit
 }
 
 func (r *AlertsPolicyReconciler) updateAlertsPolicy(policy *nrv1.AlertsPolicy) error {
+	defer r.txn.StartSegment("updateAlertsPolicy").End()
 	r.Log.Info("updating policy", "PolicyName", policy.Name)
 
 	//only update policy if policy fields have changed
@@ -502,6 +519,7 @@ func (r *AlertsPolicyReconciler) updateAlertsPolicy(policy *nrv1.AlertsPolicy) e
 }
 
 func (r *AlertsPolicyReconciler) deleteAlertsPolicy(ctx context.Context, policy *nrv1.AlertsPolicy, deleteFinalizer string) (ctrl.Result, error) {
+	defer r.txn.StartSegment("deleteAlertsPolicy").End()
 	// The object is being deleted
 	if containsString(policy.Finalizers, deleteFinalizer) {
 		// catch invalid state
@@ -557,6 +575,7 @@ func (r *AlertsPolicyReconciler) SetupWithManager(mgr ctrl.Manager) error {
 }
 
 func (r *AlertsPolicyReconciler) checkForExistingAlertsPolicy(policy *nrv1.AlertsPolicy) {
+	defer r.txn.StartSegment("checkForExistingAlertsPolicy").End()
 	if policy.Status.PolicyID != "" {
 		return
 	}
@@ -586,6 +605,7 @@ func (r *AlertsPolicyReconciler) checkForExistingAlertsPolicy(policy *nrv1.Alert
 }
 
 func (r *AlertsPolicyReconciler) deleteNewRelicAlertPolicy(policy *nrv1.AlertsPolicy) error {
+	defer r.txn.StartSegment("deleteNewRelicAlertPolicy").End()
 	r.Log.Info("Deleting policy", "policyName", policy.Spec.Name)
 
 	_, err := r.Alerts.DeletePolicyMutation(policy.Spec.AccountID, policy.Status.PolicyID)
@@ -603,6 +623,7 @@ func (r *AlertsPolicyReconciler) deleteNewRelicAlertPolicy(policy *nrv1.AlertsPo
 }
 
 func (r *AlertsPolicyReconciler) getAPIKeyOrSecret(policy nrv1.AlertsPolicy) string {
+	defer r.txn.StartSegment("getAPIKeyOrSecret").End()
 	if policy.Spec.APIKey != "" {
 		return policy.Spec.APIKey
 	}

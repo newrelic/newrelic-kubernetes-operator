@@ -5,3 +5,4 @@ resources:
 images:
 - name: newrelic/kubernetes-operator
   newTag: dev
+
