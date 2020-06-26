@@ -18,9 +18,10 @@ package main
 import (
 	"flag"
 	"fmt"
+	"os"
+
 	"github.com/newrelic/newrelic-kubernetes-operator/controllers"
 	"github.com/newrelic/newrelic-kubernetes-operator/interfaces"
-	"os"
 
 	"k8s.io/apimachinery/pkg/runtime"
 	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
