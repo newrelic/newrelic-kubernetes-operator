@@ -29,6 +29,8 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
+	newrelic "github.com/newrelic/go-agent/v3/newrelic"
+
 	nralertsv1 "github.com/newrelic/newrelic-kubernetes-operator/api/v1"
 	"github.com/newrelic/newrelic-kubernetes-operator/interfaces"
 )
@@ -41,6 +43,8 @@ type ApmAlertConditionReconciler struct {
 	AlertClientFunc func(string, string) (interfaces.NewRelicAlertsClient, error)
 	apiKey          string
 	Alerts          interfaces.NewRelicAlertsClient
+	NewRelicAgent   newrelic.Application
+	txn             *newrelic.Transaction
 }
 
 // +kubebuilder:rbac:groups=nr.k8s.newrelic.com,resources=apmalertconditions,verbs=get;list;watch;create;update;patch;delete
@@ -49,6 +53,9 @@ type ApmAlertConditionReconciler struct {
 func (r *ApmAlertConditionReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 	ctx := context.Background()
 	_ = r.Log.WithValues("apmalertcondition", req.NamespacedName)
+
+	r.txn = r.NewRelicAgent.StartTransaction("Reconcile/ApmCondition")
+	defer r.txn.End()
 
 	r.Log.Info("Starting reconcile action")
 	var condition nralertsv1.ApmAlertCondition
@@ -188,6 +195,7 @@ func (r *ApmAlertConditionReconciler) SetupWithManager(mgr ctrl.Manager) error {
 }
 
 func (r *ApmAlertConditionReconciler) checkForExistingCondition(condition *nralertsv1.ApmAlertCondition) {
+	defer r.txn.StartSegment("checkForExistingCondition").End()
 	if condition.Status.ConditionID == 0 {
 		r.Log.Info("Checking for existing condition", "conditionName", condition.Name)
 		//if no conditionId, get list of conditions and compare name
@@ -211,6 +219,7 @@ func (r *ApmAlertConditionReconciler) checkForExistingCondition(condition *nrale
 }
 
 func (r *ApmAlertConditionReconciler) deleteNewRelicAlertCondition(condition nralertsv1.ApmAlertCondition) error {
+	defer r.txn.StartSegment("deleteNewRelicAlertCondition").End()
 	r.Log.Info("Deleting condition", "conditionName", condition.Spec.Name)
 	_, err := r.Alerts.DeleteCondition(condition.Status.ConditionID)
 	if err != nil {
@@ -226,6 +235,7 @@ func (r *ApmAlertConditionReconciler) deleteNewRelicAlertCondition(condition nra
 }
 
 func (r *ApmAlertConditionReconciler) getAPIKeyOrSecret(condition nralertsv1.ApmAlertCondition) string {
+	defer r.txn.StartSegment("getAPIKeyOrSecret").End()
 	if condition.Spec.APIKey != "" {
 		return condition.Spec.APIKey
 	}

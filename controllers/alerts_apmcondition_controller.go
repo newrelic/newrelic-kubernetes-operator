@@ -30,6 +30,8 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
+	newrelic "github.com/newrelic/go-agent/v3/newrelic"
+
 	nralertsv1 "github.com/newrelic/newrelic-kubernetes-operator/api/v1"
 	"github.com/newrelic/newrelic-kubernetes-operator/interfaces"
 )
@@ -42,6 +44,8 @@ type AlertsAPMConditionReconciler struct {
 	AlertClientFunc func(string, string) (interfaces.NewRelicAlertsClient, error)
 	apiKey          string
 	Alerts          interfaces.NewRelicAlertsClient
+	NewRelicAgent   newrelic.Application
+	txn             *newrelic.Transaction
 }
 
 // +kubebuilder:rbac:groups=nr.k8s.newrelic.com,resources=alertsapmconditions,verbs=get;list;watch;create;update;patch;delete
@@ -49,6 +53,9 @@ type AlertsAPMConditionReconciler struct {
 
 // nolint:gocyclo
 func (r *AlertsAPMConditionReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
+	r.txn = r.NewRelicAgent.StartTransaction("Reconcile/Alerts/apmCondition")
+	defer r.txn.End()
+
 	ctx := context.Background()
 	_ = r.Log.WithValues("alertsapmcondition", req.NamespacedName)
 
@@ -196,6 +203,7 @@ func (r *AlertsAPMConditionReconciler) SetupWithManager(mgr ctrl.Manager) error 
 }
 
 func (r *AlertsAPMConditionReconciler) checkForExistingCondition(condition *nralertsv1.AlertsAPMCondition) {
+	defer r.txn.StartSegment("checkForExistingCondition").End()
 	if condition.Status.ConditionID == 0 {
 		r.Log.Info("Checking for existing condition", "conditionName", condition.Name)
 
@@ -226,6 +234,7 @@ func (r *AlertsAPMConditionReconciler) checkForExistingCondition(condition *nral
 }
 
 func (r *AlertsAPMConditionReconciler) deleteNewRelicAlertCondition(condition nralertsv1.AlertsAPMCondition) error {
+	defer r.txn.StartSegment("deleteNewRelicAlertCondition").End()
 	r.Log.Info("Deleting condition", "conditionName", condition.Spec.Name)
 
 	_, err := r.Alerts.DeleteCondition(condition.Status.ConditionID)
@@ -243,6 +252,7 @@ func (r *AlertsAPMConditionReconciler) deleteNewRelicAlertCondition(condition nr
 }
 
 func (r *AlertsAPMConditionReconciler) getAPIKeyOrSecret(condition nralertsv1.AlertsAPMCondition) string {
+	defer r.txn.StartSegment("getAPIKeyOrSecret").End()
 	if condition.Spec.APIKey != "" {
 		return condition.Spec.APIKey
 	}

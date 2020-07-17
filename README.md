@@ -235,6 +235,38 @@ The operator will create and update alert policies and NRQL alert conditions as 
 
     > <small>**Note:** The New Relic Alerts API does not allow updating Alerts Channels. In order to change a channel, you will need to either rename the k8s AlertsChannel object to create a new one and delete the old one or manually delete the k8s AlertsChannel object and create a new one. </small>
 
+### Monitoring the New Relic Operator
+
+The New Relic Operator uses the New Relic Go Agent to report monitoring statistics. 
+This can be activated by adding a Kubernetes Secret and an option ConfigMap to configure the agent. 
+We'll be using [Example_New_Relic_Agent_Config](examples/example_new_relic_agent_config.yaml) 
+
+```yaml
+apiVersion: v1
+kind: Secret
+metadata:
+  name: nr-agent
+  namespace: newrelic-kubernetes-operator-system
+type: Opaque
+stringData:
+  license-key: <your New Relic license key, base64 encoded>
+  
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: nr-agent
+  namespace: newrelic-kubernetes-operator-system
+data:
+  # defaults to New Relic Kubernetes Operator
+  app-name: <your desired New Relic App name for the Operator>
+  # Defaults to collector.newrelic.com
+  host: <New Relic endpoint>
+  # Defaults to false
+  log-level: debug
+```
+
+   > <small>**Note:** If the agent isn't reporting, make sure to check your base64 encoding didn't include a `/n` character. </small>
 
 
 ### Uninstall the operator
