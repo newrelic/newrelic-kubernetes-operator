@@ -77,12 +77,19 @@ func main() {
 		os.Exit(1)
 	}
 
-	// Register Alerts
-	err = registerAlerts(&mgr)
+	// initialize NR go agent
+	nrApp := InitializeNRAgent()
+
+	//Register Alerts
+	err = registerAlerts(&mgr, &nrApp)
 	if err != nil {
 		setupLog.Error(err, "unable to register alerts")
 		os.Exit(1)
 	}
+
+	// This marker is used by kubebuilder and must remain in main.go but generated code should be refactored to another class as appropriate
+	// This can likely be refactored once https://github.com/kubernetes-sigs/kubebuilder/blob/master/designs/simplified-scaffolding.md is completed
+	// +kubebuilder:scaffold:builder
 
 	setupLog.Info("starting manager")
 	if err := mgr.Start(ctrl.SetupSignalHandler()); err != nil {

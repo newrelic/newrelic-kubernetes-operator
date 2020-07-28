@@ -18,6 +18,7 @@ package main
 import (
 	"os"
 
+	"github.com/newrelic/go-agent/v3/newrelic"
 	_ "k8s.io/client-go/plugin/pkg/client/auth/gcp"
 	ctrl "sigs.k8s.io/controller-runtime"
 
@@ -27,17 +28,15 @@ import (
 	// +kubebuilder:scaffold:imports
 )
 
-func registerAlerts(mgr *ctrl.Manager) error {
+func registerAlerts(mgr *ctrl.Manager, nrApp *newrelic.Application) error {
 
-	// initialize NR go agent
-	nrApp := InitializeNRAgent()
 	// nrqlalertcondition
 	nrqlAlertConditionReconciler := &controllers.NrqlAlertConditionReconciler{
 		Client:          (*mgr).GetClient(),
 		Log:             ctrl.Log.WithName("controllers").WithName("NrqlAlertCondition"),
 		Scheme:          (*mgr).GetScheme(),
 		AlertClientFunc: interfaces.InitializeAlertsClient,
-		NewRelicAgent:   nrApp,
+		NewRelicAgent:   *nrApp,
 	}
 
 	if err := nrqlAlertConditionReconciler.SetupWithManager(*mgr); err != nil {
@@ -57,7 +56,7 @@ func registerAlerts(mgr *ctrl.Manager) error {
 		Log:             ctrl.Log.WithName("controllers").WithName("AlertsNrqlCondition"),
 		Scheme:          (*mgr).GetScheme(),
 		AlertClientFunc: interfaces.InitializeAlertsClient,
-		NewRelicAgent:   nrApp,
+		NewRelicAgent:   *nrApp,
 	}
 
 	if err := alertsNrqlConditionReconciler.SetupWithManager(*mgr); err != nil {
@@ -77,7 +76,7 @@ func registerAlerts(mgr *ctrl.Manager) error {
 		Log:             ctrl.Log.WithName("controllers").WithName("ApmAlertCondition"),
 		Scheme:          (*mgr).GetScheme(),
 		AlertClientFunc: interfaces.InitializeAlertsClient,
-		NewRelicAgent:   nrApp,
+		NewRelicAgent:   *nrApp,
 	}
 
 	if err := apmReconciler.SetupWithManager(*mgr); err != nil {
@@ -97,7 +96,7 @@ func registerAlerts(mgr *ctrl.Manager) error {
 		Log:             ctrl.Log.WithName("controllers").WithName("AlertsAPMCondition"),
 		Scheme:          (*mgr).GetScheme(),
 		AlertClientFunc: interfaces.InitializeAlertsClient,
-		NewRelicAgent:   nrApp,
+		NewRelicAgent:   *nrApp,
 	}
 
 	if err := alertsAPMReconciler.SetupWithManager(*mgr); err != nil {
@@ -117,7 +116,7 @@ func registerAlerts(mgr *ctrl.Manager) error {
 		Log:             ctrl.Log.WithName("controllers").WithName("Policy"),
 		Scheme:          (*mgr).GetScheme(),
 		AlertClientFunc: interfaces.InitializeAlertsClient,
-		NewRelicAgent:   nrApp,
+		NewRelicAgent:   *nrApp,
 	}
 
 	if err := policyReconciler.SetupWithManager(*mgr); err != nil {
@@ -137,7 +136,7 @@ func registerAlerts(mgr *ctrl.Manager) error {
 		Log:             ctrl.Log.WithName("controllers").WithName("alertsChannel"),
 		Scheme:          (*mgr).GetScheme(),
 		AlertClientFunc: interfaces.InitializeAlertsClient,
-		NewRelicAgent:   nrApp,
+		NewRelicAgent:   *nrApp,
 	}
 
 	if err := alertsChannelReconciler.SetupWithManager(*mgr); err != nil {
@@ -157,7 +156,7 @@ func registerAlerts(mgr *ctrl.Manager) error {
 		Log:             ctrl.Log.WithName("controllers").WithName("AlertsPolicy"),
 		Scheme:          (*mgr).GetScheme(),
 		AlertClientFunc: interfaces.InitializeAlertsClient,
-		NewRelicAgent:   nrApp,
+		NewRelicAgent:   *nrApp,
 	}
 	if err := alertsPolicyReconciler.SetupWithManager(*mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "AlertsPolicy")

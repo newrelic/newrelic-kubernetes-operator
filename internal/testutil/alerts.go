@@ -21,7 +21,7 @@ import (
 
 func AlertsPolicyTestSetup(t *testing.T) client.Client {
 	testEnv := &envtest.Environment{
-		CRDDirectoryPaths: []string{filepath.Join("..", "configs", "crd", "bases")},
+		CRDDirectoryPaths: []string{filepath.Join("..", "config", "crd", "bases")},
 	}
 
 	// var err error

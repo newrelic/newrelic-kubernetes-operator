@@ -66,7 +66,7 @@ Currently the operator supports managing the following resources:
 1. Install the operator in the test cluster.
 
    ```bash
-   kustomize build https://github.com/newrelic/newrelic-kubernetes-operator/configs/default | kubectl apply -f -
+   kustomize build https://github.com/newrelic/newrelic-kubernetes-operator/config/default | kubectl apply -f -
    ```
    > <small>**Note:** This will install operator on whatever kubernetes cluster kubectl is configured to use.</small>
 
@@ -81,7 +81,7 @@ If you want to deploy the operator in a custom container you can override the im
    kind: Kustomization
    namespace: newrelic-kubernetes-operator-system
    resources:
-     - github.com/newrelic/newrelic-kubernetes-operator/configs/default
+     - github.com/newrelic/newrelic-kubernetes-operator/config/default
    images:
      - name: newrelic/kubernetes-operator:snapshot
        newName: <CUSTOM_IMAGE>
@@ -274,7 +274,7 @@ data:
 The Operator can be removed with the reverse of installation, namely building the kubernetes resource files with `kustomize` and running `kubectl delete`
 
 ```bash
-kustomize build github.com/newrelic/newrelic-kubernetes-operator/configs/default | kubectl delete -f -
+kustomize build github.com/newrelic/newrelic-kubernetes-operator/config/default | kubectl delete -f -
 ```
 <br>
 
@@ -313,7 +313,7 @@ This section should get you set up properly for doing development on the operato
 1. Perform the steps from the [Quick Start](#quick-start) section, except use the following instead of step 4 to install with the :snapshot image:
 
    ```bash
-   kustomize build configs/developer | kubectl apply -f -
+   kustomize build config/developer | kubectl apply -f -
    ```
 
 1. Confirm your configuration was deployed to your local Kubernetes cluster (the one that we created with `kind`). <br>
