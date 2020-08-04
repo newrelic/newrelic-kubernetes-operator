@@ -5,8 +5,8 @@ kind: Kustomization
 images:
 - name: controller
   newName: newrelic/kubernetes-operator
-  newTag: 0.0.2
+  newTag: v0.0.3
 
 # This enables the New Relic agent for the New Relic Operator 
 patchesStrategicMerge:
-  - new_relic_agent_patch.yaml
+- new_relic_agent_patch.yaml
