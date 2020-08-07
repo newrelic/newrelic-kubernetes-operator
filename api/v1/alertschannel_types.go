@@ -52,6 +52,10 @@ type AlertsChannelConfiguration struct {
 	PayloadType           string `json:"payload_type,omitempty"`
 	Region                string `json:"region,omitempty"`
 	UserID                string `json:"user_id,omitempty"`
+
+	Payload map[string]string `json:"payload,omitempty"`
+
+	Headers map[string]string `json:"headers,omitempty"`
 }
 
 // +kubebuilder:object:root=true

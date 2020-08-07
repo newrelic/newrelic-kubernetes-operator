@@ -33,7 +33,7 @@ var _ = Describe("AlertsChannel_webhook", func() {
 				APIKey:       "api-key",
 				APIKeySecret: NewRelicAPIKeySecret{},
 				Region:       "US",
-				Type:         "email",
+				Type:         "webhook",
 				Links: ChannelLinks{
 					PolicyIDs: []int{
 						1,
@@ -41,7 +41,8 @@ var _ = Describe("AlertsChannel_webhook", func() {
 					},
 				},
 				Configuration: AlertsChannelConfiguration{
-					Recipients: "me@email.com",
+					BaseURL: "https://example.com",
+					Headers: map[string]string{"KEY": "VALUE"},
 				},
 			},
 		}
@@ -58,6 +59,9 @@ var _ = Describe("AlertsChannel_webhook", func() {
 			It("Should create the Alert Channel", func() {
 				err := r.ValidateCreate()
 				Expect(err).ToNot(HaveOccurred())
+				Expect(r.Spec.Type).To(Equal("webhook"))
+				Expect(r.Spec.Configuration.BaseURL).To(Equal("https://example.com"))
+				Expect(r.Spec.Configuration.Headers["KEY"]).To(Equal("VALUE"))
 			})
 		})
 
