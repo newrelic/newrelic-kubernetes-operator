@@ -10,7 +10,7 @@ before:
 builds:
   -
     id: newrelic
-    dir: cmd/manager
+    dir: .
     binary: manager
     env:
       - CGO_ENABLED=0
