@@ -1,5 +1,7 @@
+<a name="v0.0.4"></a>
+## [v0.0.4] - 2020-08-10
 <a name="v0.0.3"></a>
-## [v0.0.3] - 2020-08-03
+## [v0.0.3] - 2020-08-05
 ### Bug Fixes
 - **buikd:** match release manager docker image tag with goreleaser
 
@@ -67,5 +69,6 @@
 - **policy:** added policy condition creation and deletion
 - **policy:** added tests and default webhook for policy
 
-[Unreleased]: https://github.com/newrelic/newrelic-kubernetes-operator/compare/v0.0.3...HEAD
+[Unreleased]: https://github.com/newrelic/newrelic-kubernetes-operator/compare/v0.0.4...HEAD
+[v0.0.4]: https://github.com/newrelic/newrelic-kubernetes-operator/compare/v0.0.3...v0.0.4
 [v0.0.3]: https://github.com/newrelic/newrelic-kubernetes-operator/compare/v0.0.2...v0.0.3
