@@ -31,7 +31,7 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	newrelic "github.com/newrelic/go-agent/v3/newrelic"
+	"github.com/newrelic/go-agent/v3/newrelic"
 	"github.com/newrelic/newrelic-client-go/pkg/alerts"
 
 	nrv1 "github.com/newrelic/newrelic-kubernetes-operator/api/v1"
@@ -188,7 +188,10 @@ func (r *AlertsChannelReconciler) deleteAlertsChannel(alertsChannel *nrv1.Alerts
 func (r *AlertsChannelReconciler) createAlertsChannel(alertsChannel *nrv1.AlertsChannel) error {
 	defer r.txn.StartSegment("createAlertsChannel").End()
 	r.Log.Info("Creating AlertsChannel", "name", alertsChannel.Name, "ChannelName", alertsChannel.Spec.Name)
-	APIChannel := alertsChannel.Spec.APIChannel()
+	APIChannel, err := alertsChannel.Spec.APIChannel(r.Client)
+	if err != nil {
+		return err
+	}
 
 	r.Log.Info("API Payload before calling NR API", "APIChannel", APIChannel)
 
@@ -323,7 +326,11 @@ func (r *AlertsChannelReconciler) checkForExistingAlertsChannel(alertsChannel *n
 		if channel.Name == alertsChannel.Spec.Name {
 			channelID := channel.ID
 			channel.ID = 0
-			APIChannel := alertsChannel.Spec.APIChannel()
+			APIChannel, err := alertsChannel.Spec.APIChannel(r.Client)
+			if err != nil {
+				r.Log.Error(err, "Error parsing Alerts Channel configuration")
+				continue
+			}
 
 			if reflect.DeepEqual(&APIChannel, channel) {
 				r.Log.Info("Found matching Alerts Channel name from the New Relic API", "ID", channel.ID)

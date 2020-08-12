@@ -42,7 +42,12 @@ var _ = Describe("AlertsChannel_webhook", func() {
 				},
 				Configuration: AlertsChannelConfiguration{
 					BaseURL: "https://example.com",
-					Headers: map[string]string{"KEY": "VALUE"},
+					Headers: []ChannelHeader{
+						{
+							Name:  "KEY",
+							Value: "VALUE",
+						},
+					},
 				},
 			},
 		}
@@ -59,9 +64,6 @@ var _ = Describe("AlertsChannel_webhook", func() {
 			It("Should create the Alert Channel", func() {
 				err := r.ValidateCreate()
 				Expect(err).ToNot(HaveOccurred())
-				Expect(r.Spec.Type).To(Equal("webhook"))
-				Expect(r.Spec.Configuration.BaseURL).To(Equal("https://example.com"))
-				Expect(r.Spec.Configuration.Headers["KEY"]).To(Equal("VALUE"))
 			})
 		})
 

@@ -61,10 +61,29 @@ spec:
                   type: string
                 channel:
                   type: string
+                headers:
+                  items:
+                    properties:
+                      key_name:
+                        type: string
+                      name:
+                        type: string
+                      namespace:
+                        type: string
+                      secret:
+                        type: string
+                      value:
+                        type: string
+                    type: object
+                  type: array
                 include_json_attachment:
                   type: string
                 key:
                   type: string
+                payload:
+                  additionalProperties:
+                    type: string
+                  type: object
                 payload_type:
                   type: string
                 recipients:
@@ -143,10 +162,29 @@ spec:
                       type: string
                     channel:
                       type: string
+                    headers:
+                      items:
+                        properties:
+                          key_name:
+                            type: string
+                          name:
+                            type: string
+                          namespace:
+                            type: string
+                          secret:
+                            type: string
+                          value:
+                            type: string
+                        type: object
+                      type: array
                     include_json_attachment:
                       type: string
                     key:
                       type: string
+                    payload:
+                      additionalProperties:
+                        type: string
+                      type: object
                     payload_type:
                       type: string
                     recipients:

@@ -17,7 +17,7 @@ spec:
       - 1
     policy_names: 
       - "k8s created policy"
-      policy_kubernetes_objects: 
+    policy_kubernetes_objects:
       - name: "my-policy"
         namespace: "default"
   configuration: 

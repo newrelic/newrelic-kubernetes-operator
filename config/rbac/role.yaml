@@ -5,14 +5,11 @@ kind: ClusterRole
 metadata:
   creationTimestamp: null
   name: manager-role
-  labels:
-    rbac.authorization.k8s.io/aggregate-to-edit: "true"
-    rbac.authorization.k8s.io/aggregate-to-admin: "true"
 rules:
 - apiGroups:
   - nr.k8s.newrelic.com
   resources:
-  - alertsapmcondition
+  - alertsapmconditions
   verbs:
   - create
   - delete
