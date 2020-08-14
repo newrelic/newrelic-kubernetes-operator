@@ -29,7 +29,7 @@ rules:
 - apiGroups:
   - nr.k8s.newrelic.com
   resources:
-  - alertschannel
+  - alertschannels
   verbs:
   - create
   - delete
@@ -41,7 +41,7 @@ rules:
 - apiGroups:
   - nr.k8s.newrelic.com
   resources:
-  - alertschannel/status
+  - alertschannels/status
   verbs:
   - get
   - patch

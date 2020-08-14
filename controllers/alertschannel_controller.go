@@ -51,8 +51,8 @@ type AlertsChannelReconciler struct {
 	txn             *newrelic.Transaction
 }
 
-// +kubebuilder:rbac:groups=nr.k8s.newrelic.com,resources=alertschannel,verbs=get;list;watch;create;update;patch;delete
-// +kubebuilder:rbac:groups=nr.k8s.newrelic.com,resources=alertschannel/status,verbs=get;update;patch
+// +kubebuilder:rbac:groups=nr.k8s.newrelic.com,resources=alertschannels,verbs=get;list;watch;create;update;patch;delete
+// +kubebuilder:rbac:groups=nr.k8s.newrelic.com,resources=alertschannels/status,verbs=get;update;patch
 
 //Reconcile - Main processing loop for AlertsChannel reconciliation
 func (r *AlertsChannelReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
