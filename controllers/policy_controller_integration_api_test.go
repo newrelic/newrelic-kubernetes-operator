@@ -9,10 +9,10 @@ import (
 	"testing"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/kubernetes/scheme"
 	ctrl "sigs.k8s.io/controller-runtime"
-	"k8s.io/apimachinery/pkg/runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/envtest"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
@@ -67,8 +67,6 @@ func testSetup(t *testing.T, object runtime.Object) client.Client {
 
 	return k8sClient
 }
-
-
 
 func TestIntegrationPolicyController(t *testing.T) {
 	t.Parallel()
@@ -182,27 +180,26 @@ func TestIntegrationAlertsChannelController(t *testing.T) {
 	}
 
 	alertsChannel := &nrv1.AlertsChannel{
-			ObjectMeta: metav1.ObjectMeta{
-				Name:      "myalertschannel",
-				Namespace: "default",
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "myalertschannel",
+			Namespace: "default",
+		},
+		Spec: nrv1.AlertsChannelSpec{
+			Name:   "my alert channel",
+			APIKey: envAPIKey,
+			Region: envRegion,
+			Type:   "email",
+			Configuration: nrv1.AlertsChannelConfiguration{
+				Recipients: "me@email.com",
 			},
-			Spec: nrv1.AlertsChannelSpec{
-				Name:         "my alert channel",
-				APIKey:       envAPIKey,
-				Region:       envRegion,
-				Type:         "email",
-				Configuration: nrv1.AlertsChannelConfiguration{
-					Recipients: "me@email.com",
-				},
-			},
+		},
 
-			Status: nrv1.AlertsChannelStatus{
-				AppliedSpec:      &nrv1.AlertsChannelSpec{},
-				ChannelID:        0,
-				AppliedPolicyIDs: []int{},
-			},
-		}
-
+		Status: nrv1.AlertsChannelStatus{
+			AppliedSpec:      &nrv1.AlertsChannelSpec{},
+			ChannelID:        0,
+			AppliedPolicyIDs: []int{},
+		},
+	}
 
 	// Must come before calling reconciler.Reconcile()
 	k8sClient := testSetup(t, alertsChannel)
