@@ -12,6 +12,7 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/kubernetes/scheme"
 	ctrl "sigs.k8s.io/controller-runtime"
+	"k8s.io/apimachinery/pkg/runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/envtest"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
@@ -41,7 +42,7 @@ func newIntegrationTestClient(t *testing.T) newrelic.NewRelic {
 	return *client
 }
 
-func testSetup(t *testing.T, policy *nrv1.Policy) client.Client {
+func testSetup(t *testing.T, object runtime.Object) client.Client {
 	ctx := context.Background()
 	testEnv := &envtest.Environment{
 		CRDDirectoryPaths: []string{filepath.Join("..", "config", "crd", "bases")},
@@ -61,11 +62,13 @@ func testSetup(t *testing.T, policy *nrv1.Policy) client.Client {
 	require.NoError(t, err)
 	require.NotNil(t, k8sClient)
 
-	err = k8sClient.Create(ctx, policy)
+	err = k8sClient.Create(ctx, object)
 	require.NoError(t, err)
 
 	return k8sClient
 }
+
+
 
 func TestIntegrationPolicyController(t *testing.T) {
 	t.Parallel()
@@ -145,6 +148,75 @@ func TestIntegrationPolicyController(t *testing.T) {
 	}
 
 	reconciler := &PolicyReconciler{
+		Client:          k8sClient,
+		Log:             logf.Log,
+		AlertClientFunc: interfaces.InitializeAlertsClient,
+	}
+
+	// call reconcile
+	_, err := reconciler.Reconcile(request)
+	require.NoError(t, err)
+
+	// Deferred teardown
+	// defer func() {
+	// 	_, err := client.DeletePolicy(policy.ID)
+
+	// 	if err != nil {
+	// 		t.Logf("error cleaning up alert policy %d (%s): %s", policy.ID, policy.Name, err)
+	// 	}
+	// }()
+}
+
+func TestIntegrationAlertsChannelController(t *testing.T) {
+	t.Parallel()
+
+	envAPIKey := os.Getenv("NEW_RELIC_API_KEY")
+	envRegion := os.Getenv("NEW_RELIC_REGION")
+
+	if envAPIKey == "" {
+		t.Skipf("acceptance testing requires NEW_RELIC_API_KEY")
+	}
+
+	if envRegion == "" {
+		envRegion = "us"
+	}
+
+	alertsChannel := &nrv1.AlertsChannel{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      "myalertschannel",
+				Namespace: "default",
+			},
+			Spec: nrv1.AlertsChannelSpec{
+				Name:         "my alert channel",
+				APIKey:       envAPIKey,
+				Region:       envRegion,
+				Type:         "email",
+				Configuration: nrv1.AlertsChannelConfiguration{
+					Recipients: "me@email.com",
+				},
+			},
+
+			Status: nrv1.AlertsChannelStatus{
+				AppliedSpec:      &nrv1.AlertsChannelSpec{},
+				ChannelID:        0,
+				AppliedPolicyIDs: []int{},
+			},
+		}
+
+
+	// Must come before calling reconciler.Reconcile()
+	k8sClient := testSetup(t, alertsChannel)
+
+	namespacedName := types.NamespacedName{
+		Namespace: "default",
+		Name:      "myalertschannel",
+	}
+
+	request := ctrl.Request{
+		NamespacedName: namespacedName,
+	}
+
+	reconciler := &AlertsChannelReconciler{
 		Client:          k8sClient,
 		Log:             logf.Log,
 		AlertClientFunc: interfaces.InitializeAlertsClient,
