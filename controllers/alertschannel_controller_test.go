@@ -138,7 +138,7 @@ var _ = Describe("AlertsChannel reconciliation", func() {
 
 	Context("When starting with no alertsChannels", func() {
 		Context("and given a new alertsChannel", func() {
-			Context("with a valid alertsChannelSpec", func() {
+			Context("with a valid email alertsChannelSpec", func() {
 				BeforeEach(func() {
 					err = k8sClient.Create(ctx, alertsChannel)
 					Expect(err).ToNot(HaveOccurred())
@@ -178,6 +178,43 @@ var _ = Describe("AlertsChannel reconciliation", func() {
 					err = k8sClient.Get(ctx, namespacedName, &endStateAlertsChannel)
 					Expect(err).To(BeNil())
 					Expect(endStateAlertsChannel.Status.AppliedPolicyIDs).To(ContainElement(665544))
+				})
+			})
+
+			Context("with a valid webhook alertsChannelSpec", func() {
+				var endStateAlertsChannel nrv1.AlertsChannel
+				BeforeEach(func() {
+					alertsChannel.Spec.Type = "webhook"
+					alertsChannel.Spec.Configuration.Headers = []nrv1.ChannelHeader{
+						{Name: "HEADER", Value: "value"},
+					}
+					alertsChannel.Spec.Configuration.Payload = map[string]string{
+						"details": "$EVENT_DETAILS",
+					}
+
+					err = k8sClient.Create(ctx, alertsChannel)
+					Expect(err).ToNot(HaveOccurred())
+
+					_, err = r.Reconcile(request)
+					Expect(err).ToNot(HaveOccurred())
+
+					err = k8sClient.Get(ctx, namespacedName, &endStateAlertsChannel)
+					Expect(err).To(BeNil())
+				})
+
+				It("sets the channel type to webhook", func() {
+					Expect(endStateAlertsChannel.Spec.Type).To(Equal("webhook"))
+				})
+
+				It("sets the channel header configuration", func() {
+					header := endStateAlertsChannel.Spec.Configuration.Headers[0]
+					Expect(header.Name).To(Equal("HEADER"))
+					Expect(header.Value).To(Equal("value"))
+				})
+
+				It("sets the channel payload configuration", func() {
+					payload := endStateAlertsChannel.Spec.Configuration.Payload
+					Expect(payload["details"]).To(Equal("$EVENT_DETAILS"))
 				})
 			})
 

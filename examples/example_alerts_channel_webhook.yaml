@@ -1,0 +1,35 @@
+apiVersion: nr.k8s.newrelic.com/v1
+kind: AlertsChannel
+metadata:
+  name: my-channel1
+spec:
+  api_key: <your New Relic personal API key>
+  # api_key_secret:
+  #   name: nr-api-key
+  #   namespace: default
+  #   key_name: api-key
+  name: "my alert channel"
+  region: "US"
+  type: "webhook"
+  links:
+    # Policy links can be by NR PolicyID, NR PolicyName OR K8s AlertPolicy object reference
+    policy_ids:
+      - 1
+    policy_names:
+      - "k8s created policy"
+    policy_kubernetes_objects:
+      - name: "my-policy"
+        namespace: "default"
+  configuration:
+    url: "https://example.com/"
+    headers:
+      - name: WEBHOOK_SOURCE
+        value: newrelic
+      - name: SECRET_TOKEN
+        secret: secret
+        namespace: default
+        key_name: token
+    # see https://docs.newrelic.com/docs/alerts-applied-intelligence/new-relic-alerts/alert-notifications/customize-your-webhook-payload
+    payload:
+      details: "$EVENT_DETAILS"
+      current_state: "$EVENT_STATE"

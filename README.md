@@ -202,7 +202,7 @@ The operator will create and update alert policies and NRQL alert conditions as 
 
 ### Create an Alerts Channel
 
-1. We'll be using the following [example alerts channel](/examples/example_alerts_channel.yaml) configuration file. You will need to update the [`api_key`](/examples/example_alerts_channel.yaml#6) field with your New Relic [personal API key](https://docs.newrelic.com/docs/apis/get-started/intro-apis/types-new-relic-api-keys#personal-api-key). <br>
+1. We'll be using the following [example alerts channel](/examples/example_alerts_channel_email.yaml) configuration file. You will need to update the [`api_key`](/examples/example_alerts_channel_email.yaml#6) field with your New Relic [personal API key](https://docs.newrelic.com/docs/apis/get-started/intro-apis/types-new-relic-api-keys#personal-api-key). <br>
 
     **examples/example_alerts_channel.yaml**
 
@@ -313,7 +313,7 @@ This section should get you set up properly for doing development on the operato
 1. Perform the steps from the [Quick Start](#quick-start) section, except use the following instead of step 4 to install with the :snapshot image:
 
    ```bash
-   kustomize build config/developer | kubectl apply -f -
+   kustomize build config/development | kubectl apply -f -
    ```
 
 1. Confirm your configuration was deployed to your local Kubernetes cluster (the one that we created with `kind`). <br>

@@ -33,7 +33,7 @@ var _ = Describe("AlertsChannel_webhook", func() {
 				APIKey:       "api-key",
 				APIKeySecret: NewRelicAPIKeySecret{},
 				Region:       "US",
-				Type:         "email",
+				Type:         "webhook",
 				Links: ChannelLinks{
 					PolicyIDs: []int{
 						1,
@@ -41,7 +41,13 @@ var _ = Describe("AlertsChannel_webhook", func() {
 					},
 				},
 				Configuration: AlertsChannelConfiguration{
-					Recipients: "me@email.com",
+					BaseURL: "https://example.com",
+					Headers: []ChannelHeader{
+						{
+							Name:  "KEY",
+							Value: "VALUE",
+						},
+					},
 				},
 			},
 		}

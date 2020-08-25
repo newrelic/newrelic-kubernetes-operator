@@ -1,7 +1,12 @@
 package v1
 
 import (
+	"context"
 	"encoding/json"
+
+	v1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/types"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	"github.com/newrelic/newrelic-client-go/pkg/alerts"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -33,6 +38,14 @@ type AlertsChannelStatus struct {
 	AppliedPolicyIDs []int              `json:"appliedPolicyIDs"`
 }
 
+type ChannelHeader struct {
+	Name      string `json:"name,omitempty"`
+	Value     string `json:"value,omitempty"`
+	Secret    string `json:"secret,omitempty"`
+	Namespace string `json:"namespace,omitempty"`
+	KeyName   string `json:"key_name,omitempty"`
+}
+
 // AlertsChannelConfiguration - copy of alerts.ChannelConfiguration
 type AlertsChannelConfiguration struct {
 	Recipients            string `json:"recipients,omitempty"`
@@ -52,6 +65,10 @@ type AlertsChannelConfiguration struct {
 	PayloadType           string `json:"payload_type,omitempty"`
 	Region                string `json:"region,omitempty"`
 	UserID                string `json:"user_id,omitempty"`
+
+	Payload map[string]string `json:"payload,omitempty"`
+
+	Headers []ChannelHeader `json:"headers,omitempty"`
 }
 
 // +kubebuilder:object:root=true
@@ -79,13 +96,50 @@ func init() {
 	SchemeBuilder.Register(&AlertsChannel{}, &AlertsChannelList{})
 }
 
+func getSecret(name types.NamespacedName, key string, k8sClient client.Client) (string, error) {
+	var apiKeySecret v1.Secret
+
+	err := k8sClient.Get(context.Background(), name, &apiKeySecret)
+	if err != nil {
+		return "", err
+	}
+
+	return string(apiKeySecret.Data[key]), nil
+}
+
 // APIChannel - Converts AlertsChannelSpec object to alerts.Channel
-func (in AlertsChannelSpec) APIChannel() alerts.Channel {
+func (in AlertsChannelSpec) APIChannel(k8sClient client.Client) (alerts.Channel, error) {
+	headers := in.Configuration.Headers
+	in.Configuration.Headers = nil
 	jsonString, _ := json.Marshal(in)
 
 	var APIChannel alerts.Channel
-	json.Unmarshal(jsonString, &APIChannel) //nolint
+	err := json.Unmarshal(jsonString, &APIChannel) // nolint
+	if err != nil {
+		return alerts.Channel{}, err
+	}
+
 	APIChannel.Links = alerts.ChannelLinks{}
 
-	return APIChannel
+	// Spec holds headers in a different format, need to convert to API format
+	if len(headers) > 0 {
+		APIChannel.Configuration.Headers = map[string]interface{}{}
+		for _, header := range headers {
+			if header.Value != "" {
+				APIChannel.Configuration.Headers[header.Name] = header.Value
+			} else {
+				name := types.NamespacedName{
+					Namespace: header.Namespace,
+					Name:      header.Secret,
+				}
+				value, err := getSecret(name, header.KeyName, k8sClient)
+				if err != nil {
+					return alerts.Channel{}, err
+				}
+				APIChannel.Configuration.Headers[header.Name] = value
+			}
+		}
+	}
+
+	return APIChannel, nil
 }
