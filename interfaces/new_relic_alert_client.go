@@ -6,7 +6,6 @@ import (
 	"github.com/newrelic/newrelic-client-go/newrelic"
 	"github.com/newrelic/newrelic-client-go/pkg/alerts"
 	"github.com/newrelic/newrelic-client-go/pkg/config"
-	"github.com/newrelic/newrelic-client-go/pkg/region"
 
 	"github.com/newrelic/newrelic-kubernetes-operator/internal/info"
 )
@@ -52,7 +51,7 @@ func NewClient(apiKey string, regionValue string) (*newrelic.NewRelic, error) {
 	client, err := newrelic.New(
 		newrelic.ConfigPersonalAPIKey(apiKey),
 		newrelic.ConfigLogLevel(cfg.LogLevel),
-		newrelic.ConfigRegion(region.Name(regionValue)),
+		newrelic.ConfigRegion(regionValue),
 		newrelic.ConfigUserAgent(info.UserAgent()),
 		newrelic.ConfigServiceName(info.Name),
 	)

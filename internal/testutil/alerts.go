@@ -98,7 +98,7 @@ func NewTestAlertsPolicyConditionSpec(t *testing.T) *nrv1.AlertsPolicyConditionS
 			AccountID: accountID,
 			Terms: []nrv1.AlertsNrqlConditionTerm{
 				{
-					Operator:             alerts.NrqlConditionOperators.Above,
+					Operator:             alerts.AlertsNrqlConditionTermsOperatorTypes.ABOVE,
 					Priority:             alerts.NrqlConditionPriorities.Critical,
 					Threshold:            "5",
 					ThresholdDuration:    60,
