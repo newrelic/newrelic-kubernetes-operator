@@ -104,51 +104,6 @@ Once you've completed the [Quick Start](#quick-start) section, you can start pro
 
 1. We'll be using the following [example policy](/examples/example_policy.yaml) configuration file. You will need to update the [`api_key`](/examples/example_policy.yaml#10) field with your New Relic [personal API key](https://docs.newrelic.com/docs/apis/get-started/intro-apis/types-new-relic-api-keys#personal-api-key). <br>
 
-    **examples/example_policy.yaml**
-
-    ```yaml
-    apiVersion: nr.k8s.newrelic.com/v1
-    kind: AlertsPolicy
-    metadata:
-      name: my-policy
-    spec:
-      # Add your account ID here
-      account_id: <your New Relic account ID>
-      # Add your API key here
-      api_key: <your New Relic personal API key>
-      name: k8s created policy
-      incidentPreference: "PER_POLICY"
-      region: "US"
-      conditions:
-        - spec:
-            type: "NRQL"
-            nrql:
-              query: "SELECT count(*) FROM Transactions"
-              evaluationOffset: 10
-            enabled: true
-            terms:
-              - threshold: "75.0"
-                threshold_occurrences: "ALL"
-                threshold_duration: 60
-                priority: "CRITICAL"
-                operator: "ABOVE"
-            name: "K8s generated alert condition"
-        - spec:
-            type: "apm_app_metric"
-            enabled: true
-            metric: "apdex"
-            condition_scope: application
-            entities:
-              - "5950260"
-            apm_terms:
-              - threshold: "0.9"
-                time_function: "all"
-                duration: "30"
-                priority: "critical"
-                operator: "above"
-            name: "K8s generated apm alert condition 2"
-    ```
-
    Once you've added your API key, we can apply it your local cluster.
    ```bash
    kubectl apply -f examples/example_policy.yaml
@@ -167,71 +122,11 @@ The operator will create and update alert policies and NRQL alert conditions as 
 
 1. We'll be using the following [example NRQL alert condition](/examples/example_nrql_alert_condition.yaml) configuration file. You will need to update the [`api_key`](/examples/example_nrql_alert_condition.yaml#10) field with your New Relic [personal API key](https://docs.newrelic.com/docs/apis/get-started/intro-apis/types-new-relic-api-keys#personal-api-key). <br>
 
-    **examples/example_nrql_alert_condition.yaml**
-
-    ```yaml
-    apiVersion: nr.k8s.newrelic.com/v1
-    kind: AlertsNrqlCondition
-    metadata:
-      name: my-alert-condition
-    spec:
-      # Add your account ID here
-      account_id: <your New Relic account ID>
-      # Add your API key here
-      api_key: <your New Relic personal API key>
-      name: "K8s generated alert condition"
-      type: "NRQL"
-      nrql:
-        # Note: This is just an example.
-        # You'll want to use a query with parameters that are
-        # more specific to the needs for targeting associated
-        # kubernetes objects.
-        query: "SELECT count(*) FROM Transactions"
-        evaluationOffset: 10
-      enabled: true
-      terms:
-        - threshold: "75.0"
-          threshold_occurrences: "ALL"
-          threshold_duration: 60
-          priority: "CRITICAL"
-          operator: "ABOVE"
-      existing_policy_id: "26458245" # Note: must match an existing policy in your account
-      region: "US"
-    ```
-
 
 ### Create an Alerts Channel
 
 1. We'll be using the following [example alerts channel](/examples/example_alerts_channel_email.yaml) configuration file. You will need to update the [`api_key`](/examples/example_alerts_channel_email.yaml#6) field with your New Relic [personal API key](https://docs.newrelic.com/docs/apis/get-started/intro-apis/types-new-relic-api-keys#personal-api-key). <br>
 
-    **examples/example_alerts_channel.yaml**
-
-    ```yaml
-    apiVersion: nr.k8s.newrelic.com/v1
-    kind: AlertsChannel
-    metadata:
-      name: my-channel1
-      spec:
-        api_key: <your New Relic personal API key>
-        # api_key_secret:
-        #   name: nr-api-key
-        #   namespace: default
-        #   key_name: api-key
-        name:         "my alert channel"
-        region:       "US"
-        type:         "email"
-        links:
-          # Policy links can be by NR PolicyID, NR PolicyName AND/OR K8s AlertPolicy object reference 
-          policy_ids: 
-            - 1
-          policy_names: 
-            - "k8s created policy"
-          policy_kubernetes_objects: 
-            - name: "my-policy"
-              namespace: "default"
-        configuration: 
-          recipients: "me@email.com"
-    ```
 
     > <small>**Note:** The New Relic Alerts API does not allow updating Alerts Channels. In order to change a channel, you will need to either rename the k8s AlertsChannel object to create a new one and delete the old one or manually delete the k8s AlertsChannel object and create a new one. </small>
 
