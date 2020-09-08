@@ -21,7 +21,7 @@ var _ = Describe("AlertsNrqlConditionSpec", func() {
 		condition.ExistingPolicyID = "42"
 		condition.Terms = []AlertsNrqlConditionTerm{
 			{
-				Operator:             alerts.NrqlConditionOperators.Above,
+				Operator:             alerts.AlertsNrqlConditionTermsOperatorTypes.ABOVE,
 				Priority:             alerts.NrqlConditionPriorities.Critical,
 				Threshold:            "5",
 				ThresholdDuration:    60,
@@ -65,9 +65,10 @@ var _ = Describe("AlertsNrqlConditionSpec", func() {
 			Expect(fmt.Sprint(reflect.TypeOf(apiTerm))).To(Equal("alerts.NrqlConditionTerm"))
 
 			//Expect(apiTerm.Duration).To(Equal(30))
-			Expect(apiTerm.Operator).To(Equal(alerts.NrqlConditionOperators.Above))
+			Expect(apiTerm.Operator).To(Equal(alerts.AlertsNrqlConditionTermsOperatorTypes.ABOVE))
 			Expect(apiTerm.Priority).To(Equal(alerts.NrqlConditionPriorities.Critical))
-			Expect(apiTerm.Threshold).To(Equal(float64(5)))
+			expectedThreshold := 5.0
+			Expect(apiTerm.Threshold).To(Equal(&expectedThreshold))
 			Expect(apiTerm.ThresholdDuration).To(Equal(60))
 			Expect(apiTerm.ThresholdOccurrences).To(Equal(alerts.ThresholdOccurrences.AtLeastOnce))
 

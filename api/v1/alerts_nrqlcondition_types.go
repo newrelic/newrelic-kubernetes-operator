@@ -41,11 +41,11 @@ type AlertsNrqlSpecificSpec struct {
 
 // AlertsNrqlConditionTerm represents the terms of a New Relic alert condition.
 type AlertsNrqlConditionTerm struct {
-	Operator             alerts.NrqlConditionOperator `json:"operator,omitempty"`
-	Priority             alerts.NrqlConditionPriority `json:"priority,omitempty"`
-	Threshold            string                       `json:"threshold,omitempty"`
-	ThresholdDuration    int                          `json:"threshold_duration,omitempty"`
-	ThresholdOccurrences alerts.ThresholdOccurrence   `json:"threshold_occurrences,omitempty"`
+	Operator             alerts.AlertsNrqlConditionTermsOperator `json:"operator,omitempty"`
+	Priority             alerts.NrqlConditionPriority            `json:"priority,omitempty"`
+	Threshold            string                                  `json:"threshold,omitempty"`
+	ThresholdDuration    int                                     `json:"threshold_duration,omitempty"`
+	ThresholdOccurrences alerts.ThresholdOccurrence              `json:"threshold_occurrences,omitempty"`
 }
 
 // AlertsNrqlConditionStatus defines the observed state of AlertsNrqlCondition
@@ -109,7 +109,7 @@ func (in AlertsNrqlConditionSpec) ToNrqlConditionInput() alerts.NrqlConditionInp
 			log.Error(err, "strconv.ParseFloat()", "threshold", term.Threshold)
 		}
 
-		t.Threshold = f
+		t.Threshold = &f
 		t.ThresholdDuration = term.ThresholdDuration
 		t.ThresholdOccurrences = term.ThresholdOccurrences
 

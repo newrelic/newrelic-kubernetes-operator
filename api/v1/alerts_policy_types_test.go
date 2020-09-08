@@ -20,7 +20,7 @@ var _ = Describe("Equals", func() {
 		spec := AlertsPolicyConditionSpec{}
 		spec.Terms = []AlertsNrqlConditionTerm{
 			{
-				Operator:             alerts.NrqlConditionOperators.Above,
+				Operator:             alerts.AlertsNrqlConditionTermsOperatorTypes.ABOVE,
 				Priority:             alerts.NrqlConditionPriorities.Critical,
 				Threshold:            "5",
 				ThresholdDuration:    60,
@@ -95,7 +95,7 @@ var _ = Describe("Equals", func() {
 
 			spec.Terms = []AlertsNrqlConditionTerm{
 				{
-					Operator:             alerts.NrqlConditionOperators.Above,
+					Operator:             alerts.AlertsNrqlConditionTermsOperatorTypes.ABOVE,
 					Priority:             alerts.NrqlConditionPriorities.Critical,
 					Threshold:            "5",
 					ThresholdDuration:    60,
