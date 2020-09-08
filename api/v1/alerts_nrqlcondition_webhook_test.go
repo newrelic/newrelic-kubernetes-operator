@@ -36,7 +36,7 @@ var _ = Describe("ValidateCreate", func() {
 		spec := AlertsNrqlConditionSpec{}
 		spec.Terms = []AlertsNrqlConditionTerm{
 			{
-				Operator:             alerts.NrqlConditionOperators.Above,
+				Operator:             alerts.AlertsNrqlConditionTermsOperatorTypes.ABOVE,
 				Priority:             alerts.NrqlConditionPriorities.Critical,
 				Threshold:            "5",
 				ThresholdDuration:    60,

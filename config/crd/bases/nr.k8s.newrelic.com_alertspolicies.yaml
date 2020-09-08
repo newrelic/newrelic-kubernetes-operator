@@ -127,7 +127,7 @@ spec:
                           description: AlertsNrqlConditionTerm represents the terms of a New Relic alert condition.
                           properties:
                             operator:
-                              description: NrqlConditionOperator specifies the operator for alert condition terms.
+                              description: AlertsNrqlConditionTermsOperator - Operator used to compare against the threshold for NrqlConditions.
                               type: string
                             priority:
                               description: NrqlConditionPriority specifies the priority for alert condition terms.
@@ -279,7 +279,7 @@ spec:
                               description: AlertsNrqlConditionTerm represents the terms of a New Relic alert condition.
                               properties:
                                 operator:
-                                  description: NrqlConditionOperator specifies the operator for alert condition terms.
+                                  description: AlertsNrqlConditionTermsOperator - Operator used to compare against the threshold for NrqlConditions.
                                   type: string
                                 priority:
                                   description: NrqlConditionPriority specifies the priority for alert condition terms.
