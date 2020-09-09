@@ -1,5 +1,14 @@
+<a name="v0.0.6"></a>
+## [v0.0.6] - 2020-09-08
+### Bug Fixes
+- rollback ns change
+- update manager namespace created
+
+### Documentation Updates
+- remove hardcoded examples in README
+
 <a name="v0.0.5"></a>
-## [v0.0.5] - 2020-08-25
+## [v0.0.5] - 2020-09-01
 ### Features
 - support for secrets in the headers of webhook alerts channels
 - add schema for headers and payload definition
@@ -85,7 +94,8 @@
 - **policy:** added policy condition creation and deletion
 - **policy:** Added most of reconcile function
 
-[Unreleased]: https://github.com/newrelic/newrelic-kubernetes-operator/compare/v0.0.5...HEAD
+[Unreleased]: https://github.com/newrelic/newrelic-kubernetes-operator/compare/v0.0.6...HEAD
+[v0.0.6]: https://github.com/newrelic/newrelic-kubernetes-operator/compare/v0.0.5...v0.0.6
 [v0.0.5]: https://github.com/newrelic/newrelic-kubernetes-operator/compare/v0.0.4...v0.0.5
 [v0.0.4]: https://github.com/newrelic/newrelic-kubernetes-operator/compare/v0.0.3...v0.0.4
 [v0.0.3]: https://github.com/newrelic/newrelic-kubernetes-operator/compare/v0.0.2...v0.0.3
