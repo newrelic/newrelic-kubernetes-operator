@@ -21,9 +21,9 @@ import (
 	"reflect"
 	"sort"
 	"strconv"
-	"strings"
 
 	v1 "k8s.io/api/core/v1"
+	kErr "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/types"
 
 	"github.com/go-logr/logr"
@@ -66,17 +66,21 @@ func (r *AlertsChannelReconciler) Reconcile(req ctrl.Request) (ctrl.Result, erro
 
 	err := r.Client.Get(r.ctx, req.NamespacedName, &alertsChannel)
 	if err != nil {
-		if strings.Contains(err.Error(), " not found") {
+		if kErr.IsNotFound(err) {
 			r.Log.Info("AlertsChannel 'not found' after being deleted. This is expected and no cause for alarm", "error", err)
 			return ctrl.Result{}, nil
 		}
 		r.Log.Error(err, "Failed to GET alertsChannel", "name", req.NamespacedName.String())
-		return ctrl.Result{}, nil
+		return ctrl.Result{}, err
 	}
 
 	r.Log.Info("alertsChannel", "alertsChannel.Spec", alertsChannel.Spec, "alertsChannel.status.applied", alertsChannel.Status.AppliedSpec)
 
-	r.apiKey = r.getAPIKeyOrSecret(alertsChannel)
+	r.apiKey, err = r.getAPIKeyOrSecret(alertsChannel)
+	if err != nil {
+		return ctrl.Result{}, err
+	}
+
 	if r.apiKey == "" {
 		return ctrl.Result{}, errors.New("api key is blank")
 	}
@@ -138,10 +142,10 @@ func (r *AlertsChannelReconciler) SetupWithManager(mgr ctrl.Manager) error {
 		Complete(r)
 }
 
-func (r *AlertsChannelReconciler) getAPIKeyOrSecret(alertschannel nrv1.AlertsChannel) string {
+func (r *AlertsChannelReconciler) getAPIKeyOrSecret(alertschannel nrv1.AlertsChannel) (string, error) {
 	defer r.txn.StartSegment("getAPIKeyOrSecret").End()
 	if alertschannel.Spec.APIKey != "" {
-		return alertschannel.Spec.APIKey
+		return alertschannel.Spec.APIKey, nil
 	}
 
 	if alertschannel.Spec.APIKeySecret != (nrv1.NewRelicAPIKeySecret{}) {
@@ -152,13 +156,13 @@ func (r *AlertsChannelReconciler) getAPIKeyOrSecret(alertschannel nrv1.AlertsCha
 		getErr := r.Client.Get(context.Background(), key, &apiKeySecret)
 		if getErr != nil {
 			r.Log.Error(getErr, "Failed to retrieve secret", "secret", apiKeySecret)
-			return ""
+			return "", getErr
 		}
 
-		return string(apiKeySecret.Data[alertschannel.Spec.APIKeySecret.KeyName])
+		return string(apiKeySecret.Data[alertschannel.Spec.APIKeySecret.KeyName]), nil
 	}
 
-	return ""
+	return "", nil
 }
 
 func (r *AlertsChannelReconciler) deleteAlertsChannel(alertsChannel *nrv1.AlertsChannel, deleteFinalizer string) (err error) {

@@ -19,9 +19,9 @@ import (
 	"context"
 	"errors"
 	"reflect"
-	"strings"
 
 	v1 "k8s.io/api/core/v1"
+	kErr "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/types"
 
 	newrelic "github.com/newrelic/go-agent/v3/newrelic"
@@ -68,15 +68,18 @@ func (r *AlertsNrqlConditionReconciler) Reconcile(req ctrl.Request) (ctrl.Result
 
 	err := r.Client.Get(ctx, req.NamespacedName, &condition)
 	if err != nil {
-		if strings.Contains(err.Error(), " not found") {
+		if kErr.IsNotFound(err) {
 			r.Log.Info("Expected error 'not found' after condition deleted", "error", err)
 			return ctrl.Result{}, nil
 		}
 		r.Log.Error(err, "Tried getting condition", "name", req.NamespacedName.String())
-		return ctrl.Result{}, nil
+		return ctrl.Result{}, err
 	}
 
-	r.apiKey = r.getAPIKeyOrSecret(condition)
+	r.apiKey, err = r.getAPIKeyOrSecret(condition)
+	if err != nil {
+		return ctrl.Result{}, err
+	}
 
 	if r.apiKey == "" {
 		return ctrl.Result{}, errors.New("api key is blank")
@@ -151,42 +154,7 @@ func (r *AlertsNrqlConditionReconciler) Reconcile(req ctrl.Request) (ctrl.Result
 	//check if condition has condition id
 	r.checkForExistingCondition(&condition)
 
-	updateInput := condition.Spec.ToNrqlConditionInput()
-
-	if condition.Status.ConditionID != "" && !reflect.DeepEqual(&condition.Spec, condition.Status.AppliedSpec) {
-		r.Log.Info("updating condition", "ConditionName", condition.Name, "API fields", updateInput)
-		updatedCondition, err := alertsClient.UpdateNrqlConditionStaticMutation(condition.Spec.AccountID, condition.Status.ConditionID, updateInput)
-		if err != nil {
-			r.Log.Error(err, "failed to update condition")
-		} else {
-			condition.Status.AppliedSpec = &condition.Spec
-			condition.Status.ConditionID = updatedCondition.ID
-		}
-
-		err = r.Client.Update(ctx, &condition)
-		if err != nil {
-			r.Log.Error(err, "tried updating condition status", "name", req.NamespacedName)
-		}
-	} else {
-		r.Log.Info("Creating condition", "ConditionName", condition.Name, "API fields", updateInput)
-		createdCondition, err := alertsClient.CreateNrqlConditionStaticMutation(condition.Spec.AccountID, condition.Spec.ExistingPolicyID, updateInput)
-
-		if err != nil {
-			r.Log.Error(err, "failed to create condition",
-				"conditionId", condition.Status.ConditionID,
-				"region", condition.Spec.Region,
-				"apiKey", interfaces.PartialAPIKey(r.apiKey),
-			)
-		} else {
-			condition.Status.AppliedSpec = &condition.Spec
-			condition.Status.ConditionID = createdCondition.ID
-		}
-
-		err = r.Client.Update(ctx, &condition)
-		if err != nil {
-			r.Log.Error(err, "tried updating condition status", "name", req.NamespacedName)
-		}
-	}
+	r.writeNewRelicAlertCondition(ctx, req, alertsClient, condition)
 
 	return ctrl.Result{}, nil
 }
@@ -226,6 +194,45 @@ func (r *AlertsNrqlConditionReconciler) SetupWithManager(mgr ctrl.Manager) error
 		Complete(r)
 }
 
+func (r *AlertsNrqlConditionReconciler) writeNewRelicAlertCondition(ctx context.Context, req ctrl.Request, alertsClient interfaces.NewRelicAlertsClient, condition nrv1.AlertsNrqlCondition) {
+	updateInput := condition.Spec.ToNrqlConditionInput()
+
+	if condition.Status.ConditionID != "" && !reflect.DeepEqual(&condition.Spec, condition.Status.AppliedSpec) {
+		r.Log.Info("updating condition", "ConditionName", condition.Name, "API fields", updateInput)
+		updatedCondition, err := alertsClient.UpdateNrqlConditionStaticMutation(condition.Spec.AccountID, condition.Status.ConditionID, updateInput)
+		if err != nil {
+			r.Log.Error(err, "failed to update condition")
+		} else {
+			condition.Status.AppliedSpec = &condition.Spec
+			condition.Status.ConditionID = updatedCondition.ID
+		}
+
+		err = r.Client.Update(ctx, &condition)
+		if err != nil {
+			r.Log.Error(err, "tried updating condition status", "name", req.NamespacedName)
+		}
+	} else {
+		r.Log.Info("Creating condition", "ConditionName", condition.Name, "API fields", updateInput)
+		createdCondition, err := alertsClient.CreateNrqlConditionStaticMutation(condition.Spec.AccountID, condition.Spec.ExistingPolicyID, updateInput)
+
+		if err != nil {
+			r.Log.Error(err, "failed to create condition",
+				"conditionId", condition.Status.ConditionID,
+				"region", condition.Spec.Region,
+				"apiKey", interfaces.PartialAPIKey(r.apiKey),
+			)
+		} else {
+			condition.Status.AppliedSpec = &condition.Spec
+			condition.Status.ConditionID = createdCondition.ID
+		}
+
+		err = r.Client.Update(ctx, &condition)
+		if err != nil {
+			r.Log.Error(err, "tried updating condition status", "name", req.NamespacedName)
+		}
+	}
+}
+
 func (r *AlertsNrqlConditionReconciler) deleteNewRelicAlertCondition(condition nrv1.AlertsNrqlCondition) error {
 	defer r.txn.StartSegment("deleteNewRelicAlertCondition").End()
 	r.Log.Info("Deleting condition", "conditionName", condition.Spec.Name)
@@ -242,10 +249,10 @@ func (r *AlertsNrqlConditionReconciler) deleteNewRelicAlertCondition(condition n
 	return nil
 }
 
-func (r *AlertsNrqlConditionReconciler) getAPIKeyOrSecret(condition nrv1.AlertsNrqlCondition) string {
+func (r *AlertsNrqlConditionReconciler) getAPIKeyOrSecret(condition nrv1.AlertsNrqlCondition) (string, error) {
 	defer r.txn.StartSegment("getAPIKeyOrSecret").End()
 	if condition.Spec.APIKey != "" {
-		return condition.Spec.APIKey
+		return condition.Spec.APIKey, nil
 	}
 
 	if condition.Spec.APIKeySecret != (nrv1.NewRelicAPIKeySecret{}) {
@@ -253,10 +260,10 @@ func (r *AlertsNrqlConditionReconciler) getAPIKeyOrSecret(condition nrv1.AlertsN
 		var apiKeySecret v1.Secret
 		if getErr := r.Client.Get(context.Background(), key, &apiKeySecret); getErr != nil {
 			r.Log.Error(getErr, "Error retrieving secret", "secret", apiKeySecret)
-			return ""
+			return "", getErr
 		}
-		return string(apiKeySecret.Data[condition.Spec.APIKeySecret.KeyName])
+		return string(apiKeySecret.Data[condition.Spec.APIKeySecret.KeyName]), nil
 	}
 
-	return ""
+	return "", nil
 }
