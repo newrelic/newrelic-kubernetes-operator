@@ -212,6 +212,30 @@ var _ = Describe("alertspolicy reconciliation", func() {
 				Expect(endStateCondition.Spec.Enabled).To(BeTrue())
 			})
 
+			It("creates ownership reference to parent alerts policy", func() {
+				err := k8sClient.Create(ctx, alertspolicy)
+				Expect(err).ToNot(HaveOccurred())
+
+				// call reconcile
+				_, err = r.Reconcile(request)
+				Expect(err).ToNot(HaveOccurred())
+
+				var endStateAlertsPolicy nrv1.AlertsPolicy
+				var endStateCondition nrv1.AlertsNrqlCondition
+				err = k8sClient.Get(ctx, namespacedName, &endStateAlertsPolicy)
+				Expect(err).To(BeNil())
+				conditionNameType := types.NamespacedName{
+					Name:      endStateAlertsPolicy.Spec.Conditions[0].Name,
+					Namespace: endStateAlertsPolicy.Spec.Conditions[0].Namespace,
+				}
+				err = k8sClient.Get(ctx, conditionNameType, &endStateCondition)
+				// expectedOwner := []v1.OwnerReference{
+				//      {}
+				// }
+
+				Expect(endStateCondition.ObjectMeta.OwnerReferences[0].Name).To(Equal(endStateAlertsPolicy.Name))
+			})
+
 			It("creates the NRQL condition with inherited attributes from the AlertsPolicy resource", func() {
 				err := k8sClient.Create(ctx, alertspolicy)
 				Expect(err).ToNot(HaveOccurred())
