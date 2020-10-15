@@ -372,7 +372,7 @@ func (r *AlertsPolicyReconciler) createOrUpdateConditions(policy *nrv1.AlertsPol
 func asOwner(p *nrv1.AlertsPolicy) metav1.OwnerReference {
 
 	return metav1.OwnerReference{
-		APIVersion: "v1", //this probablby shouldn't be hardcoded this way but doesn't work in tests for some reason
+		APIVersion: nrv1.GroupVersion.String(),
 		Kind:       "AlertsPolicy",
 		Name:       p.Name,
 		UID:        p.UID,

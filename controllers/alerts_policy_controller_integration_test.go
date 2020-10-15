@@ -229,9 +229,6 @@ var _ = Describe("alertspolicy reconciliation", func() {
 					Namespace: endStateAlertsPolicy.Spec.Conditions[0].Namespace,
 				}
 				err = k8sClient.Get(ctx, conditionNameType, &endStateCondition)
-				// expectedOwner := []v1.OwnerReference{
-				//      {}
-				// }
 
 				Expect(endStateCondition.ObjectMeta.OwnerReferences[0].Name).To(Equal(endStateAlertsPolicy.Name))
 			})
