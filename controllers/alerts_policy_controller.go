@@ -27,6 +27,7 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 
 	"github.com/go-logr/logr"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -39,6 +40,8 @@ import (
 const (
 	alertsPolicyDeleteFinalizer = "policies.finalizers.nr.k8s.newrelic.com"
 )
+
+var trueVar = true
 
 // AlertsPolicyReconciler reconciles a AlertsPolicy object
 type AlertsPolicyReconciler struct {
@@ -368,6 +371,17 @@ func (r *AlertsPolicyReconciler) createOrUpdateConditions(policy *nrv1.AlertsPol
 	return nil
 }
 
+func asOwner(p *nrv1.AlertsPolicy) metav1.OwnerReference {
+
+	return metav1.OwnerReference{
+		APIVersion: nrv1.GroupVersion.String(),
+		Kind:       "AlertsPolicy",
+		Name:       p.Name,
+		UID:        p.UID,
+		Controller: &trueVar,
+	}
+}
+
 func (r *AlertsPolicyReconciler) createNrqlCondition(policy *nrv1.AlertsPolicy, condition *nrv1.AlertsPolicyCondition) error {
 	defer r.txn.StartSegment("createNrqlCondition").End()
 	var alertsNrqlCondition nrv1.AlertsNrqlCondition
@@ -381,6 +395,7 @@ func (r *AlertsPolicyReconciler) createNrqlCondition(policy *nrv1.AlertsPolicy, 
 	alertsNrqlCondition.Spec.APIKeySecret = policy.Spec.APIKeySecret
 	alertsNrqlCondition.Spec.AccountID = policy.Spec.AccountID
 	alertsNrqlCondition.Status.AppliedSpec = &nrv1.AlertsNrqlConditionSpec{}
+	alertsNrqlCondition.OwnerReferences = append(alertsNrqlCondition.OwnerReferences, asOwner(policy))
 
 	r.Log.Info("creating condition", "condition", condition.Name, "conditionName", condition.Spec.Name, "alertsNrqlCondition", alertsNrqlCondition)
 
@@ -413,6 +428,7 @@ func (r *AlertsPolicyReconciler) createApmCondition(policy *nrv1.AlertsPolicy, c
 	apmCondition.Status.AppliedSpec = &nrv1.AlertsAPMConditionSpec{}
 
 	apmCondition.Spec.ExistingPolicyID = policy.Status.PolicyID
+	apmCondition.OwnerReferences = append(apmCondition.OwnerReferences, asOwner(policy))
 
 	r.Log.Info("creating apm condition", "condition", condition.Name, "conditionName", condition.Spec.Name, "alertsAPMCondition", apmCondition)
 	errCondition := r.Create(r.ctx, &apmCondition)
