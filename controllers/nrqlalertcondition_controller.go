@@ -19,9 +19,9 @@ import (
 	"context"
 	"errors"
 	"reflect"
-	"strings"
 
 	v1 "k8s.io/api/core/v1"
+	kErr "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/types"
 
 	newrelic "github.com/newrelic/go-agent/v3/newrelic"
@@ -62,15 +62,18 @@ func (r *NrqlAlertConditionReconciler) Reconcile(req ctrl.Request) (ctrl.Result,
 	var condition nralertsv1.NrqlAlertCondition
 	err := r.Client.Get(ctx, req.NamespacedName, &condition)
 	if err != nil {
-		if strings.Contains(err.Error(), " not found") {
+		if kErr.IsNotFound(err) {
 			r.Log.Info("Expected error 'not found' after condition deleted", "error", err)
 			return ctrl.Result{}, nil
 		}
 		r.Log.Error(err, "Tried getting condition", "name", req.NamespacedName.String())
-		return ctrl.Result{}, nil
+		return ctrl.Result{}, err
 	}
 
-	r.apiKey = r.getAPIKeyOrSecret(condition)
+	r.apiKey, err = r.getAPIKeyOrSecret(condition)
+	if err != nil {
+		return ctrl.Result{}, err
+	}
 
 	if r.apiKey == "" {
 		return ctrl.Result{}, errors.New("api key is blank")
@@ -147,6 +150,36 @@ func (r *NrqlAlertConditionReconciler) Reconcile(req ctrl.Request) (ctrl.Result,
 	//check if condition has condition id
 	r.checkForExistingCondition(&condition)
 
+	r.writeNewRelicAlertCondition(ctx, req, alertsClient, condition)
+
+	return ctrl.Result{}, nil
+}
+
+func (r *NrqlAlertConditionReconciler) checkForExistingCondition(condition *nralertsv1.NrqlAlertCondition) {
+	defer r.txn.StartSegment("checkForExistingCondition").End()
+	if condition.Status.ConditionID == 0 {
+		r.Log.Info("Checking for existing condition", "conditionName", condition.Name)
+		//if no conditionId, get list of conditions and compare name
+		existingConditions, err := r.Alerts.ListNrqlConditions(condition.Spec.ExistingPolicyID)
+		if err != nil {
+			r.Log.Error(err, "failed to get list of NRQL conditions from New Relic API",
+				"conditionId", condition.Status.ConditionID,
+				"region", condition.Spec.Region,
+				"Api Key", interfaces.PartialAPIKey(r.apiKey),
+			)
+		} else {
+			for _, existingCondition := range existingConditions {
+				if existingCondition.Name == condition.Spec.Name {
+					r.Log.Info("Matched on existing condition, updating ConditionId", "conditionId", existingCondition.ID)
+					condition.Status.ConditionID = existingCondition.ID
+					break
+				}
+			}
+		}
+	}
+}
+
+func (r *NrqlAlertConditionReconciler) writeNewRelicAlertCondition(ctx context.Context, req ctrl.Request, alertsClient interfaces.NewRelicAlertsClient, condition nralertsv1.NrqlAlertCondition) {
 	APICondition := condition.Spec.APICondition()
 
 	if condition.Status.ConditionID != 0 && !reflect.DeepEqual(&condition.Spec, condition.Status.AppliedSpec) {
@@ -181,32 +214,6 @@ func (r *NrqlAlertConditionReconciler) Reconcile(req ctrl.Request) (ctrl.Result,
 		err = r.Client.Update(ctx, &condition)
 		if err != nil {
 			r.Log.Error(err, "tried updating condition status", "name", req.NamespacedName)
-		}
-	}
-
-	return ctrl.Result{}, nil
-}
-
-func (r *NrqlAlertConditionReconciler) checkForExistingCondition(condition *nralertsv1.NrqlAlertCondition) {
-	defer r.txn.StartSegment("checkForExistingCondition").End()
-	if condition.Status.ConditionID == 0 {
-		r.Log.Info("Checking for existing condition", "conditionName", condition.Name)
-		//if no conditionId, get list of conditions and compare name
-		existingConditions, err := r.Alerts.ListNrqlConditions(condition.Spec.ExistingPolicyID)
-		if err != nil {
-			r.Log.Error(err, "failed to get list of NRQL conditions from New Relic API",
-				"conditionId", condition.Status.ConditionID,
-				"region", condition.Spec.Region,
-				"Api Key", interfaces.PartialAPIKey(r.apiKey),
-			)
-		} else {
-			for _, existingCondition := range existingConditions {
-				if existingCondition.Name == condition.Spec.Name {
-					r.Log.Info("Matched on existing condition, updating ConditionId", "conditionId", existingCondition.ID)
-					condition.Status.ConditionID = existingCondition.ID
-					break
-				}
-			}
 		}
 	}
 }
@@ -257,10 +264,10 @@ func removeString(slice []string, s string) (result []string) {
 	return
 }
 
-func (r *NrqlAlertConditionReconciler) getAPIKeyOrSecret(condition nralertsv1.NrqlAlertCondition) string {
+func (r *NrqlAlertConditionReconciler) getAPIKeyOrSecret(condition nralertsv1.NrqlAlertCondition) (string, error) {
 	defer r.txn.StartSegment("getAPIKeyOrSecret").End()
 	if condition.Spec.APIKey != "" {
-		return condition.Spec.APIKey
+		return condition.Spec.APIKey, nil
 	}
 
 	if condition.Spec.APIKeySecret != (nralertsv1.NewRelicAPIKeySecret{}) {
@@ -268,12 +275,11 @@ func (r *NrqlAlertConditionReconciler) getAPIKeyOrSecret(condition nralertsv1.Nr
 		var apiKeySecret v1.Secret
 		if getErr := r.Client.Get(context.Background(), key, &apiKeySecret); getErr != nil {
 			r.Log.Error(getErr, "Error retrieving secret", "secret", apiKeySecret)
-
-			return ""
+			return "", getErr
 		}
 
-		return string(apiKeySecret.Data[condition.Spec.APIKeySecret.KeyName])
+		return string(apiKeySecret.Data[condition.Spec.APIKeySecret.KeyName]), nil
 	}
 
-	return ""
+	return "", nil
 }

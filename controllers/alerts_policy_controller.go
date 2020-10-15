@@ -19,11 +19,11 @@ import (
 	"context"
 	"errors"
 	"reflect"
-	"strings"
 
 	newrelic "github.com/newrelic/go-agent/v3/newrelic"
 	"github.com/newrelic/newrelic-client-go/pkg/alerts"
 	v1 "k8s.io/api/core/v1"
+	kErr "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/types"
 
 	"github.com/go-logr/logr"
@@ -68,18 +68,20 @@ func (r *AlertsPolicyReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error
 	var policy nrv1.AlertsPolicy
 	err := r.Client.Get(r.ctx, req.NamespacedName, &policy)
 	if err != nil {
-		if strings.Contains(err.Error(), " not found") {
+		if kErr.IsNotFound(err) {
 			r.Log.Info("AlertsPolicy 'not found' after being deleted. This is expected and no cause for alarm", "error", err)
 			return ctrl.Result{}, nil
 		}
-
 		r.Log.Error(err, "Failed to GET policy", "name", req.NamespacedName.String())
-		return ctrl.Result{}, nil
+		return ctrl.Result{}, err
 	}
 	r.Log.Info("Starting reconcile action")
 	r.Log.Info("policy", "policy.Spec.Condition", policy.Spec.Conditions, "policy.status.applied.conditions", policy.Status.AppliedSpec.Conditions)
 
-	r.apiKey = r.getAPIKeyOrSecret(policy)
+	r.apiKey, err = r.getAPIKeyOrSecret(policy)
+	if err != nil {
+		return ctrl.Result{}, err
+	}
 
 	if r.apiKey == "" {
 		return ctrl.Result{}, errors.New("api key is blank")
@@ -638,10 +640,10 @@ func (r *AlertsPolicyReconciler) deleteNewRelicAlertPolicy(policy *nrv1.AlertsPo
 	return nil
 }
 
-func (r *AlertsPolicyReconciler) getAPIKeyOrSecret(policy nrv1.AlertsPolicy) string {
+func (r *AlertsPolicyReconciler) getAPIKeyOrSecret(policy nrv1.AlertsPolicy) (string, error) {
 	defer r.txn.StartSegment("getAPIKeyOrSecret").End()
 	if policy.Spec.APIKey != "" {
-		return policy.Spec.APIKey
+		return policy.Spec.APIKey, nil
 	}
 
 	if policy.Spec.APIKeySecret != (nrv1.NewRelicAPIKeySecret{}) {
@@ -650,12 +652,11 @@ func (r *AlertsPolicyReconciler) getAPIKeyOrSecret(policy nrv1.AlertsPolicy) str
 		getErr := r.Client.Get(context.Background(), key, &apiKeySecret)
 		if getErr != nil {
 			r.Log.Error(getErr, "Failed to retrieve secret", "secret", apiKeySecret)
-
-			return ""
+			return "", getErr
 		}
 
-		return string(apiKeySecret.Data[policy.Spec.APIKeySecret.KeyName])
+		return string(apiKeySecret.Data[policy.Spec.APIKeySecret.KeyName]), nil
 	}
 
-	return ""
+	return "", nil
 }
