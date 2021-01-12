@@ -36,6 +36,7 @@ type AlertsPolicySpec struct {
 	APIKey             string                  `json:"api_key,omitempty"`
 	APIKeySecret       NewRelicAPIKeySecret    `json:"api_key_secret,omitempty"`
 	AccountID          int                     `json:"account_id,omitempty"`
+	ChannelIDs         []int                   `json:"channel_ids,omitempty"`
 }
 
 //AlertsPolicyCondition defined the conditions contained within an AlertsPolicy
@@ -156,6 +157,22 @@ func (in AlertsPolicySpec) Equals(policyToCompare AlertsPolicySpec) bool {
 
 	for _, conditionToCompare := range policyToCompare.Conditions {
 		if _, ok := checkedHashes[conditionToCompare.SpecHash()]; !ok {
+			return false
+		}
+	}
+
+	if len(in.ChannelIDs) != len(policyToCompare.ChannelIDs) {
+		return false
+	}
+
+	checkedChannels := make(map[int]bool)
+
+	for _, channel := range in.ChannelIDs {
+		checkedChannels[channel] = true
+	}
+
+	for _, channnelToCompare := range policyToCompare.ChannelIDs {
+		if _, ok := checkedChannels[channnelToCompare]; !ok {
 			return false
 		}
 	}

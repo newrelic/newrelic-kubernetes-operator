@@ -1,5 +1,3 @@
-// +build integration
-
 package v1
 
 import (
@@ -58,6 +56,7 @@ var _ = Describe("Equals", func() {
 				KeyName:   "api-key",
 			},
 			Region:     "us",
+			ChannelIDs: []int{1, 2},
 			Conditions: []AlertsPolicyCondition{condition},
 		}
 
@@ -71,6 +70,7 @@ var _ = Describe("Equals", func() {
 				KeyName:   "api-key",
 			},
 			Region:     "us",
+			ChannelIDs: []int{1, 2},
 			Conditions: []AlertsPolicyCondition{condition},
 		}
 	})
@@ -223,6 +223,24 @@ var _ = Describe("Equals", func() {
 				Namespace: "default",
 				KeyName:   "api-key",
 			}
+			output = p.Equals(policyToCompare)
+			Expect(output).ToNot(BeTrue())
+		})
+	})
+
+	Context("When ChannelIDs have different length", func() {
+		It("should return false", func() {
+			p.ChannelIDs = []int{1, 2, 3}
+
+			output = p.Equals(policyToCompare)
+			Expect(output).ToNot(BeTrue())
+		})
+	})
+
+	Context("When ChannelIDs don't match", func() {
+		It("should return false", func() {
+			p.ChannelIDs = []int{1, 3}
+
 			output = p.Equals(policyToCompare)
 			Expect(output).ToNot(BeTrue())
 		})

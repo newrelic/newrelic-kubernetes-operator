@@ -43,6 +43,10 @@ spec:
                 namespace:
                   type: string
               type: object
+            channel_ids:
+              items:
+                type: integer
+              type: array
             conditions:
               items:
                 description: AlertsPolicyCondition defined the conditions contained within an AlertsPolicy
@@ -195,6 +199,10 @@ spec:
                     namespace:
                       type: string
                   type: object
+                channel_ids:
+                  items:
+                    type: integer
+                  type: array
                 conditions:
                   items:
                     description: AlertsPolicyCondition defined the conditions contained within an AlertsPolicy
