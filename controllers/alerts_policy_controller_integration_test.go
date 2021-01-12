@@ -302,7 +302,7 @@ var _ = Describe("alertspolicy reconciliation", func() {
 				// call reconcile
 				_, reconcileErr := r.Reconcile(request)
 				Expect(reconcileErr).To(HaveOccurred())
-				Expect(reconcileErr.Error()).To(Equal("Any Error Goes Here"))
+				Expect(reconcileErr.Error()).To(Equal("any Error Goes Here"))
 
 				var endStateAlertsPolicy nrv1.AlertsPolicy
 				getErr := k8sClient.Get(ctx, namespacedName, &endStateAlertsPolicy)
