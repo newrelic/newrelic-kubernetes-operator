@@ -97,8 +97,8 @@ jobs:
           sudo mv kubebuilder_${version}_linux_${arch} /usr/local/kubebuilder
         shell: bash
 
-      - name: Add GOBIN to PATH
-        run: echo "$(go env GOPATH)/bin" >> $GITHUB_PATH
+      - name: Add Kubebuilder to PATH
+        run: echo "/usr/local/kubebuilder/bin" >> $GITHUB_PATH
         shell: bash
 
       - name: Checkout code
