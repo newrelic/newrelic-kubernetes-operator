@@ -2,28 +2,27 @@ name: Snapshot
 
 on:
   push:
-    branches: [ master ]
+    branches: [master]
 
 jobs:
   snapshot:
     runs-on: ubuntu-latest
     steps:
-    - name: Install Go
-      uses: actions/setup-go@v1
-      with:
-        go-version: ${{ matrix.go-version }}
+      - name: Install Go
+        uses: actions/setup-go@v1
+        with:
+          go-version: ${{ matrix.go-version }}
 
-    - name: Add GOBIN to PATH
-      run: echo "::add-path::$(go env GOPATH)/bin"
-      shell: bash
+      - name: Add GOBIN to PATH
+        run: echo "$(go env GOPATH)/bin" >> $GITHUB_PATH
+        shell: bash
 
-    - name: Checkout code
-      uses: actions/checkout@v2
+      - name: Checkout code
+        uses: actions/checkout@v2
 
-    - name: Publish Snapshot to Docker
-      shell: bash
-      run: make docker-push
-      env:
-        DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
-        DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
-
+      - name: Publish Snapshot to Docker
+        shell: bash
+        run: make docker-push
+        env:
+          DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
+          DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
