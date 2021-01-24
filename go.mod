@@ -5,7 +5,7 @@ go 1.13
 require (
 	github.com/davecgh/go-spew v1.1.1
 	github.com/go-logr/logr v0.1.0
-	github.com/golang/mock v1.4.3
+	github.com/golang/mock v1.4.4
 	github.com/goreleaser/goreleaser v0.143.0
 	github.com/hashicorp/golang-lru v0.5.4 // indirect
 	github.com/maxbrunsfeld/counterfeiter/v6 v6.2.3
