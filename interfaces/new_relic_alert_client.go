@@ -40,6 +40,8 @@ type NewRelicAlertsClient interface {
 
 	CreateNrqlConditionStaticMutation(accountID int, policyID string, nrqlCondition alerts.NrqlConditionInput) (*alerts.NrqlAlertCondition, error)
 	UpdateNrqlConditionStaticMutation(accountID int, conditionID string, nrqlCondition alerts.NrqlConditionInput) (*alerts.NrqlAlertCondition, error)
+	CreateNrqlConditionBaselineMutation(accountID int, policyID string, nrqlCondition alerts.NrqlConditionInput) (*alerts.NrqlAlertCondition, error)
+	UpdateNrqlConditionBaselineMutation(accountID int, conditionID string, nrqlCondition alerts.NrqlConditionInput) (*alerts.NrqlAlertCondition, error)
 	DeleteConditionMutation(accountID int, conditionID string) (string, error)
 	SearchNrqlConditionsQuery(accountID int, searchCriteria alerts.NrqlConditionsSearchCriteria) ([]*alerts.NrqlAlertCondition, error)
 	GetNrqlConditionQuery(accountID int, conditionID string) (*alerts.NrqlAlertCondition, error)

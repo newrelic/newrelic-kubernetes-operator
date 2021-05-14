@@ -85,8 +85,13 @@ func (r *AlertsNrqlCondition) ValidateCreate() error {
 // ValidateUpdate implements webhook.Validator so a webhook will be registered for the type
 func (r *AlertsNrqlCondition) ValidateUpdate(old runtime.Object) error {
 	alertsNrqlConditionLog.Info("validate update", "name", r.Name)
+	prevCondition := old.(*AlertsNrqlCondition)
 
-	// TODO(user): fill in your validation logic upon object update.
+	if (r.Spec.BaselineDirection == nil && prevCondition.Spec.BaselineDirection != nil) ||
+		(r.Spec.BaselineDirection != nil && prevCondition.Spec.BaselineDirection == nil) {
+		return errors.New("cannot change between condition types, you must delete and create a new alert")
+	}
+
 	return nil
 }
 

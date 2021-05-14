@@ -49,6 +49,7 @@ type AlertsPolicyConditionSpec struct {
 	AlertsGenericConditionSpec `json:",inline"`
 	AlertsNrqlSpecificSpec     `json:",inline"`
 	AlertsAPMSpecificSpec      `json:",inline"`
+	AlertsBaselineSpecificSpec `json:",inline"`
 }
 
 // AlertsPolicyStatus defines the observed state of AlertsPolicy

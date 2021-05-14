@@ -11,6 +11,7 @@ import (
 type AlertsNrqlConditionSpec struct {
 	AlertsGenericConditionSpec `json:",inline"`
 	AlertsNrqlSpecificSpec     `json:",inline"`
+	AlertsBaselineSpecificSpec `json:",inline"`
 }
 
 // AlertsGenericConditionSpec defines the desired state of AlertsNrqlCondition
@@ -37,6 +38,10 @@ type AlertsNrqlSpecificSpec struct {
 	ExpectedGroups     int                                    `json:"expected_groups,omitempty"`
 	IgnoreOverlap      bool                                   `json:"ignore_overlap,omitempty"`
 	ViolationTimeLimit alerts.NrqlConditionViolationTimeLimit `json:"violationTimeLimit,omitempty"`
+}
+
+type AlertsBaselineSpecificSpec struct {
+	BaselineDirection *alerts.NrqlBaselineDirection `json:"baseline_direction,omitempty"`
 }
 
 // AlertsNrqlConditionTerm represents the terms of a New Relic alert condition.
@@ -87,15 +92,11 @@ func (in AlertsNrqlConditionSpec) ToNrqlConditionInput() alerts.NrqlConditionInp
 	conditionInput.Nrql = in.Nrql
 	conditionInput.RunbookURL = in.RunbookURL
 	conditionInput.ViolationTimeLimit = in.ViolationTimeLimit
+	conditionInput.BaselineDirection = in.BaselineDirection
 
 	if in.ValueFunction != nil {
-		// f := alerts.NrqlConditionValueFunction(in.ValueFunction)
 		conditionInput.ValueFunction = in.ValueFunction
 	}
-
-	// if in.BaselineDirection != nil {
-	//      conditionInput.BaselineDirection = alerts.NrqlBaselineDirection(in.BaselineDirection)
-	// }
 
 	for _, term := range in.Terms {
 		t := alerts.NrqlConditionTerm{}

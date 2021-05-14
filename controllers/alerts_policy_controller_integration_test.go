@@ -130,6 +130,7 @@ var _ = Describe("alertspolicy reconciliation", func() {
 					IgnoreOverlap:      true,
 				},
 				nrv1.AlertsAPMSpecificSpec{},
+				nrv1.AlertsBaselineSpecificSpec{},
 			}
 
 			alertspolicy = &nrv1.AlertsPolicy{
@@ -404,6 +405,7 @@ var _ = Describe("alertspolicy reconciliation", func() {
 					IgnoreOverlap:      true,
 				},
 				nrv1.AlertsAPMSpecificSpec{},
+				nrv1.AlertsBaselineSpecificSpec{},
 			}
 
 			alertspolicy = &nrv1.AlertsPolicy{
@@ -526,6 +528,7 @@ var _ = Describe("alertspolicy reconciliation", func() {
 					IgnoreOverlap:      true,
 				},
 				nrv1.AlertsAPMSpecificSpec{},
+				nrv1.AlertsBaselineSpecificSpec{},
 			}
 
 			alertspolicy = &nrv1.AlertsPolicy{
@@ -761,6 +764,7 @@ var _ = Describe("alertspolicy reconciliation", func() {
 						IgnoreOverlap:      true,
 					},
 					nrv1.AlertsAPMSpecificSpec{},
+					nrv1.AlertsBaselineSpecificSpec{},
 				}
 				secondCondition := nrv1.AlertsPolicyCondition{
 					Spec: secondConditionSpec,
@@ -1169,6 +1173,7 @@ var _ = Describe("alertspolicy reconciliation", func() {
 					IgnoreOverlap:      true,
 				},
 				nrv1.AlertsAPMSpecificSpec{},
+				nrv1.AlertsBaselineSpecificSpec{},
 			}
 
 			alertspolicy = &nrv1.AlertsPolicy{
@@ -1220,6 +1225,7 @@ var _ = Describe("alertspolicy reconciliation", func() {
 					IgnoreOverlap:      true,
 				},
 				nrv1.AlertsAPMSpecificSpec{},
+				nrv1.AlertsBaselineSpecificSpec{},
 			}
 			secondCondition := nrv1.AlertsPolicyCondition{
 				Spec: secondConditionSpec,
