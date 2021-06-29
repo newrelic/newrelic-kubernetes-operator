@@ -24,6 +24,15 @@ spec:
       threshold_duration: 60
       priority: "CRITICAL"
       operator: "ABOVE"
+  expiration:
+    expirationDuration: 360
+    closeViolationsOnExpiration: false
+    openViolationOnExpiration: true
+#  signal:
+#      aggregation_window: 360
+#      evaluation_offset: 30
+#      fill_option: NONE
+#      fill_value: 15
   name: "nrql condition (new)"
   violationTimeLimit: "ONE_HOUR"
   valueFunction: "SINGLE_VALUE"

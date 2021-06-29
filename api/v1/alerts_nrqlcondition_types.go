@@ -46,7 +46,7 @@ type AlertsNrqlConditionSignal struct {
 	AggregationWindow *int                     `json:"aggregation_window,omitempty"`
 	EvaluationOffset  *int                     `json:"evaluation_offset,omitempty"`
 	FillOption        *alerts.AlertsFillOption `json:"fill_option,omitempty"`
-	FillValue         string                   `json:"fill_value,omitempty"`
+	FillValue         *string                  `json:"fill_value,omitempty"`
 }
 
 // AlertsNrqlConditionExpiration
@@ -115,12 +115,13 @@ func (in AlertsNrqlConditionSpec) ToNrqlConditionInput() alerts.NrqlConditionInp
 	conditionInput.Signal.FillOption = in.Signal.FillOption
 	conditionInput.Signal.AggregationWindow = in.Signal.AggregationWindow
 	conditionInput.Signal.EvaluationOffset = in.Signal.EvaluationOffset
-	f, err := strconv.ParseFloat(in.Signal.FillValue, 64)
-	if err != nil {
-		log.Error(err, "strconv.ParseFloat()", "signal.FillValue", in.Signal.FillValue)
+	if in.Signal.FillValue != nil {
+		f, err := strconv.ParseFloat(*in.Signal.FillValue, 64)
+		if err != nil {
+			log.Error(err, "strconv.ParseFloat()", "signal.FillValue", in.Signal.FillValue)
+		}
+		conditionInput.Signal.FillValue = &f
 	}
-	conditionInput.Signal.FillValue = &f
-
 	if in.ValueFunction != nil {
 		// f := alerts.NrqlConditionValueFunction(in.ValueFunction)
 		conditionInput.ValueFunction = in.ValueFunction
