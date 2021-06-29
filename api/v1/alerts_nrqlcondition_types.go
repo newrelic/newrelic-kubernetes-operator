@@ -115,7 +115,7 @@ func (in AlertsNrqlConditionSpec) ToNrqlConditionInput() alerts.NrqlConditionInp
 	conditionInput.Signal.FillOption = in.Signal.FillOption
 	conditionInput.Signal.AggregationWindow = in.Signal.AggregationWindow
 	conditionInput.Signal.EvaluationOffset = in.Signal.EvaluationOffset
-	f, err := strconv.ParseFloat(in.Signal.FillValue, 10)
+	f, err := strconv.ParseFloat(in.Signal.FillValue, 64)
 	if err != nil {
 		log.Error(err, "strconv.ParseFloat()", "signal.FillValue", in.Signal.FillValue)
 	}
