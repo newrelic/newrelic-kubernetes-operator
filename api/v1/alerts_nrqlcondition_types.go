@@ -37,8 +37,8 @@ type AlertsNrqlSpecificSpec struct {
 	ExpectedGroups     int                                    `json:"expected_groups,omitempty"`
 	IgnoreOverlap      bool                                   `json:"ignore_overlap,omitempty"`
 	ViolationTimeLimit alerts.NrqlConditionViolationTimeLimit `json:"violationTimeLimit,omitempty"`
-	Expiration         AlertsNrqlConditionExpiration          `json:"expiration,omitempty"`
-	Signal             AlertsNrqlConditionSignal              `json:"signal,omitempty"`
+	Expiration         *AlertsNrqlConditionExpiration         `json:"expiration,omitempty"`
+	Signal             *AlertsNrqlConditionSignal             `json:"signal,omitempty"`
 }
 
 // AlertsNrqlConditionSignal - Configuration that defines the signal that the NRQL condition will use to evaluate.
@@ -106,22 +106,27 @@ func (in AlertsNrqlConditionSpec) ToNrqlConditionInput() alerts.NrqlConditionInp
 	conditionInput.RunbookURL = in.RunbookURL
 	conditionInput.ViolationTimeLimit = in.ViolationTimeLimit
 
-	conditionInput.Expiration = &alerts.AlertsNrqlConditionExpiration{}
-	conditionInput.Expiration.ExpirationDuration = in.Expiration.ExpirationDuration
-	conditionInput.Expiration.CloseViolationsOnExpiration = in.Expiration.CloseViolationsOnExpiration
-	conditionInput.Expiration.OpenViolationOnExpiration = in.Expiration.OpenViolationOnExpiration
-
-	conditionInput.Signal = &alerts.AlertsNrqlConditionSignal{}
-	conditionInput.Signal.FillOption = in.Signal.FillOption
-	conditionInput.Signal.AggregationWindow = in.Signal.AggregationWindow
-	conditionInput.Signal.EvaluationOffset = in.Signal.EvaluationOffset
-	if in.Signal.FillValue != nil {
-		f, err := strconv.ParseFloat(*in.Signal.FillValue, 64)
-		if err != nil {
-			log.Error(err, "strconv.ParseFloat()", "signal.FillValue", in.Signal.FillValue)
-		}
-		conditionInput.Signal.FillValue = &f
+	if in.Expiration != nil {
+		conditionInput.Expiration = &alerts.AlertsNrqlConditionExpiration{}
+		conditionInput.Expiration.ExpirationDuration = in.Expiration.ExpirationDuration
+		conditionInput.Expiration.CloseViolationsOnExpiration = in.Expiration.CloseViolationsOnExpiration
+		conditionInput.Expiration.OpenViolationOnExpiration = in.Expiration.OpenViolationOnExpiration
 	}
+
+	if in.Signal != nil {
+		conditionInput.Signal = &alerts.AlertsNrqlConditionSignal{}
+		conditionInput.Signal.FillOption = in.Signal.FillOption
+		conditionInput.Signal.AggregationWindow = in.Signal.AggregationWindow
+		conditionInput.Signal.EvaluationOffset = in.Signal.EvaluationOffset
+		if in.Signal.FillValue != nil {
+			f, err := strconv.ParseFloat(*in.Signal.FillValue, 64)
+			if err != nil {
+				log.Error(err, "strconv.ParseFloat()", "signal.FillValue", in.Signal.FillValue)
+			}
+			conditionInput.Signal.FillValue = &f
+		}
+	}
+
 	if in.ValueFunction != nil {
 		// f := alerts.NrqlConditionValueFunction(in.ValueFunction)
 		conditionInput.ValueFunction = in.ValueFunction
