@@ -61,6 +61,20 @@ var _ = Describe("AlertsNrqlCondition reconciliation", func() {
 			return condition, nil
 		}
 
+		mockAlertsClient.CreateNrqlConditionBaselineMutationStub = func(accountID int, policyID string, a alerts.NrqlConditionInput) (*alerts.NrqlAlertCondition, error) {
+			condition := &alerts.NrqlAlertCondition{
+				ID: "111",
+			}
+			return condition, nil
+		}
+
+		mockAlertsClient.UpdateNrqlConditionBaselineMutationStub = func(accountID int, conditionID string, a alerts.NrqlConditionInput) (*alerts.NrqlAlertCondition, error) {
+			condition := &alerts.NrqlAlertCondition{
+				ID: "112",
+			}
+			return condition, nil
+		}
+
 		mockAlertsClient.SearchNrqlConditionsQueryStub = func(accountID int, searchCriteria alerts.NrqlConditionsSearchCriteria) ([]*alerts.NrqlAlertCondition, error) {
 			var a []*alerts.NrqlAlertCondition
 			condition := &alerts.NrqlAlertCondition{
@@ -345,6 +359,36 @@ var _ = Describe("AlertsNrqlCondition reconciliation", func() {
 					Expect(err).ToNot(HaveOccurred())
 					Expect(mockAlertsClient.CreateNrqlConditionStaticMutationCallCount()).To(Equal(1))
 					Expect(mockAlertsClient.UpdateNrqlConditionStaticMutationCallCount()).To(Equal(0))
+				})
+			})
+		})
+
+		Context("and given a new baseline condition", func() {
+			Context("with a valid condition", func() {
+				BeforeEach(func() {
+					condition.Spec.BaselineDirection = &alerts.NrqlBaselineDirections.UpperAndLower
+				})
+				It("should create the condition", func() {
+					err := k8sClient.Create(ctx, condition)
+					Expect(err).To(BeNil())
+
+					_, err = r.Reconcile(request)
+					Expect(err).ToNot(HaveOccurred())
+					Expect(mockAlertsClient.CreateNrqlConditionBaselineMutationCallCount()).To(Equal(1))
+					Expect(mockAlertsClient.UpdateNrqlConditionBaselineMutationCallCount()).To(Equal(0))
+				})
+
+				It("has the expected AppliedSpec", func() {
+					err := k8sClient.Create(ctx, condition)
+					Expect(err).ToNot(HaveOccurred())
+
+					_, err = r.Reconcile(request)
+					Expect(err).ToNot(HaveOccurred())
+
+					var endStateCondition nrv1.AlertsNrqlCondition
+					err = k8sClient.Get(ctx, namespacedName, &endStateCondition)
+					Expect(err).To(BeNil())
+					Expect(endStateCondition.Status.AppliedSpec).To(Equal(&condition.Spec))
 				})
 			})
 		})

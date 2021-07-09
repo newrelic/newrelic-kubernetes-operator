@@ -5,11 +5,9 @@ package v1
 import (
 	"context"
 	"errors"
-
+	"github.com/newrelic/newrelic-kubernetes-operator/interfaces"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-
-	"github.com/newrelic/newrelic-kubernetes-operator/interfaces"
 
 	"github.com/newrelic/newrelic-client-go/pkg/alerts"
 	. "github.com/onsi/ginkgo"
@@ -158,6 +156,17 @@ var _ = Describe("ValidateCreate", func() {
 				err := r.ValidateCreate()
 				Expect(err).To(HaveOccurred())
 				Expect(err).To(MatchError(errors.New("region and existing_policy_id must be set")))
+			})
+		})
+	})
+
+	Context("when updating an existing NRQL condition", func() {
+		Context("and changing the type from static to baseline", func() {
+			It("should fail validation", func() {
+				updated := r.DeepCopy()
+				updated.Spec.BaselineDirection = &alerts.NrqlBaselineDirections.UpperAndLower
+				err := updated.ValidateUpdate(&r)
+				Expect(err.Error()).To(Equal("cannot change between condition types, you must delete and create a new alert"))
 			})
 		})
 	})

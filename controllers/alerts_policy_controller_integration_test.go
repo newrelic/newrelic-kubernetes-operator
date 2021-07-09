@@ -140,7 +140,8 @@ var _ = Describe("alertspolicy reconciliation", func() {
 					ExpectedGroups:     2,
 					IgnoreOverlap:      true,
 				},
-				AlertsAPMSpecificSpec: nrv1.AlertsAPMSpecificSpec{},
+				AlertsAPMSpecificSpec:      nrv1.AlertsAPMSpecificSpec{},
+				AlertsBaselineSpecificSpec: nrv1.AlertsBaselineSpecificSpec{},
 			}
 
 			alertspolicy = &nrv1.AlertsPolicy{
@@ -432,7 +433,8 @@ var _ = Describe("alertspolicy reconciliation", func() {
 					ExpectedGroups:     2,
 					IgnoreOverlap:      true,
 				},
-				AlertsAPMSpecificSpec: nrv1.AlertsAPMSpecificSpec{},
+				AlertsAPMSpecificSpec:      nrv1.AlertsAPMSpecificSpec{},
+				AlertsBaselineSpecificSpec: nrv1.AlertsBaselineSpecificSpec{},
 			}
 
 			alertspolicy = &nrv1.AlertsPolicy{
@@ -597,7 +599,8 @@ var _ = Describe("alertspolicy reconciliation", func() {
 					ExpectedGroups:     2,
 					IgnoreOverlap:      true,
 				},
-				AlertsAPMSpecificSpec: nrv1.AlertsAPMSpecificSpec{},
+				AlertsAPMSpecificSpec:      nrv1.AlertsAPMSpecificSpec{},
+				AlertsBaselineSpecificSpec: nrv1.AlertsBaselineSpecificSpec{},
 			}
 
 			alertspolicy = &nrv1.AlertsPolicy{
@@ -832,7 +835,8 @@ var _ = Describe("alertspolicy reconciliation", func() {
 						ExpectedGroups:     2,
 						IgnoreOverlap:      true,
 					},
-					AlertsAPMSpecificSpec: nrv1.AlertsAPMSpecificSpec{},
+					AlertsAPMSpecificSpec:      nrv1.AlertsAPMSpecificSpec{},
+					AlertsBaselineSpecificSpec: nrv1.AlertsBaselineSpecificSpec{},
 				}
 				secondCondition := nrv1.AlertsPolicyCondition{
 					Spec: secondConditionSpec,
@@ -1240,7 +1244,8 @@ var _ = Describe("alertspolicy reconciliation", func() {
 					ExpectedGroups:     2,
 					IgnoreOverlap:      true,
 				},
-				AlertsAPMSpecificSpec: nrv1.AlertsAPMSpecificSpec{},
+				AlertsAPMSpecificSpec:      nrv1.AlertsAPMSpecificSpec{},
+				AlertsBaselineSpecificSpec: nrv1.AlertsBaselineSpecificSpec{},
 			}
 
 			alertspolicy = &nrv1.AlertsPolicy{
@@ -1291,7 +1296,8 @@ var _ = Describe("alertspolicy reconciliation", func() {
 					ExpectedGroups:     2,
 					IgnoreOverlap:      true,
 				},
-				AlertsAPMSpecificSpec: nrv1.AlertsAPMSpecificSpec{},
+				AlertsAPMSpecificSpec:      nrv1.AlertsAPMSpecificSpec{},
+				AlertsBaselineSpecificSpec: nrv1.AlertsBaselineSpecificSpec{},
 			}
 			secondCondition := nrv1.AlertsPolicyCondition{
 				Spec: secondConditionSpec,

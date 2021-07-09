@@ -68,6 +68,9 @@ spec:
                 - threshold
                 type: object
               type: array
+            baseline_direction:
+              description: NrqlBaselineDirection
+              type: string
             description:
               type: string
             enabled:
@@ -189,6 +192,9 @@ spec:
                     - threshold
                     type: object
                   type: array
+                baseline_direction:
+                  description: NrqlBaselineDirection
+                  type: string
                 description:
                   type: string
                 enabled:

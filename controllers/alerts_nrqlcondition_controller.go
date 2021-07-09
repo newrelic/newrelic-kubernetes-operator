@@ -199,7 +199,15 @@ func (r *AlertsNrqlConditionReconciler) writeNewRelicAlertCondition(ctx context.
 
 	if condition.Status.ConditionID != "" && !reflect.DeepEqual(&condition.Spec, condition.Status.AppliedSpec) {
 		r.Log.Info("updating condition", "ConditionName", condition.Name, "API fields", updateInput)
-		updatedCondition, err := alertsClient.UpdateNrqlConditionStaticMutation(condition.Spec.AccountID, condition.Status.ConditionID, updateInput)
+		var updatedCondition *alerts.NrqlAlertCondition
+		var err error
+
+		if condition.Spec.BaselineDirection != nil {
+			updatedCondition, err = alertsClient.UpdateNrqlConditionBaselineMutation(condition.Spec.AccountID, condition.Status.ConditionID, updateInput)
+		} else {
+			updatedCondition, err = alertsClient.UpdateNrqlConditionStaticMutation(condition.Spec.AccountID, condition.Status.ConditionID, updateInput)
+		}
+
 		if err != nil {
 			r.Log.Error(err, "failed to update condition")
 		} else {
@@ -213,7 +221,14 @@ func (r *AlertsNrqlConditionReconciler) writeNewRelicAlertCondition(ctx context.
 		}
 	} else {
 		r.Log.Info("Creating condition", "ConditionName", condition.Name, "API fields", updateInput)
-		createdCondition, err := alertsClient.CreateNrqlConditionStaticMutation(condition.Spec.AccountID, condition.Spec.ExistingPolicyID, updateInput)
+		var createdCondition *alerts.NrqlAlertCondition
+		var err error
+
+		if condition.Spec.BaselineDirection != nil {
+			createdCondition, err = alertsClient.CreateNrqlConditionBaselineMutation(condition.Spec.AccountID, condition.Spec.ExistingPolicyID, updateInput)
+		} else {
+			createdCondition, err = alertsClient.CreateNrqlConditionStaticMutation(condition.Spec.AccountID, condition.Spec.ExistingPolicyID, updateInput)
+		}
 
 		if err != nil {
 			r.Log.Error(err, "failed to create condition",
