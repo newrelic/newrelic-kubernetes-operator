@@ -1,5 +1,3 @@
-// +build integration
-
 package controllers
 
 import (
@@ -58,6 +56,19 @@ var _ = Describe("alertspolicy reconciliation", func() {
 			}, nil
 		}
 
+		mockAlertsClient.UpdatePolicyChannelsStub = func(policy int, channels []int) (*alerts.PolicyChannels, error) {
+			return &alerts.PolicyChannels{
+				ID:         policy,
+				ChannelIDs: channels,
+			}, nil
+		}
+
+		mockAlertsClient.DeletePolicyChannelStub = func(policy int, channel int) (*alerts.Channel, error) {
+			return &alerts.Channel{
+				ID: policy,
+			}, nil
+		}
+
 		newRelicAgent := newrelic.Application{}
 
 		r = &AlertsPolicyReconciler{
@@ -104,7 +115,7 @@ var _ = Describe("alertspolicy reconciliation", func() {
 			}
 
 			conditionSpec = &nrv1.AlertsPolicyConditionSpec{
-				nrv1.AlertsGenericConditionSpec{
+				AlertsGenericConditionSpec: nrv1.AlertsGenericConditionSpec{
 					Terms: []nrv1.AlertsNrqlConditionTerm{
 						{
 							ThresholdDuration:    30,
@@ -119,7 +130,7 @@ var _ = Describe("alertspolicy reconciliation", func() {
 					RunbookURL: "http://test.com/runbook",
 					Enabled:    true,
 				},
-				nrv1.AlertsNrqlSpecificSpec{
+				AlertsNrqlSpecificSpec: nrv1.AlertsNrqlSpecificSpec{
 					Nrql: alerts.NrqlConditionQuery{
 						Query:            "SELECT 1 FROM MyEvents",
 						EvaluationOffset: 5,
@@ -129,7 +140,7 @@ var _ = Describe("alertspolicy reconciliation", func() {
 					ExpectedGroups:     2,
 					IgnoreOverlap:      true,
 				},
-				nrv1.AlertsAPMSpecificSpec{},
+				AlertsAPMSpecificSpec: nrv1.AlertsAPMSpecificSpec{},
 			}
 
 			alertspolicy = &nrv1.AlertsPolicy{
@@ -142,12 +153,14 @@ var _ = Describe("alertspolicy reconciliation", func() {
 					APIKey:             "112233",
 					IncidentPreference: "PER_POLICY",
 					Region:             "us",
+					ChannelIDs:         []int{1, 2},
 					Conditions: []nrv1.AlertsPolicyCondition{
 						{
 							Spec: *conditionSpec,
 						},
 					},
 				},
+
 				Status: nrv1.AlertsPolicyStatus{
 					AppliedSpec: &nrv1.AlertsPolicySpec{},
 					PolicyID:    "",
@@ -229,7 +242,7 @@ var _ = Describe("alertspolicy reconciliation", func() {
 					Namespace: endStateAlertsPolicy.Spec.Conditions[0].Namespace,
 				}
 				err = k8sClient.Get(ctx, conditionNameType, &endStateCondition)
-
+				Expect(err).To(BeNil())
 				Expect(endStateCondition.ObjectMeta.OwnerReferences[0].Name).To(Equal(endStateAlertsPolicy.Name))
 			})
 
@@ -256,12 +269,28 @@ var _ = Describe("alertspolicy reconciliation", func() {
 				Expect(endStateCondition.Spec.Region).To(Equal(alertspolicy.Spec.Region))
 				Expect(endStateCondition.Spec.APIKey).To(Equal(alertspolicy.Spec.APIKey))
 			})
+
+			It("adds expected alertsChannels", func() {
+				err := k8sClient.Create(ctx, alertspolicy)
+				Expect(err).ToNot(HaveOccurred())
+
+				// call reconcile
+				_, err = r.Reconcile(request)
+				Expect(err).ToNot(HaveOccurred())
+				Expect(mockAlertsClient.UpdatePolicyChannelsCallCount()).To(Equal(1))
+
+				var endStateAlertsPolicy nrv1.AlertsPolicy
+				err = k8sClient.Get(ctx, namespacedName, &endStateAlertsPolicy)
+				Expect(err).To(BeNil())
+				Expect(endStateAlertsPolicy.Status.AppliedSpec.ChannelIDs).To(Equal([]int{1, 2}))
+
+			})
 		})
 
 		Context("when the New Relic API returns an error", func() {
 			BeforeEach(func() {
 				mockAlertsClient.CreatePolicyMutationStub = func(int, alerts.AlertsPolicyInput) (*alerts.AlertsPolicy, error) {
-					return &alerts.AlertsPolicy{}, errors.New("Any Error Goes Here")
+					return &alerts.AlertsPolicy{}, errors.New("any Error Goes Here")
 				}
 			})
 
@@ -272,7 +301,7 @@ var _ = Describe("alertspolicy reconciliation", func() {
 				// call reconcile
 				_, reconcileErr := r.Reconcile(request)
 				Expect(reconcileErr).To(HaveOccurred())
-				Expect(reconcileErr.Error()).To(Equal("Any Error Goes Here"))
+				Expect(reconcileErr.Error()).To(Equal("any Error Goes Here"))
 
 				var endStateAlertsPolicy nrv1.AlertsPolicy
 				getErr := k8sClient.Get(ctx, namespacedName, &endStateAlertsPolicy)
@@ -378,7 +407,7 @@ var _ = Describe("alertspolicy reconciliation", func() {
 	Context("When starting with an existing alertspolicy with a NRQL condition", func() {
 		BeforeEach(func() {
 			conditionSpec = &nrv1.AlertsPolicyConditionSpec{
-				nrv1.AlertsGenericConditionSpec{
+				AlertsGenericConditionSpec: nrv1.AlertsGenericConditionSpec{
 					Terms: []nrv1.AlertsNrqlConditionTerm{
 						{
 							ThresholdDuration:    30,
@@ -393,7 +422,7 @@ var _ = Describe("alertspolicy reconciliation", func() {
 					RunbookURL: "http://test.com/runbook",
 					Enabled:    true,
 				},
-				nrv1.AlertsNrqlSpecificSpec{
+				AlertsNrqlSpecificSpec: nrv1.AlertsNrqlSpecificSpec{
 					Nrql: alerts.NrqlConditionQuery{
 						Query:            "SELECT 1 FROM MyEvents",
 						EvaluationOffset: 5,
@@ -403,7 +432,7 @@ var _ = Describe("alertspolicy reconciliation", func() {
 					ExpectedGroups:     2,
 					IgnoreOverlap:      true,
 				},
-				nrv1.AlertsAPMSpecificSpec{},
+				AlertsAPMSpecificSpec: nrv1.AlertsAPMSpecificSpec{},
 			}
 
 			alertspolicy = &nrv1.AlertsPolicy{
@@ -416,6 +445,7 @@ var _ = Describe("alertspolicy reconciliation", func() {
 					APIKey:             "112233",
 					IncidentPreference: "PER_POLICY",
 					Region:             "us",
+					ChannelIDs:         []int{1, 2},
 					Conditions: []nrv1.AlertsPolicyCondition{
 						{
 							Spec: *conditionSpec,
@@ -475,7 +505,7 @@ var _ = Describe("alertspolicy reconciliation", func() {
 		Context("and New Relic API returns a 404", func() {
 			BeforeEach(func() {
 				mockAlertsClient.DeletePolicyMutationStub = func(int, string) (*alerts.AlertsPolicy, error) {
-					return &alerts.AlertsPolicy{}, errors.New("Imaginary 404 Failure")
+					return &alerts.AlertsPolicy{}, errors.New("imaginary 404 Failure")
 				}
 			})
 
@@ -495,12 +525,54 @@ var _ = Describe("alertspolicy reconciliation", func() {
 				Expect(err).ToNot(HaveOccurred())
 			})
 		})
+
+		Context("and updating the list of Alerts channnels", func() {
+			BeforeEach(func() {
+				alertspolicy.Spec.ChannelIDs = []int{1, 3}
+			})
+
+			It("should call the New Relic Alerts API", func() {
+				err := k8sClient.Update(ctx, alertspolicy)
+				Expect(err).ToNot(HaveOccurred())
+
+				// call reconcile
+				_, err = r.Reconcile(request)
+				Expect(err).ToNot(HaveOccurred())
+				Expect(mockAlertsClient.UpdatePolicyChannelsCallCount()).To(Equal(2))
+				policyID, alertsChannels := mockAlertsClient.UpdatePolicyChannelsArgsForCall(1)
+				Expect(policyID).To(Equal(333))
+				Expect(alertsChannels).To(Equal([]int{3}))
+
+				Expect(mockAlertsClient.DeletePolicyChannelCallCount()).To(Equal(1))
+				_, deletedChannnel := mockAlertsClient.DeletePolicyChannelArgsForCall(0)
+				Expect(deletedChannnel).To(Equal(2))
+
+				var endStateAlertsPolicy nrv1.AlertsPolicy
+				err = k8sClient.Get(ctx, namespacedName, &endStateAlertsPolicy)
+				Expect(err).To(BeNil())
+				Expect(endStateAlertsPolicy.Status.AppliedSpec.ChannelIDs).To(Equal([]int{1, 3}))
+			})
+
+			AfterEach(func() {
+				mockAlertsClient.DeletePolicyMutationStub = func(int, string) (*alerts.AlertsPolicy, error) {
+					return &alerts.AlertsPolicy{}, nil
+				}
+
+				// Delete the alertspolicy
+				err := k8sClient.Delete(ctx, alertspolicy)
+				Expect(err).ToNot(HaveOccurred())
+
+				// Need to call reconcile to delete finalizer
+				_, err = r.Reconcile(request)
+				Expect(err).ToNot(HaveOccurred())
+			})
+		})
 	})
 
 	Context("When starting with an existing alertspolicy with a NRQL condition", func() {
 		BeforeEach(func() {
 			conditionSpec = &nrv1.AlertsPolicyConditionSpec{
-				nrv1.AlertsGenericConditionSpec{
+				AlertsGenericConditionSpec: nrv1.AlertsGenericConditionSpec{
 					Terms: []nrv1.AlertsNrqlConditionTerm{
 						{
 							ThresholdDuration:    30,
@@ -515,7 +587,7 @@ var _ = Describe("alertspolicy reconciliation", func() {
 					RunbookURL: "http://test.com/runbook",
 					Enabled:    true,
 				},
-				nrv1.AlertsNrqlSpecificSpec{
+				AlertsNrqlSpecificSpec: nrv1.AlertsNrqlSpecificSpec{
 					Nrql: alerts.NrqlConditionQuery{
 						Query:            "SELECT 1 FROM MyEvents",
 						EvaluationOffset: 5,
@@ -525,7 +597,7 @@ var _ = Describe("alertspolicy reconciliation", func() {
 					ExpectedGroups:     2,
 					IgnoreOverlap:      true,
 				},
-				nrv1.AlertsAPMSpecificSpec{},
+				AlertsAPMSpecificSpec: nrv1.AlertsAPMSpecificSpec{},
 			}
 
 			alertspolicy = &nrv1.AlertsPolicy{
@@ -735,7 +807,7 @@ var _ = Describe("alertspolicy reconciliation", func() {
 		Context("and adding another condition ", func() {
 			BeforeEach(func() {
 				secondConditionSpec := nrv1.AlertsPolicyConditionSpec{
-					nrv1.AlertsGenericConditionSpec{
+					AlertsGenericConditionSpec: nrv1.AlertsGenericConditionSpec{
 						Terms: []nrv1.AlertsNrqlConditionTerm{
 							{
 								ThresholdDuration:    30,
@@ -750,7 +822,7 @@ var _ = Describe("alertspolicy reconciliation", func() {
 						RunbookURL: "http://test.com/runbook",
 						Enabled:    true,
 					},
-					nrv1.AlertsNrqlSpecificSpec{
+					AlertsNrqlSpecificSpec: nrv1.AlertsNrqlSpecificSpec{
 						Nrql: alerts.NrqlConditionQuery{
 							Query:            "SELECT 1 FROM MyEvents",
 							EvaluationOffset: 5,
@@ -760,7 +832,7 @@ var _ = Describe("alertspolicy reconciliation", func() {
 						ExpectedGroups:     2,
 						IgnoreOverlap:      true,
 					},
-					nrv1.AlertsAPMSpecificSpec{},
+					AlertsAPMSpecificSpec: nrv1.AlertsAPMSpecificSpec{},
 				}
 				secondCondition := nrv1.AlertsPolicyCondition{
 					Spec: secondConditionSpec,
@@ -1143,7 +1215,7 @@ var _ = Describe("alertspolicy reconciliation", func() {
 	Context("When starting with an existing alertspolicy with two NRQL conditions", func() {
 		BeforeEach(func() {
 			conditionSpec = &nrv1.AlertsPolicyConditionSpec{
-				nrv1.AlertsGenericConditionSpec{
+				AlertsGenericConditionSpec: nrv1.AlertsGenericConditionSpec{
 					Terms: []nrv1.AlertsNrqlConditionTerm{
 						{
 							ThresholdDuration:    30,
@@ -1158,7 +1230,7 @@ var _ = Describe("alertspolicy reconciliation", func() {
 					RunbookURL: "http://test.com/runbook",
 					Enabled:    true,
 				},
-				nrv1.AlertsNrqlSpecificSpec{
+				AlertsNrqlSpecificSpec: nrv1.AlertsNrqlSpecificSpec{
 					Nrql: alerts.NrqlConditionQuery{
 						Query:            "SELECT 1 FROM MyEvents",
 						EvaluationOffset: 5,
@@ -1168,7 +1240,7 @@ var _ = Describe("alertspolicy reconciliation", func() {
 					ExpectedGroups:     2,
 					IgnoreOverlap:      true,
 				},
-				nrv1.AlertsAPMSpecificSpec{},
+				AlertsAPMSpecificSpec: nrv1.AlertsAPMSpecificSpec{},
 			}
 
 			alertspolicy = &nrv1.AlertsPolicy{
@@ -1194,7 +1266,7 @@ var _ = Describe("alertspolicy reconciliation", func() {
 			}
 
 			secondConditionSpec := nrv1.AlertsPolicyConditionSpec{
-				nrv1.AlertsGenericConditionSpec{
+				AlertsGenericConditionSpec: nrv1.AlertsGenericConditionSpec{
 					Terms: []nrv1.AlertsNrqlConditionTerm{
 						{
 							ThresholdDuration:    30,
@@ -1209,7 +1281,7 @@ var _ = Describe("alertspolicy reconciliation", func() {
 					RunbookURL: "http://test.com/runbook",
 					Enabled:    true,
 				},
-				nrv1.AlertsNrqlSpecificSpec{
+				AlertsNrqlSpecificSpec: nrv1.AlertsNrqlSpecificSpec{
 					Nrql: alerts.NrqlConditionQuery{
 						Query:            "SELECT 1 FROM MyEvents",
 						EvaluationOffset: 5,
@@ -1219,7 +1291,7 @@ var _ = Describe("alertspolicy reconciliation", func() {
 					ExpectedGroups:     2,
 					IgnoreOverlap:      true,
 				},
-				nrv1.AlertsAPMSpecificSpec{},
+				AlertsAPMSpecificSpec: nrv1.AlertsAPMSpecificSpec{},
 			}
 			secondCondition := nrv1.AlertsPolicyCondition{
 				Spec: secondConditionSpec,
@@ -1345,6 +1417,50 @@ var _ = Describe("alertspolicy reconciliation", func() {
 			// Need to call reconcile to delete finalizer
 			_, err = r.Reconcile(request)
 			Expect(err).ToNot(HaveOccurred())
+		})
+	})
+
+	Describe("diffIntSlice", func() {
+		var (
+			in      []int
+			compare []int
+			diff    []int
+		)
+
+		Context("with same slices", func() {
+			BeforeEach(func() {
+				in = []int{1, 2}
+				compare = []int{1, 2}
+			})
+
+			It("returns a zero slice", func() {
+				diff = diffIntSlice(in, compare)
+				Expect(diff).To(Equal([]int{}))
+			})
+		})
+
+		Context("with 2 same and 1 different value", func() {
+			BeforeEach(func() {
+				in = []int{1, 2, 3}
+				compare = []int{1, 2}
+			})
+
+			It("returns expected difference", func() {
+				diff = diffIntSlice(in, compare)
+				Expect(diff).To(Equal([]int{3}))
+			})
+		})
+
+		Context("with all different values", func() {
+			BeforeEach(func() {
+				in = []int{1, 2}
+				compare = []int{3, 4}
+			})
+
+			It("returns expected difference", func() {
+				diff = diffIntSlice(in, compare)
+				Expect(diff).To(Equal([]int{1, 2}))
+			})
 		})
 	})
 })
