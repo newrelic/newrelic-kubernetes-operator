@@ -5,9 +5,11 @@ package v1
 import (
 	"context"
 	"errors"
-	"github.com/newrelic/newrelic-kubernetes-operator/interfaces"
+
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+
+	"github.com/newrelic/newrelic-kubernetes-operator/interfaces"
 
 	"github.com/newrelic/newrelic-client-go/pkg/alerts"
 	. "github.com/onsi/ginkgo"
