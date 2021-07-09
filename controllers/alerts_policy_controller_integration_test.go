@@ -140,7 +140,7 @@ var _ = Describe("alertspolicy reconciliation", func() {
 					ExpectedGroups:     2,
 					IgnoreOverlap:      true,
 				},
-				AlertsAPMSpecificSpec: nrv1.AlertsAPMSpecificSpec{},
+				AlertsAPMSpecificSpec:      nrv1.AlertsAPMSpecificSpec{},
 				AlertsBaselineSpecificSpec: nrv1.AlertsBaselineSpecificSpec{},
 			}
 
@@ -433,7 +433,7 @@ var _ = Describe("alertspolicy reconciliation", func() {
 					ExpectedGroups:     2,
 					IgnoreOverlap:      true,
 				},
-				AlertsAPMSpecificSpec: nrv1.AlertsAPMSpecificSpec{},
+				AlertsAPMSpecificSpec:      nrv1.AlertsAPMSpecificSpec{},
 				AlertsBaselineSpecificSpec: nrv1.AlertsBaselineSpecificSpec{},
 			}
 
@@ -599,7 +599,7 @@ var _ = Describe("alertspolicy reconciliation", func() {
 					ExpectedGroups:     2,
 					IgnoreOverlap:      true,
 				},
-				AlertsAPMSpecificSpec: nrv1.AlertsAPMSpecificSpec{},
+				AlertsAPMSpecificSpec:      nrv1.AlertsAPMSpecificSpec{},
 				AlertsBaselineSpecificSpec: nrv1.AlertsBaselineSpecificSpec{},
 			}
 
@@ -835,7 +835,7 @@ var _ = Describe("alertspolicy reconciliation", func() {
 						ExpectedGroups:     2,
 						IgnoreOverlap:      true,
 					},
-					AlertsAPMSpecificSpec: nrv1.AlertsAPMSpecificSpec{},
+					AlertsAPMSpecificSpec:      nrv1.AlertsAPMSpecificSpec{},
 					AlertsBaselineSpecificSpec: nrv1.AlertsBaselineSpecificSpec{},
 				}
 				secondCondition := nrv1.AlertsPolicyCondition{
@@ -1244,7 +1244,7 @@ var _ = Describe("alertspolicy reconciliation", func() {
 					ExpectedGroups:     2,
 					IgnoreOverlap:      true,
 				},
-				AlertsAPMSpecificSpec: nrv1.AlertsAPMSpecificSpec{},
+				AlertsAPMSpecificSpec:      nrv1.AlertsAPMSpecificSpec{},
 				AlertsBaselineSpecificSpec: nrv1.AlertsBaselineSpecificSpec{},
 			}
 
@@ -1296,7 +1296,7 @@ var _ = Describe("alertspolicy reconciliation", func() {
 					ExpectedGroups:     2,
 					IgnoreOverlap:      true,
 				},
-				AlertsAPMSpecificSpec: nrv1.AlertsAPMSpecificSpec{},
+				AlertsAPMSpecificSpec:      nrv1.AlertsAPMSpecificSpec{},
 				AlertsBaselineSpecificSpec: nrv1.AlertsBaselineSpecificSpec{},
 			}
 			secondCondition := nrv1.AlertsPolicyCondition{
