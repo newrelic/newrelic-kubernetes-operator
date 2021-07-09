@@ -212,7 +212,7 @@ var _ = Describe("AlertsNrqlCondition reconciliation", func() {
 				spec.APIKey = "nraa-key"
 				spec.Terms = []nrv1.AlertsNrqlConditionTerm{
 					{
-						Operator:             alerts.AlertsNrqlConditionTermsOperatorTypes.ABOVE,
+						Operator:             alerts.AlertsNRQLConditionTermsOperatorTypes.ABOVE,
 						Priority:             alerts.NrqlConditionPriorities.Critical,
 						Threshold:            "5",
 						ThresholdDuration:    60,
