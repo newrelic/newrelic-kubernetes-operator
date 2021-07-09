@@ -38,6 +38,24 @@ type AlertsNrqlSpecificSpec struct {
 	ExpectedGroups     int                                    `json:"expected_groups,omitempty"`
 	IgnoreOverlap      bool                                   `json:"ignore_overlap,omitempty"`
 	ViolationTimeLimit alerts.NrqlConditionViolationTimeLimit `json:"violationTimeLimit,omitempty"`
+	Expiration         *AlertsNrqlConditionExpiration         `json:"expiration,omitempty"`
+	Signal             *AlertsNrqlConditionSignal             `json:"signal,omitempty"`
+}
+
+// AlertsNrqlConditionSignal - Configuration that defines the signal that the NRQL condition will use to evaluate.
+type AlertsNrqlConditionSignal struct {
+	AggregationWindow *int                     `json:"aggregation_window,omitempty"`
+	EvaluationOffset  *int                     `json:"evaluation_offset,omitempty"`
+	FillOption        *alerts.AlertsFillOption `json:"fill_option,omitempty"`
+	FillValue         *string                  `json:"fill_value,omitempty"`
+}
+
+// AlertsNrqlConditionExpiration
+// Settings for how violations are opened or closed when a signal expires.
+type AlertsNrqlConditionExpiration struct {
+	ExpirationDuration          *int `json:"expirationDuration,omitempty"`
+	CloseViolationsOnExpiration bool `json:"closeViolationsOnExpiration,omitempty"`
+	OpenViolationOnExpiration   bool `json:"openViolationOnExpiration,omitempty"`
 }
 
 type AlertsBaselineSpecificSpec struct {
@@ -46,7 +64,7 @@ type AlertsBaselineSpecificSpec struct {
 
 // AlertsNrqlConditionTerm represents the terms of a New Relic alert condition.
 type AlertsNrqlConditionTerm struct {
-	Operator             alerts.AlertsNrqlConditionTermsOperator `json:"operator,omitempty"`
+	Operator             alerts.AlertsNRQLConditionTermsOperator `json:"operator,omitempty"`
 	Priority             alerts.NrqlConditionPriority            `json:"priority,omitempty"`
 	Threshold            string                                  `json:"threshold,omitempty"`
 	ThresholdDuration    int                                     `json:"threshold_duration,omitempty"`
@@ -93,6 +111,27 @@ func (in AlertsNrqlConditionSpec) ToNrqlConditionInput() alerts.NrqlConditionInp
 	conditionInput.RunbookURL = in.RunbookURL
 	conditionInput.ViolationTimeLimit = in.ViolationTimeLimit
 	conditionInput.BaselineDirection = in.BaselineDirection
+
+	if in.Expiration != nil {
+		conditionInput.Expiration = &alerts.AlertsNrqlConditionExpiration{}
+		conditionInput.Expiration.ExpirationDuration = in.Expiration.ExpirationDuration
+		conditionInput.Expiration.CloseViolationsOnExpiration = in.Expiration.CloseViolationsOnExpiration
+		conditionInput.Expiration.OpenViolationOnExpiration = in.Expiration.OpenViolationOnExpiration
+	}
+
+	if in.Signal != nil {
+		conditionInput.Signal = &alerts.AlertsNrqlConditionSignal{}
+		conditionInput.Signal.FillOption = in.Signal.FillOption
+		conditionInput.Signal.AggregationWindow = in.Signal.AggregationWindow
+		conditionInput.Signal.EvaluationOffset = in.Signal.EvaluationOffset
+		if in.Signal.FillValue != nil {
+			f, err := strconv.ParseFloat(*in.Signal.FillValue, 64)
+			if err != nil {
+				log.Error(err, "strconv.ParseFloat()", "signal.FillValue", in.Signal.FillValue)
+			}
+			conditionInput.Signal.FillValue = &f
+		}
+	}
 
 	if in.ValueFunction != nil {
 		conditionInput.ValueFunction = in.ValueFunction

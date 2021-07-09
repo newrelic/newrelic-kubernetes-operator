@@ -79,6 +79,17 @@ spec:
               type: string
             expected_groups:
               type: integer
+            expiration:
+              description: AlertsNrqlConditionExpiration Settings for how violations
+                are opened or closed when a signal expires.
+              properties:
+                closeViolationsOnExpiration:
+                  type: boolean
+                expirationDuration:
+                  type: integer
+                openViolationOnExpiration:
+                  type: boolean
+              type: object
             id:
               type: integer
             ignore_overlap:
@@ -97,6 +108,20 @@ spec:
               type: string
             runbook_url:
               type: string
+            signal:
+              description: AlertsNrqlConditionSignal - Configuration that defines
+                the signal that the NRQL condition will use to evaluate.
+              properties:
+                aggregation_window:
+                  type: integer
+                evaluation_offset:
+                  type: integer
+                fill_option:
+                  description: AlertsFillOption - The available fill options.
+                  type: string
+                fill_value:
+                  type: string
+              type: object
             terms:
               items:
                 description: AlertsNrqlConditionTerm represents the terms of a New Relic alert condition.
@@ -178,6 +203,17 @@ spec:
                   type: string
                 expected_groups:
                   type: integer
+                expiration:
+                  description: AlertsNrqlConditionExpiration Settings for how violations
+                    are opened or closed when a signal expires.
+                  properties:
+                    closeViolationsOnExpiration:
+                      type: boolean
+                    expirationDuration:
+                      type: integer
+                    openViolationOnExpiration:
+                      type: boolean
+                  type: object
                 id:
                   type: integer
                 ignore_overlap:
@@ -196,6 +232,20 @@ spec:
                   type: string
                 runbook_url:
                   type: string
+                signal:
+                  description: AlertsNrqlConditionSignal - Configuration that defines
+                    the signal that the NRQL condition will use to evaluate.
+                  properties:
+                    aggregation_window:
+                      type: integer
+                    evaluation_offset:
+                      type: integer
+                    fill_option:
+                      description: AlertsFillOption - The available fill options.
+                      type: string
+                    fill_value:
+                      type: string
+                  type: object
                 terms:
                   items:
                     description: AlertsNrqlConditionTerm represents the terms of a New Relic alert condition.

@@ -106,7 +106,7 @@ var _ = Describe("AlertsPolicy_webhooks", func() {
 				spec1 := AlertsPolicyConditionSpec{}
 				spec1.Terms = []AlertsNrqlConditionTerm{
 					{
-						Operator:             alerts.AlertsNrqlConditionTermsOperatorTypes.ABOVE,
+						Operator:             alerts.AlertsNRQLConditionTermsOperatorTypes.ABOVE,
 						Priority:             alerts.NrqlConditionPriorities.Critical,
 						Threshold:            "5",
 						ThresholdDuration:    60,
@@ -129,7 +129,7 @@ var _ = Describe("AlertsPolicy_webhooks", func() {
 				spec2 := AlertsPolicyConditionSpec{}
 				spec2.Terms = []AlertsNrqlConditionTerm{
 					{
-						Operator:             alerts.AlertsNrqlConditionTermsOperatorTypes.ABOVE,
+						Operator:             alerts.AlertsNRQLConditionTermsOperatorTypes.ABOVE,
 						Priority:             alerts.NrqlConditionPriorities.Critical,
 						Threshold:            "5",
 						ThresholdDuration:    60,
@@ -185,7 +185,7 @@ var _ = Describe("AlertsPolicy_webhooks", func() {
 		conditionSpec := AlertsPolicyConditionSpec{}
 		conditionSpec.Terms = []AlertsNrqlConditionTerm{
 			{
-				Operator:             alerts.AlertsNrqlConditionTermsOperatorTypes.ABOVE,
+				Operator:             alerts.AlertsNRQLConditionTermsOperatorTypes.ABOVE,
 				Priority:             alerts.NrqlConditionPriorities.Critical,
 				Threshold:            "5",
 				ThresholdDuration:    60,

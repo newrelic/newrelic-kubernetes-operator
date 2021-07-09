@@ -19,6 +19,7 @@ import (
 	"context"
 	"errors"
 	"reflect"
+	"strconv"
 
 	newrelic "github.com/newrelic/go-agent/v3/newrelic"
 	"github.com/newrelic/newrelic-client-go/pkg/alerts"
@@ -150,13 +151,20 @@ func (r *AlertsPolicyReconciler) createAlertsPolicy(policy *nrv1.AlertsPolicy) e
 
 	policy.Status.PolicyID = createResult.ID
 
-	errConditions := r.createConditions(policy)
-	if errConditions != nil {
-		r.Log.Error(errConditions, "error creating or updating conditions")
+	err = r.createConditions(policy)
+	if err != nil {
+		r.Log.Error(err, "error creating or updating conditions")
 
-		return errConditions
+		return err
 	}
 	r.Log.Info("policy after condition creation", "policyCondition", policy.Spec.Conditions, "pointer", &policy)
+
+	err = r.createAlertsChannels(policy)
+	if err != nil {
+		r.Log.Error(err, "error updating alert channels")
+
+		return err
+	}
 
 	policy.Status.AppliedSpec = &policy.Spec
 
@@ -372,7 +380,6 @@ func (r *AlertsPolicyReconciler) createOrUpdateConditions(policy *nrv1.AlertsPol
 }
 
 func asOwner(p *nrv1.AlertsPolicy) metav1.OwnerReference {
-
 	return metav1.OwnerReference{
 		APIVersion: nrv1.GroupVersion.String(),
 		Kind:       "AlertsPolicy",
@@ -518,12 +525,21 @@ func (r *AlertsPolicyReconciler) updateAlertsPolicy(policy *nrv1.AlertsPolicy) e
 		policy.Status.PolicyID = updateResult.ID
 	}
 
-	errConditions := r.createOrUpdateConditions(policy)
-	if errConditions != nil {
-		r.Log.Error(errConditions, "error creating or updating conditions")
-		return errConditions
+	err = r.createOrUpdateConditions(policy)
+	if err != nil {
+		r.Log.Error(err, "error creating or updating conditions")
+		return err
 	}
 	r.Log.Info("policySpec before update", "policy.Spec", policy.Spec)
+
+	if len(policy.Spec.ChannelIDs) > 0 {
+		r.Log.Info("May need to udpate policy Channels")
+		err = r.updateAlertsChannels(policy)
+		if err != nil {
+			r.Log.Error(err, "error creating or updating conditions")
+			return err
+		}
+	}
 
 	policy.Status.AppliedSpec = &policy.Spec
 
@@ -638,6 +654,78 @@ func (r *AlertsPolicyReconciler) deleteNewRelicAlertPolicy(policy *nrv1.AlertsPo
 	}
 
 	return nil
+}
+
+func (r *AlertsPolicyReconciler) createAlertsChannels(policy *nrv1.AlertsPolicy) error {
+	if len(policy.Spec.ChannelIDs) > 0 {
+		r.Log.Info("creating channels to policy", "channelIds", policy.Spec.ChannelIDs, "policyId", policy.Status.PolicyID)
+		policyID, errInt := strconv.Atoi(policy.Status.PolicyID)
+		if errInt != nil {
+			r.Log.Error(errInt, "Failed to parse policyID as an int")
+			return errInt
+		}
+
+		alertsChannels, err := r.Alerts.UpdatePolicyChannels(policyID, policy.Spec.ChannelIDs)
+		if err != nil {
+			r.Log.Error(err, "error creating channels")
+			return err
+		}
+		r.Log.Info("alertsChannels", "", alertsChannels)
+
+		return nil
+	}
+
+	return nil
+}
+
+func (r *AlertsPolicyReconciler) updateAlertsChannels(policy *nrv1.AlertsPolicy) error {
+	policyID, errInt := strconv.Atoi(policy.Status.PolicyID)
+	if errInt != nil {
+		r.Log.Error(errInt, "Failed to parse policyID as an int")
+		return errInt
+	}
+	r.Log.Info("updating channels to policy", "channelIds", policy.Spec.ChannelIDs, "policyId", policy.Status.PolicyID)
+
+	channelsToAdd := diffIntSlice(policy.Spec.ChannelIDs, policy.Status.AppliedSpec.ChannelIDs)
+	channelsToRemove := diffIntSlice(policy.Status.AppliedSpec.ChannelIDs, policy.Spec.ChannelIDs)
+	r.Log.Info("channel differences found", "channelsToAdd", channelsToAdd, "channelsToRemove", channelsToRemove)
+
+	for _, channel := range channelsToRemove {
+		deleteChannel, err := r.Alerts.DeletePolicyChannel(policyID, channel)
+		if err != nil {
+			r.Log.Error(err, "error removing channels", "deleteChannel", deleteChannel)
+			return err
+		}
+	}
+
+	alertsChannel, err := r.Alerts.UpdatePolicyChannels(policyID, channelsToAdd)
+	if err != nil {
+		r.Log.Error(err, "error updating channels")
+		return err
+	}
+	r.Log.Info("alertsChannels", "", alertsChannel)
+
+	return nil
+}
+
+//diffIntSlice - compares two slices of ints and outputs the values from the first slice that are not contained in the second
+func diffIntSlice(first, second []int) []int {
+	diff := []int{}
+
+	foundMap := map[int]interface{}{}
+	for _, f := range second {
+		foundMap[f] = true
+	}
+
+	for _, f := range first {
+		_, found := foundMap[f]
+
+		if !found {
+			diff = append(diff, f)
+		}
+	}
+
+	return diff
 }
 
 func (r *AlertsPolicyReconciler) getAPIKeyOrSecret(policy nrv1.AlertsPolicy) (string, error) {
