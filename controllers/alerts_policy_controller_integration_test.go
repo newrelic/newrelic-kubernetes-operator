@@ -271,7 +271,6 @@ var _ = Describe("alertspolicy reconciliation", func() {
 			})
 
 			It("adds expected alertsChannels", func() {
-
 				err := k8sClient.Create(ctx, alertspolicy)
 				Expect(err).ToNot(HaveOccurred())
 
@@ -528,10 +527,8 @@ var _ = Describe("alertspolicy reconciliation", func() {
 		})
 
 		Context("and updating the list of Alerts channnels", func() {
-
 			BeforeEach(func() {
 				alertspolicy.Spec.ChannelIDs = []int{1, 3}
-
 			})
 
 			It("should call the New Relic Alerts API", func() {
@@ -554,12 +551,13 @@ var _ = Describe("alertspolicy reconciliation", func() {
 				err = k8sClient.Get(ctx, namespacedName, &endStateAlertsPolicy)
 				Expect(err).To(BeNil())
 				Expect(endStateAlertsPolicy.Status.AppliedSpec.ChannelIDs).To(Equal([]int{1, 3}))
-
 			})
+
 			AfterEach(func() {
 				mockAlertsClient.DeletePolicyMutationStub = func(int, string) (*alerts.AlertsPolicy, error) {
 					return &alerts.AlertsPolicy{}, nil
 				}
+
 				// Delete the alertspolicy
 				err := k8sClient.Delete(ctx, alertspolicy)
 				Expect(err).ToNot(HaveOccurred())
@@ -569,7 +567,6 @@ var _ = Describe("alertspolicy reconciliation", func() {
 				Expect(err).ToNot(HaveOccurred())
 			})
 		})
-
 	})
 
 	Context("When starting with an existing alertspolicy with a NRQL condition", func() {
@@ -1424,17 +1421,18 @@ var _ = Describe("alertspolicy reconciliation", func() {
 	})
 
 	Describe("diffIntSlice", func() {
-
 		var (
 			in      []int
 			compare []int
 			diff    []int
 		)
+
 		Context("with same slices", func() {
 			BeforeEach(func() {
 				in = []int{1, 2}
 				compare = []int{1, 2}
 			})
+
 			It("returns a zero slice", func() {
 				diff = diffIntSlice(in, compare)
 				Expect(diff).To(Equal([]int{}))
@@ -1443,25 +1441,25 @@ var _ = Describe("alertspolicy reconciliation", func() {
 
 		Context("with 2 same and 1 different value", func() {
 			BeforeEach(func() {
-				in = []int{1, 2}
-				compare = []int{1, 2, 3}
+				in = []int{1, 2, 3}
+				compare = []int{1, 2}
 			})
 
 			It("returns expected difference", func() {
 				diff = diffIntSlice(in, compare)
 				Expect(diff).To(Equal([]int{3}))
-
 			})
 		})
+
 		Context("with all different values", func() {
 			BeforeEach(func() {
 				in = []int{1, 2}
 				compare = []int{3, 4}
 			})
+
 			It("returns expected difference", func() {
 				diff = diffIntSlice(in, compare)
-				Expect(diff).To(Equal([]int{3, 4}))
-
+				Expect(diff).To(Equal([]int{1, 2}))
 			})
 		})
 	})
