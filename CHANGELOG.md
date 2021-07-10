@@ -1,3 +1,16 @@
+<a name="v0.0.8"></a>
+## [v0.0.8] - 2021-07-09
+### Bug Fixes
+- namespace's prefix deleted(manager.yaml)
+- **float:** check type
+- **float:** typo
+
+### Features
+- support for managing channels from policy
+- **alertCondition:** support for lost signal
+- **nrqlCondition:** add ability to create Baseline NRQL Alerts
+- **types:** keeping fields as pointers
+
 <a name="v0.0.7"></a>
 ## [v0.0.7] - 2020-10-15
 ### Features
@@ -99,7 +112,8 @@
 - **policy:** added policy condition creation and deletion
 - **policy:** Added most of reconcile function
 
-[Unreleased]: https://github.com/newrelic/newrelic-kubernetes-operator/compare/v0.0.7...HEAD
+[Unreleased]: https://github.com/newrelic/newrelic-kubernetes-operator/compare/v0.0.8...HEAD
+[v0.0.8]: https://github.com/newrelic/newrelic-kubernetes-operator/compare/v0.0.7...v0.0.8
 [v0.0.7]: https://github.com/newrelic/newrelic-kubernetes-operator/compare/v0.0.6...v0.0.7
 [v0.0.6]: https://github.com/newrelic/newrelic-kubernetes-operator/compare/v0.0.5...v0.0.6
 [v0.0.5]: https://github.com/newrelic/newrelic-kubernetes-operator/compare/v0.0.4...v0.0.5
