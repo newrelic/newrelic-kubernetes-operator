@@ -24,7 +24,7 @@ require (
 	golang.org/x/time v0.0.0-20200416051211-89c76fbcd5d1 // indirect
 	golang.org/x/tools v0.0.0-20200724022722-7017fd6b1305
 	gomodules.xyz/jsonpatch/v2 v2.1.0 // indirect
-	k8s.io/api v0.18.4
+	k8s.io/api v0.22.2
 	k8s.io/apiextensions-apiserver v0.18.4 // indirect
 	k8s.io/apimachinery v0.18.4
 	k8s.io/client-go v0.18.4
