@@ -14,8 +14,7 @@ webhooks:
       path: /mutate-nr-k8s-newrelic-com-v1-alertsapmcondition
   failurePolicy: Fail
   name: malertsapmcondition.kb.io
-  admissionReviewVersions:
-  - v1
+  admissionReviewVersions: ["v1beta1"]
   rules:
   - apiGroups:
     - nr.k8s.newrelic.com
@@ -35,8 +34,7 @@ webhooks:
       path: /mutate-nr-k8s-newrelic-com-v1-alertsnrqlcondition
   failurePolicy: Fail
   name: malertsnrqlcondition.kb.io
-  admissionReviewVersions:
-  - v1  
+  admissionReviewVersions: ["v1beta1"]  
   rules:
   - apiGroups:
     - nr.k8s.newrelic.com
@@ -56,8 +54,7 @@ webhooks:
       path: /mutate-nr-k8s-newrelic-com-v1-alertspolicy
   failurePolicy: Fail
   name: malertspolicy.kb.io
-  admissionReviewVersions:
-  - v1  
+  admissionReviewVersions: ["v1beta1"]  
   rules:
   - apiGroups:
     - nr.k8s.newrelic.com
@@ -77,8 +74,7 @@ webhooks:
       path: /mutate-nr-k8s-newrelic-com-v1-alertschannel
   failurePolicy: Fail
   name: malertschannel.kb.io
-  admissionReviewVersions:
-  - v1  
+  admissionReviewVersions: ["v1beta1"]  
   rules:
   - apiGroups:
     - nr.k8s.newrelic.com
@@ -97,8 +93,7 @@ webhooks:
       namespace: system
       path: /mutate-nr-k8s-newrelic-com-v1-apmalertcondition
   failurePolicy: Fail
-  admissionReviewVersions:
-  - v1  
+  admissionReviewVersions: ["v1beta1"]  
   name: mapmalertcondition.kb.io
   rules:
   - apiGroups:
@@ -119,8 +114,7 @@ webhooks:
       path: /mutate-nr-k8s-newrelic-com-v1-nrqlalertcondition
   failurePolicy: Fail
   name: mnrqlalertcondition.kb.io
-  admissionReviewVersions:
-  - v1  
+  admissionReviewVersions: ["v1beta1"]  
   rules:
   - apiGroups:
     - nr.k8s.newrelic.com
@@ -140,8 +134,7 @@ webhooks:
       path: /mutate-nr-k8s-newrelic-com-v1-policy
   failurePolicy: Fail
   name: mpolicy.kb.io
-  admissionReviewVersions:
-  - v1  
+  admissionReviewVersions: ["v1beta1"]  
   rules:
   - apiGroups:
     - nr.k8s.newrelic.com
@@ -169,8 +162,7 @@ webhooks:
       path: /validate-nr-k8s-newrelic-com-v1-alertsapmcondition
   failurePolicy: Fail
   name: valertsapmcondition.kb.io
-  admissionReviewVersions:
-  - v1  
+  admissionReviewVersions: ["v1beta1"]  
   rules:
   - apiGroups:
     - nr.k8s.newrelic.com
@@ -190,8 +182,7 @@ webhooks:
       path: /validate-nr-k8s-newrelic-com-v1-alertsnrqlcondition
   failurePolicy: Fail
   name: valertsnrqlcondition.kb.io
-  admissionReviewVersions:
-  - v1  
+  admissionReviewVersions: ["v1beta1"]  
   rules:
   - apiGroups:
     - nr.k8s.newrelic.com
@@ -211,8 +202,7 @@ webhooks:
       path: /validate-nr-k8s-newrelic-com-v1-alertspolicy
   failurePolicy: Fail
   name: valertspolicy.kb.io
-  admissionReviewVersions:
-  - v1  
+  admissionReviewVersions: ["v1beta1"]  
   rules:
   - apiGroups:
     - nr.k8s.newrelic.com
@@ -232,8 +222,7 @@ webhooks:
       path: /validate-nr-k8s-newrelic-com-v1-alertschannel
   failurePolicy: Fail
   name: valertschannel.kb.io
-  admissionReviewVersions:
-  - v1  
+  admissionReviewVersions: ["v1beta1"]  
   rules:
   - apiGroups:
     - nr.k8s.newrelic.com
@@ -253,8 +242,7 @@ webhooks:
       path: /validate-nr-k8s-newrelic-com-v1-apmalertcondition
   failurePolicy: Fail
   name: vapmalertcondition.kb.io
-  admissionReviewVersions:
-  - v1  
+  admissionReviewVersions: ["v1beta1"]  
   rules:
   - apiGroups:
     - nr.k8s.newrelic.com
@@ -274,8 +262,7 @@ webhooks:
       path: /validate-nr-k8s-newrelic-com-v1-nrqlalertcondition
   failurePolicy: Fail
   name: vnrqlalertcondition.kb.io
-  admissionReviewVersions:
-  - v1  
+  admissionReviewVersions: ["v1beta1"]  
   rules:
   - apiGroups:
     - nr.k8s.newrelic.com
@@ -295,8 +282,7 @@ webhooks:
       path: /validate-nr-k8s-newrelic-com-v1-policy
   failurePolicy: Fail
   name: vpolicy.kb.io
-  admissionReviewVersions:
-  - v1  
+  admissionReviewVersions: ["v1beta1"]  
   rules:
   - apiGroups:
     - nr.k8s.newrelic.com
