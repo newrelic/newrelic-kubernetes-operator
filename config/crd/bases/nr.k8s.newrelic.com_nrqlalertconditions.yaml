@@ -1,6 +1,6 @@
 
 ---
-apiVersion: apiextensions.k8s.io/v1beta1
+apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
@@ -8,10 +8,6 @@ metadata:
   creationTimestamp: null
   name: nrqlalertconditions.nr.k8s.newrelic.com
 spec:
-  additionalPrinterColumns:
-  - JSONPath: .status.created
-    name: Created
-    type: boolean
   group: nr.k8s.newrelic.com
   names:
     kind: NrqlAlertCondition
@@ -19,96 +15,27 @@ spec:
     plural: nrqlalertconditions
     singular: nrqlalertcondition
   scope: Namespaced
-  subresources: {}
-  validation:
-    openAPIV3Schema:
-      description: NrqlAlertCondition is the Schema for the nrqlalertconditions API
-      properties:
-        apiVersion:
-          description: 'APIVersion defines the versioned schema of this representation
-            of an object. Servers should convert recognized schemas to the latest
-            internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
-          type: string
-        kind:
-          description: 'Kind is a string value representing the REST resource this
-            object represents. Servers may infer this from the endpoint the client
-            submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
-          type: string
-        metadata:
-          type: object
-        spec:
-          description: NrqlAlertConditionSpec defines the desired state of NrqlAlertCondition
+  versions:
+  - name: v1
+    served: true
+    storage: true
+    schema:
+      openAPIV3Schema:
+          description: NrqlAlertCondition is the Schema for the nrqlalertconditions API
           properties:
-            api_key:
+            apiVersion:
+              description: 'APIVersion defines the versioned schema of this representation
+                of an object. Servers should convert recognized schemas to the latest
+                internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
               type: string
-            api_key_secret:
-              properties:
-                key_name:
-                  type: string
-                name:
-                  type: string
-                namespace:
-                  type: string
+            kind:
+              description: 'Kind is a string value representing the REST resource this
+                object represents. Servers may infer this from the endpoint the client
+                submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+              type: string
+            metadata:
               type: object
-            enabled:
-              type: boolean
-            existing_policy_id:
-              type: integer
-            expected_groups:
-              type: integer
-            id:
-              type: integer
-            ignore_overlap:
-              type: boolean
-            name:
-              type: string
-            nrql:
-              description: NrqlQuery represents a NRQL query to use with a NRQL alert
-                condition
-              properties:
-                query:
-                  type: string
-                since_value:
-                  type: string
-              type: object
-            region:
-              type: string
-            runbook_url:
-              type: string
-            terms:
-              items:
-                description: AlertConditionTerm represents the terms of a New Relic
-                  alert condition.
-                properties:
-                  duration:
-                    type: string
-                  operator:
-                    type: string
-                  priority:
-                    type: string
-                  threshold:
-                    type: string
-                  time_function:
-                    type: string
-                  violation_close_timer:
-                    type: integer
-                required:
-                - threshold
-                type: object
-              type: array
-            type:
-              type: string
-            value_function:
-              type: string
-            violation_time_limit_seconds:
-              type: integer
-          required:
-          - enabled
-          type: object
-        status:
-          description: NrqlAlertConditionStatus defines the observed state of NrqlAlertCondition
-          properties:
-            applied_spec:
+            spec:
               description: NrqlAlertConditionSpec defines the desired state of NrqlAlertCondition
               properties:
                 api_key:
@@ -135,8 +62,8 @@ spec:
                 name:
                   type: string
                 nrql:
-                  description: NrqlQuery represents a NRQL query to use with a NRQL
-                    alert condition
+                  description: NrqlQuery represents a NRQL query to use with a NRQL alert
+                    condition
                   properties:
                     query:
                       type: string
@@ -149,8 +76,8 @@ spec:
                   type: string
                 terms:
                   items:
-                    description: AlertConditionTerm represents the terms of a New
-                      Relic alert condition.
+                    description: AlertConditionTerm represents the terms of a New Relic
+                      alert condition.
                     properties:
                       duration:
                         type: string
@@ -177,18 +104,89 @@ spec:
               required:
               - enabled
               type: object
-            condition_id:
-              type: integer
-          required:
-          - applied_spec
-          - condition_id
+            status:
+              description: NrqlAlertConditionStatus defines the observed state of NrqlAlertCondition
+              properties:
+                applied_spec:
+                  description: NrqlAlertConditionSpec defines the desired state of NrqlAlertCondition
+                  properties:
+                    api_key:
+                      type: string
+                    api_key_secret:
+                      properties:
+                        key_name:
+                          type: string
+                        name:
+                          type: string
+                        namespace:
+                          type: string
+                      type: object
+                    enabled:
+                      type: boolean
+                    existing_policy_id:
+                      type: integer
+                    expected_groups:
+                      type: integer
+                    id:
+                      type: integer
+                    ignore_overlap:
+                      type: boolean
+                    name:
+                      type: string
+                    nrql:
+                      description: NrqlQuery represents a NRQL query to use with a NRQL
+                        alert condition
+                      properties:
+                        query:
+                          type: string
+                        since_value:
+                          type: string
+                      type: object
+                    region:
+                      type: string
+                    runbook_url:
+                      type: string
+                    terms:
+                      items:
+                        description: AlertConditionTerm represents the terms of a New
+                          Relic alert condition.
+                        properties:
+                          duration:
+                            type: string
+                          operator:
+                            type: string
+                          priority:
+                            type: string
+                          threshold:
+                            type: string
+                          time_function:
+                            type: string
+                          violation_close_timer:
+                            type: integer
+                        required:
+                        - threshold
+                        type: object
+                      type: array
+                    type:
+                      type: string
+                    value_function:
+                      type: string
+                    violation_time_limit_seconds:
+                      type: integer
+                  required:
+                  - enabled
+                  type: object
+                condition_id:
+                  type: integer
+              required:
+              - applied_spec
+              - condition_id
+              type: object
           type: object
-      type: object
-  version: v1
-  versions:
-  - name: v1
-    served: true
-    storage: true
+    additionalPrinterColumns:
+    - name: Created
+      type: boolean
+      jsonPath: .status.created
 status:
   acceptedNames:
     kind: ""
