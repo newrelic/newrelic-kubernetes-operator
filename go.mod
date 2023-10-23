@@ -9,7 +9,7 @@ require (
 	github.com/git-chglog/git-chglog v0.15.0 // indirect
 	github.com/go-logr/logr v0.1.0
 	github.com/golang/mock v1.4.3
-	github.com/goreleaser/goreleaser v0.143.0
+	github.com/goreleaser/goreleaser v0.184.0
 	github.com/hashicorp/golang-lru v0.5.4 // indirect
 	github.com/llorllale/go-gitlint v0.0.0-20210608233938-d6303cc52cc5 // indirect
 	github.com/maxbrunsfeld/counterfeiter/v6 v6.2.3
