@@ -3,15 +3,11 @@ module github.com/newrelic/newrelic-kubernetes-operator
 go 1.13
 
 require (
-	github.com/Masterminds/goutils v1.1.1 // indirect
-	github.com/Masterminds/semver/v3 v3.1.1 // indirect
 	github.com/davecgh/go-spew v1.1.1
-	github.com/git-chglog/git-chglog v0.15.0 // indirect
 	github.com/go-logr/logr v0.1.0
-	github.com/golang/mock v1.4.3
-	github.com/goreleaser/goreleaser v0.143.0
+	github.com/golang/mock v1.6.0
+	github.com/goreleaser/goreleaser v0.184.0
 	github.com/hashicorp/golang-lru v0.5.4 // indirect
-	github.com/llorllale/go-gitlint v0.0.0-20210608233938-d6303cc52cc5 // indirect
 	github.com/maxbrunsfeld/counterfeiter/v6 v6.2.3
 	github.com/newrelic/go-agent/v3 v3.7.0
 	github.com/newrelic/newrelic-client-go v0.60.0
@@ -19,10 +15,9 @@ require (
 	github.com/onsi/gomega v1.10.1
 	github.com/prometheus/client_golang v1.6.0 // indirect
 	github.com/prometheus/common v0.10.0 // indirect
-	github.com/psampaz/go-mod-outdated v0.8.0 // indirect
 	github.com/stretchr/testify v1.7.0
-	golang.org/x/time v0.0.0-20200416051211-89c76fbcd5d1 // indirect
-	golang.org/x/tools v0.0.0-20200724022722-7017fd6b1305
+	golang.org/x/term v0.0.0-20210503060354-a79de5458b56 // indirect
+	golang.org/x/tools v0.1.5
 	gomodules.xyz/jsonpatch/v2 v2.1.0 // indirect
 	k8s.io/api v0.18.4
 	k8s.io/apiextensions-apiserver v0.18.4 // indirect
