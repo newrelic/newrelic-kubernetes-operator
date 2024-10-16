@@ -33,7 +33,7 @@ Currently the operator supports managing the following resources:
 - Alert Conditions for APM, Browser and mobile
 - Alert Channels
 
-If you are looking for New Relic's Kubernetes operator for managing New Relic's Kubernetes integration, please see [newrelic-k8s-operator](https://github.com/newrelic/newrelic-k8s-operator). 
+If you are looking for New Relic's Kubernetes operator for managing New Relic's Kubernetes integration, please see [newrelic-k8s-operator](https://github.com/newrelic/newrelic-k8s-operator-v2). 
 
 # Quick Start
 > <small>**Note:** These quick start instructions do **not** require you to clone the repo.</small>
