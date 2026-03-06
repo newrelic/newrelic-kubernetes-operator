@@ -25,8 +25,10 @@ GO_MOD_OUTDATED ?= go-mod-outdated
 GOTOOLS += github.com/client9/misspell/cmd/misspell \
            github.com/llorllale/go-gitlint/cmd/go-gitlint \
            github.com/psampaz/go-mod-outdated \
-           github.com/golangci/golangci-lint/cmd/golangci-lint \
            golang.org/x/tools/cmd/goimports
+
+# golangci-lint is installed separately due to dependency conflicts
+GOLANGCI_LINT_VERSION ?= v1.61.0
 
 
 lint: outdated spell-check gofmt golangci lint-commit goimports
@@ -60,7 +62,9 @@ lint-commit: tools
 	@$(COMMIT_LINT_CMD) --since=$(COMMIT_LINT_START) --subject-minlen=10 --subject-maxlen=120 --subject-regex=$(COMMIT_LINT_REGEX)
 
 golangci: tools
-	@echo "=== $(PROJECT_NAME) === [ golangci-lint    ]: Linting using $(GOLINTER) ($(COMMIT_LINT_CMD))..."
+	@echo "=== $(PROJECT_NAME) === [ golangci-lint    ]: Installing $(GOLINTER) $(GOLANGCI_LINT_VERSION)..."
+	@$(GO) install github.com/golangci/golangci-lint/cmd/golangci-lint@$(GOLANGCI_LINT_VERSION)
+	@echo "=== $(PROJECT_NAME) === [ golangci-lint    ]: Linting using $(GOLINTER)..."
 	@$(GOLINTER) run
 
 outdated: tools
