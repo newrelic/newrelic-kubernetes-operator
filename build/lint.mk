@@ -27,9 +27,9 @@ GOTOOLS += github.com/client9/misspell/cmd/misspell \
            github.com/psampaz/go-mod-outdated \
            golang.org/x/tools/cmd/goimports
 
-# golangci-lint is installed separately due to dependency conflicts
-# Use v1.62.2 which has updated golang.org/x/tools dependency compatible with Go 1.25+
+# golangci-lint is installed via binary download to avoid dependency conflicts
 GOLANGCI_LINT_VERSION ?= v1.62.2
+GOLANGCI_LINT_BIN ?= $(shell go env GOPATH)/bin/golangci-lint
 
 
 lint: outdated spell-check gofmt golangci lint-commit goimports
@@ -63,8 +63,22 @@ lint-commit: tools
 	@$(COMMIT_LINT_CMD) --since=$(COMMIT_LINT_START) --subject-minlen=10 --subject-maxlen=120 --subject-regex=$(COMMIT_LINT_REGEX)
 
 golangci: tools
-	@echo "=== $(PROJECT_NAME) === [ golangci-lint    ]: Installing $(GOLINTER) $(GOLANGCI_LINT_VERSION)..."
-	@$(GO) install github.com/golangci/golangci-lint/cmd/golangci-lint@$(GOLANGCI_LINT_VERSION)
+	@echo "=== $(PROJECT_NAME) === [ golangci-lint    ]: Installing $(GOLINTER) $(GOLANGCI_LINT_VERSION) via binary..."
+	@if [ ! -f $(GOLANGCI_LINT_BIN) ] || ! $(GOLANGCI_LINT_BIN) version | grep -q $(GOLANGCI_LINT_VERSION); then \
+		OS=$$(uname -s | tr '[:upper:]' '[:lower:]'); \
+		ARCH=$$(uname -m); \
+		if [ "$$ARCH" = "x86_64" ]; then ARCH="amd64"; fi; \
+		if [ "$$ARCH" = "aarch64" ]; then ARCH="arm64"; fi; \
+		TARBALL="golangci-lint-$(GOLANGCI_LINT_VERSION:v%=%)-$$OS-$$ARCH.tar.gz"; \
+		URL="https://github.com/golangci/golangci-lint/releases/download/$(GOLANGCI_LINT_VERSION)/$$TARBALL"; \
+		echo "Downloading from $$URL"; \
+		curl -sSfL "$$URL" -o /tmp/$$TARBALL; \
+		tar -xzf /tmp/$$TARBALL -C /tmp; \
+		mkdir -p $$(dirname $(GOLANGCI_LINT_BIN)); \
+		mv /tmp/golangci-lint-$(GOLANGCI_LINT_VERSION:v%=%)-$$OS-$$ARCH/golangci-lint $(GOLANGCI_LINT_BIN); \
+		rm -rf /tmp/$$TARBALL /tmp/golangci-lint-$(GOLANGCI_LINT_VERSION:v%=%)-$$OS-$$ARCH; \
+		echo "Installed $(GOLINTER) $(GOLANGCI_LINT_VERSION) to $(GOLANGCI_LINT_BIN)"; \
+	fi
 	@echo "=== $(PROJECT_NAME) === [ golangci-lint    ]: Linting using $(GOLINTER)..."
 	@$(GOLINTER) run
 
