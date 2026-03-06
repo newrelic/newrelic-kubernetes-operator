@@ -66,8 +66,14 @@ golangci: tools install-golangci-lint
 
 install-golangci-lint:
 	@if ! command -v $(GOLINTER) >/dev/null 2>&1 || ! $(GOLINTER) version 2>/dev/null | grep -q $(GOLANGCI_LINT_VERSION); then \
-		echo "=== $(PROJECT_NAME) === [ golangci-lint    ]: Installing $(GOLINTER) $(GOLANGCI_LINT_VERSION)..."; \
-		curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(shell go env GOPATH)/bin $(GOLANGCI_LINT_VERSION); \
+		echo "=== $(PROJECT_NAME) === [ golangci-lint    ]: Installing $(GOLINTER) $(GOLANGCI_LINT_VERSION) from source..."; \
+		TMPDIR=$$(mktemp -d); \
+		cd $$TMPDIR && \
+		$(GO) mod init tmp 2>/dev/null && \
+		GOBIN=$(shell go env GOPATH)/bin $(GO) install github.com/golangci/golangci-lint/cmd/golangci-lint@$(GOLANGCI_LINT_VERSION) && \
+		cd - >/dev/null && \
+		rm -rf $$TMPDIR; \
+		echo "Installed $(GOLINTER) $(GOLANGCI_LINT_VERSION) built with $$($(GO) version | awk '{print $$3}')"; \
 	fi
 
 outdated: tools
