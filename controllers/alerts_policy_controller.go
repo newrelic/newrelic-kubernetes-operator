@@ -708,7 +708,7 @@ func (r *AlertsPolicyReconciler) updateAlertsChannels(policy *nrv1.AlertsPolicy)
 	return nil
 }
 
-//diffIntSlice - compares two slices of ints and outputs the values from the first slice that are not contained in the second
+// diffIntSlice - compares two slices of ints and outputs the values from the first slice that are not contained in the second
 func diffIntSlice(first, second []int) []int {
 	diff := []int{}
 

@@ -38,7 +38,7 @@ type NewRelicAPIKeySecret struct {
 	KeyName   string `json:"key_name,omitempty"`
 }
 
-//ValidRegion - returns true if a valid region is passed
+// ValidRegion - returns true if a valid region is passed
 func ValidRegion(input string) bool {
 	_, err := region.Parse(input)
 	if err != nil {
@@ -50,7 +50,7 @@ func ValidRegion(input string) bool {
 	return true
 }
 
-//CheckForAPIKeyOrSecret - returns error if a API KEY or k8 secret is not passed in
+// CheckForAPIKeyOrSecret - returns error if a API KEY or k8 secret is not passed in
 func CheckForAPIKeyOrSecret(apiKey string, secret NewRelicAPIKeySecret) error {
 	if apiKey != "" {
 		return nil
