@@ -21,7 +21,7 @@ import (
 	"reflect"
 	"strconv"
 
-	newrelic "github.com/newrelic/go-agent/v3/newrelic"
+	"github.com/newrelic/go-agent/v3/newrelic"
 	"github.com/newrelic/newrelic-client-go/pkg/alerts"
 	v1 "k8s.io/api/core/v1"
 	kErr "k8s.io/apimachinery/pkg/api/errors"

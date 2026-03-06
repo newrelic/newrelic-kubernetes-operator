@@ -37,14 +37,14 @@ type PolicySpec struct {
 	Conditions         []PolicyCondition    `json:"conditions,omitempty"`
 }
 
-//PolicyCondition defined the conditions contained within a a policy
+// PolicyCondition defined the conditions contained within a a policy
 type PolicyCondition struct {
 	Name      string        `json:"name"`
 	Namespace string        `json:"namespace"`
 	Spec      ConditionSpec `json:"spec,omitempty"`
 }
 
-//ConditionSpec - Merged superset of Condition types
+// ConditionSpec - Merged superset of Condition types
 type ConditionSpec struct {
 	GenericConditionSpec `json:",inline"`
 	NrqlSpecificSpec     `json:",inline"`
@@ -113,7 +113,7 @@ func (p *PolicyCondition) GetNamespace() types.NamespacedName {
 	}
 }
 
-//Equals - comparator function to check for equality
+// Equals - comparator function to check for equality
 func (in PolicySpec) Equals(policyToCompare PolicySpec) bool {
 	if in.IncidentPreference != policyToCompare.IncidentPreference {
 		return false
@@ -154,7 +154,7 @@ func (in PolicySpec) Equals(policyToCompare PolicySpec) bool {
 	return true
 }
 
-//GetConditionType - returns the string representative of the Condition type
+// GetConditionType - returns the string representative of the Condition type
 func GetConditionType(condition PolicyCondition) string {
 	if condition.Spec.Type == "NRQL" {
 		return "NrqlAlertCondition"
