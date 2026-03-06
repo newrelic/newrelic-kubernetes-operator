@@ -27,10 +27,8 @@ GOTOOLS += github.com/client9/misspell/cmd/misspell \
            github.com/psampaz/go-mod-outdated \
            golang.org/x/tools/cmd/goimports
 
-# golangci-lint is installed in isolation to avoid dependency conflicts with project dependencies
+# golangci-lint version and installation
 GOLANGCI_LINT_VERSION ?= v1.62.2
-GOLANGCI_LINT_BIN ?= $(shell go env GOPATH)/bin/golangci-lint
-
 
 lint: outdated spell-check gofmt golangci lint-commit goimports
 lint-fix: spell-check-fix gofmt-fix goimports
@@ -62,22 +60,18 @@ lint-commit: tools
 	@echo "=== $(PROJECT_NAME) === [ lint-commit      ]: Checking that commit messages are properly formatted ($(COMMIT_LINT_CMD))..."
 	@$(COMMIT_LINT_CMD) --since=$(COMMIT_LINT_START) --subject-minlen=10 --subject-maxlen=120 --subject-regex=$(COMMIT_LINT_REGEX)
 
-golangci: tools
-	@echo "=== $(PROJECT_NAME) === [ golangci-lint    ]: Installing $(GOLINTER) $(GOLANGCI_LINT_VERSION)..."
-	@if [ ! -f $(GOLANGCI_LINT_BIN) ] || ! $(GOLANGCI_LINT_BIN) version 2>/dev/null | grep -q $(GOLANGCI_LINT_VERSION); then \
-		echo "Installing golangci-lint in isolated environment..."; \
-		TMPDIR=$$(mktemp -d); \
-		cd $$TMPDIR && \
-		$(GO) mod init tmp 2>/dev/null && \
-		GOBIN=$$(go env GOPATH)/bin $(GO) install github.com/golangci/golangci-lint/cmd/golangci-lint@$(GOLANGCI_LINT_VERSION) && \
-		cd - >/dev/null && \
-		rm -rf $$TMPDIR; \
-	fi
+golangci: tools install-golangci-lint
 	@echo "=== $(PROJECT_NAME) === [ golangci-lint    ]: Linting using $(GOLINTER)..."
 	@$(GOLINTER) run
+
+install-golangci-lint:
+	@if ! command -v $(GOLINTER) >/dev/null 2>&1 || ! $(GOLINTER) version 2>/dev/null | grep -q $(GOLANGCI_LINT_VERSION); then \
+		echo "=== $(PROJECT_NAME) === [ golangci-lint    ]: Installing $(GOLINTER) $(GOLANGCI_LINT_VERSION)..."; \
+		curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(shell go env GOPATH)/bin $(GOLANGCI_LINT_VERSION); \
+	fi
 
 outdated: tools
 	@echo "=== $(PROJECT_NAME) === [ outdated         ]: Finding outdated deps with $(GO_MOD_OUTDATED)..."
 	@$(GO) list -u -m -json all | $(GO_MOD_OUTDATED) -direct -update
 
-.PHONY: lint spell-check spell-check-fix gofmt gofmt-fix lint-fix lint-commit outdated goimports
+.PHONY: lint spell-check spell-check-fix gofmt gofmt-fix lint-fix lint-commit outdated goimports install-golangci-lint
