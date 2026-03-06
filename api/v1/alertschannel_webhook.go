@@ -112,7 +112,7 @@ func (r *AlertsChannel) ValidateAlertsChannel() error {
 	return nil
 }
 
-//ValidateType - Validates the Type attribute
+// ValidateType - Validates the Type attribute
 func (r *AlertsChannel) ValidateType() InvalidAttributeSlice {
 	switch r.Spec.Type {
 	case string(alerts.ChannelTypes.Email),

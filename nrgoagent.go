@@ -6,7 +6,7 @@ import (
 	"github.com/newrelic/go-agent/v3/newrelic"
 )
 
-//InitializeNRAgent - Initializes the NR Agent
+// InitializeNRAgent - Initializes the NR Agent
 func InitializeNRAgent() newrelic.Application {
 
 	app, err := newrelic.NewApplication(

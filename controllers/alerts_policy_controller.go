@@ -21,7 +21,7 @@ import (
 	"reflect"
 	"strconv"
 
-	newrelic "github.com/newrelic/go-agent/v3/newrelic"
+	"github.com/newrelic/go-agent/v3/newrelic"
 	"github.com/newrelic/newrelic-client-go/pkg/alerts"
 	v1 "k8s.io/api/core/v1"
 	kErr "k8s.io/apimachinery/pkg/api/errors"
@@ -708,7 +708,7 @@ func (r *AlertsPolicyReconciler) updateAlertsChannels(policy *nrv1.AlertsPolicy)
 	return nil
 }
 
-//diffIntSlice - compares two slices of ints and outputs the values from the first slice that are not contained in the second
+// diffIntSlice - compares two slices of ints and outputs the values from the first slice that are not contained in the second
 func diffIntSlice(first, second []int) []int {
 	diff := []int{}
 

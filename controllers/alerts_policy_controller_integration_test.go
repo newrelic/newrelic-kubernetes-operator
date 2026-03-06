@@ -4,7 +4,7 @@ import (
 	"context"
 	"errors"
 
-	newrelic "github.com/newrelic/go-agent/v3/newrelic"
+	"github.com/newrelic/go-agent/v3/newrelic"
 	"github.com/newrelic/newrelic-client-go/pkg/alerts"
 	ctrl "sigs.k8s.io/controller-runtime"
 
