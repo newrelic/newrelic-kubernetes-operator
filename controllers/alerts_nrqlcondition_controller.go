@@ -57,8 +57,7 @@ type AlertsNrqlConditionReconciler struct {
 // +kubebuilder:rbac:groups=nr.k8s.newrelic.com,resources=alertsnrqlconditions/status,verbs=get;update;patch
 
 // Reconcile is responsible for reconciling the spec and state of the AlertsNrqlCondition.
-func (r *AlertsNrqlConditionReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) { //nolint: gocyclo
-	ctx := context.Background()
+func (r *AlertsNrqlConditionReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) { //nolint: gocyclo
 	_ = r.Log.WithValues("alertsnrqlcondition", req.NamespacedName)
 	r.txn = r.NewRelicAgent.StartTransaction("Reconcile/Alerts/NrqlCondition")
 	defer r.txn.End()

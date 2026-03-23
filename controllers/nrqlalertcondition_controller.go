@@ -51,8 +51,7 @@ type NrqlAlertConditionReconciler struct {
 // +kubebuilder:rbac:groups=nr.k8s.newrelic.com,resources=nrqlalertconditions,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=nr.k8s.newrelic.com,resources=nrqlalertconditions/status,verbs=get;update;patch
 
-func (r *NrqlAlertConditionReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
-	ctx := context.Background()
+func (r *NrqlAlertConditionReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	_ = r.Log.WithValues("nrqlalertcondition", req.NamespacedName)
 
 	r.txn = r.NewRelicAgent.StartTransaction("Reconcile/NrqlCondition")

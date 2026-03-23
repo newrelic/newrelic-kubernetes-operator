@@ -24,11 +24,17 @@ type AlertsChannelSpec struct {
 	Configuration AlertsChannelConfiguration `json:"configuration,omitempty"`
 }
 
+// PolicyReference is a simple reference to a Policy resource by name and namespace
+type PolicyReference struct {
+	Name      string `json:"name,omitempty"`
+	Namespace string `json:"namespace,omitempty"`
+}
+
 // ChannelLinks - copy of alerts.ChannelLinks
 type ChannelLinks struct {
-	PolicyIDs               []int               `json:"policy_ids,omitempty"`
-	PolicyNames             []string            `json:"policy_names,omitempty"`
-	PolicyKubernetesObjects []metav1.ObjectMeta `json:"policy_kubernetes_objects,omitempty"`
+	PolicyIDs               []int             `json:"policy_ids,omitempty"`
+	PolicyNames             []string          `json:"policy_names,omitempty"`
+	PolicyKubernetesObjects []PolicyReference `json:"policy_kubernetes_objects,omitempty"`
 }
 
 // AlertsChannelStatus defines the observed state of AlertsChannel

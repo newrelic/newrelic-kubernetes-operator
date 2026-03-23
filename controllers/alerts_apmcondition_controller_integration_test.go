@@ -8,7 +8,7 @@ import (
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/types"
@@ -140,7 +140,7 @@ var _ = Describe("ApmCondition reconciliation", func() {
 					Expect(err).ToNot(HaveOccurred())
 
 					// call reconcile
-					_, err = r.Reconcile(request)
+					_, err = r.Reconcile(ctx, request)
 					Expect(err).ToNot(HaveOccurred())
 
 					Expect(alertsClient.CreateConditionCallCount()).To(Equal(1))
@@ -152,7 +152,7 @@ var _ = Describe("ApmCondition reconciliation", func() {
 					Expect(err).ToNot(HaveOccurred())
 
 					// call reconcile
-					_, err = r.Reconcile(request)
+					_, err = r.Reconcile(ctx, request)
 					Expect(err).ToNot(HaveOccurred())
 
 					var endStateCondition nrv1.AlertsAPMCondition
@@ -166,7 +166,7 @@ var _ = Describe("ApmCondition reconciliation", func() {
 					Expect(err).ToNot(HaveOccurred())
 
 					// call reconcile
-					_, err = r.Reconcile(request)
+					_, err = r.Reconcile(ctx, request)
 					Expect(err).ToNot(HaveOccurred())
 
 					var endStateCondition nrv1.AlertsAPMCondition
@@ -204,7 +204,7 @@ var _ = Describe("ApmCondition reconciliation", func() {
 					Expect(err).ToNot(HaveOccurred())
 
 					// call reconcile
-					_, err = r.Reconcile(request)
+					_, err = r.Reconcile(ctx, request)
 					Expect(err).ToNot(HaveOccurred())
 
 					Expect(alertsClient.CreateConditionCallCount()).To(Equal(1))
@@ -216,7 +216,7 @@ var _ = Describe("ApmCondition reconciliation", func() {
 					Expect(err).ToNot(HaveOccurred())
 
 					// call reconcile
-					_, err = r.Reconcile(request)
+					_, err = r.Reconcile(ctx, request)
 					Expect(err).ToNot(HaveOccurred())
 
 					var endStateCondition nrv1.AlertsAPMCondition
@@ -230,7 +230,7 @@ var _ = Describe("ApmCondition reconciliation", func() {
 					Expect(err).ToNot(HaveOccurred())
 
 					// call reconcile
-					_, err = r.Reconcile(request)
+					_, err = r.Reconcile(ctx, request)
 					Expect(err).ToNot(HaveOccurred())
 
 					var endStateCondition nrv1.AlertsAPMCondition
@@ -293,7 +293,7 @@ var _ = Describe("ApmCondition reconciliation", func() {
 					Expect(err).ToNot(HaveOccurred())
 
 					// call reconcile
-					_, err = r.Reconcile(request)
+					_, err = r.Reconcile(ctx, request)
 					Expect(err).ToNot(HaveOccurred())
 
 					Expect(alertsClient.CreateConditionCallCount()).To(Equal(0))
@@ -304,7 +304,7 @@ var _ = Describe("ApmCondition reconciliation", func() {
 					Expect(err).ToNot(HaveOccurred())
 
 					// call reconcile
-					_, err = r.Reconcile(request)
+					_, err = r.Reconcile(ctx, request)
 					Expect(err).ToNot(HaveOccurred())
 
 					var endStateCondition nrv1.AlertsAPMCondition
@@ -318,7 +318,7 @@ var _ = Describe("ApmCondition reconciliation", func() {
 					Expect(err).ToNot(HaveOccurred())
 
 					// call reconcile
-					_, err = r.Reconcile(request)
+					_, err = r.Reconcile(ctx, request)
 					Expect(err).ToNot(HaveOccurred())
 
 					var endStateCondition nrv1.AlertsAPMCondition
@@ -335,7 +335,7 @@ var _ = Describe("ApmCondition reconciliation", func() {
 				Expect(err).ToNot(HaveOccurred())
 
 				// call reconcile
-				_, err = r.Reconcile(request)
+				_, err = r.Reconcile(ctx, request)
 				Expect(err).ToNot(HaveOccurred())
 
 				Expect(alertsClient.CreateConditionCallCount()).To(Equal(1))
@@ -357,7 +357,7 @@ var _ = Describe("ApmCondition reconciliation", func() {
 					Expect(err).ToNot(HaveOccurred())
 
 					// call reconcile
-					_, err = r.Reconcile(request)
+					_, err = r.Reconcile(ctx, request)
 					Expect(err).ToNot(HaveOccurred())
 
 					// Only call count for Update is changed from second reconciliation run
@@ -370,7 +370,7 @@ var _ = Describe("ApmCondition reconciliation", func() {
 					Expect(err).ToNot(HaveOccurred())
 
 					// call reconcile
-					_, err = r.Reconcile(request)
+					_, err = r.Reconcile(ctx, request)
 					Expect(err).ToNot(HaveOccurred())
 
 					var endStateCondition nrv1.AlertsAPMCondition
@@ -384,7 +384,7 @@ var _ = Describe("ApmCondition reconciliation", func() {
 					Expect(err).ToNot(HaveOccurred())
 
 					// call reconcile
-					_, err = r.Reconcile(request)
+					_, err = r.Reconcile(ctx, request)
 					Expect(err).ToNot(HaveOccurred())
 
 					var endStateCondition nrv1.AlertsAPMCondition
@@ -401,7 +401,7 @@ var _ = Describe("ApmCondition reconciliation", func() {
 					Expect(err).ToNot(HaveOccurred())
 
 					// call reconcile
-					_, err = r.Reconcile(request)
+					_, err = r.Reconcile(ctx, request)
 					Expect(err).ToNot(HaveOccurred())
 
 					Expect(alertsClient.CreateConditionCallCount()).To(Equal(1))
@@ -416,7 +416,7 @@ var _ = Describe("ApmCondition reconciliation", func() {
 			Expect(err).ToNot(HaveOccurred())
 
 			// Need to call reconcile to delete finalizer
-			_, err = r.Reconcile(request)
+			_, err = r.Reconcile(ctx, request)
 			Expect(err).ToNot(HaveOccurred())
 		})
 	})
@@ -428,7 +428,7 @@ var _ = Describe("ApmCondition reconciliation", func() {
 				Expect(err).ToNot(HaveOccurred())
 
 				// call reconcile
-				_, err = r.Reconcile(request)
+				_, err = r.Reconcile(ctx, request)
 				Expect(err).ToNot(HaveOccurred())
 
 				// change the event after creation via reconciliation
@@ -443,7 +443,7 @@ var _ = Describe("ApmCondition reconciliation", func() {
 					Expect(err).ToNot(HaveOccurred())
 
 					// call reconcile
-					_, err = r.Reconcile(request)
+					_, err = r.Reconcile(ctx, request)
 					Expect(err).ToNot(HaveOccurred())
 
 					Expect(alertsClient.CreateConditionCallCount()).To(Equal(1)) //This is 1 because the create occurring in the
@@ -456,7 +456,7 @@ var _ = Describe("ApmCondition reconciliation", func() {
 					Expect(err).ToNot(HaveOccurred())
 
 					// call reconcile
-					_, err = r.Reconcile(request)
+					_, err = r.Reconcile(ctx, request)
 					Expect(err).ToNot(HaveOccurred())
 
 					var endStateCondition nrv1.AlertsAPMCondition
@@ -479,7 +479,7 @@ var _ = Describe("ApmCondition reconciliation", func() {
 					Expect(err).ToNot(HaveOccurred())
 
 					// call reconcile
-					_, err = r.Reconcile(request)
+					_, err = r.Reconcile(ctx, request)
 					Expect(err).ToNot(HaveOccurred())
 
 					Expect(alertsClient.CreateConditionCallCount()).To(Equal(1)) //This is 1 because the create occurring in the
@@ -505,7 +505,7 @@ var _ = Describe("ApmCondition reconciliation", func() {
 					Expect(err).ToNot(HaveOccurred())
 
 					// call reconcile
-					_, err = r.Reconcile(request)
+					_, err = r.Reconcile(ctx, request)
 					Expect(err).ToNot(HaveOccurred())
 
 					Expect(alertsClient.CreateConditionCallCount()).To(Equal(1)) //This is 1 because the create occurring in the

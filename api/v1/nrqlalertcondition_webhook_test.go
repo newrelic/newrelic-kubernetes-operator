@@ -13,7 +13,7 @@ import (
 	"github.com/newrelic/newrelic-kubernetes-operator/interfaces"
 
 	"github.com/newrelic/newrelic-client-go/pkg/alerts"
-	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 
 	"github.com/newrelic/newrelic-kubernetes-operator/interfaces/interfacesfakes"
@@ -90,7 +90,7 @@ var _ = Describe("ValidateCreate", func() {
 	Context("ValidateCreate", func() {
 		Context("When given a valid API key", func() {
 			It("should not return an error", func() {
-				err := r.ValidateCreate()
+				_, err := r.ValidateCreate()
 				Expect(err).ToNot(HaveOccurred())
 			})
 		})
@@ -98,7 +98,7 @@ var _ = Describe("ValidateCreate", func() {
 		Context("When given an invalid API key", func() {
 			It("should return an error", func() {
 				r.Spec.APIKey = ""
-				err := r.ValidateCreate()
+				_, err := r.ValidateCreate()
 				Expect(err).To(HaveOccurred())
 			})
 		})
@@ -121,7 +121,7 @@ var _ = Describe("ValidateCreate", func() {
 					},
 				}
 				Expect(ignoreAlreadyExists(k8Client.Create(ctx, secret))).To(Succeed())
-				err := r.ValidateCreate()
+				_, err := r.ValidateCreate()
 				Expect(err).ToNot(HaveOccurred())
 			})
 
@@ -138,7 +138,7 @@ var _ = Describe("ValidateCreate", func() {
 					Namespace: "my-namespace",
 					KeyName:   "my-api-key",
 				}
-				err := r.ValidateCreate()
+				_, err := r.ValidateCreate()
 				Expect(err).To(HaveOccurred())
 			})
 		})
@@ -146,7 +146,7 @@ var _ = Describe("ValidateCreate", func() {
 		Context("when given a NRQL condition without required field region", func() {
 			It("should reject resource creation", func() {
 				r.Spec.Region = ""
-				err := r.ValidateCreate()
+				_, err := r.ValidateCreate()
 				Expect(err).To(HaveOccurred())
 			})
 		})
@@ -154,7 +154,7 @@ var _ = Describe("ValidateCreate", func() {
 		Context("when given a NRQL condition without required field ExistingPolicyId", func() {
 			It("should reject resource creation", func() {
 				r.Spec.ExistingPolicyID = 0
-				err := r.ValidateCreate()
+				_, err := r.ValidateCreate()
 				Expect(err).To(HaveOccurred())
 			})
 
@@ -162,7 +162,7 @@ var _ = Describe("ValidateCreate", func() {
 				It("should reject resource creation", func() {
 					r.Spec.Region = ""
 					r.Spec.ExistingPolicyID = 0
-					err := r.ValidateCreate()
+					_, err := r.ValidateCreate()
 					Expect(err).To(HaveOccurred())
 					Expect(err).To(MatchError(errors.New("region and existing_policy_id must be set")))
 				})
@@ -201,7 +201,7 @@ var _ = Describe("ValidateCreate", func() {
 				})
 
 				It("returns an error", func() {
-					err := r.ValidateCreate()
+					_, err := r.ValidateCreate()
 					Expect(err).To(HaveOccurred())
 				})
 			})
@@ -224,7 +224,7 @@ var _ = Describe("ValidateCreate", func() {
 			})
 
 			It("Should allow the deletion anyway", func() {
-				err := update.ValidateUpdate(&r)
+				_, err := update.ValidateUpdate(&r)
 				Expect(err).ToNot(HaveOccurred())
 			})
 		})
