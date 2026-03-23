@@ -90,7 +90,7 @@ var _ = Describe("ValidateCreate", func() {
 	Context("ValidateCreate", func() {
 		Context("When given a valid API key", func() {
 			It("should not return an error", func() {
-				_, _, err := r.ValidateCreate()
+				_, err := r.ValidateCreate()
 				Expect(err).ToNot(HaveOccurred())
 			})
 		})
@@ -98,7 +98,7 @@ var _ = Describe("ValidateCreate", func() {
 		Context("When given an invalid API key", func() {
 			It("should return an error", func() {
 				r.Spec.APIKey = ""
-				_, _, err := r.ValidateCreate()
+				_, err := r.ValidateCreate()
 				Expect(err).To(HaveOccurred())
 			})
 		})
@@ -121,7 +121,7 @@ var _ = Describe("ValidateCreate", func() {
 					},
 				}
 				Expect(ignoreAlreadyExists(k8Client.Create(ctx, secret))).To(Succeed())
-				_, _, err := r.ValidateCreate()
+				_, err := r.ValidateCreate()
 				Expect(err).ToNot(HaveOccurred())
 			})
 
@@ -138,7 +138,7 @@ var _ = Describe("ValidateCreate", func() {
 					Namespace: "my-namespace",
 					KeyName:   "my-api-key",
 				}
-				_, _, err := r.ValidateCreate()
+				_, err := r.ValidateCreate()
 				Expect(err).To(HaveOccurred())
 			})
 		})
@@ -146,7 +146,7 @@ var _ = Describe("ValidateCreate", func() {
 		Context("when given a NRQL condition without required field region", func() {
 			It("should reject resource creation", func() {
 				r.Spec.Region = ""
-				_, _, err := r.ValidateCreate()
+				_, err := r.ValidateCreate()
 				Expect(err).To(HaveOccurred())
 			})
 		})
@@ -154,7 +154,7 @@ var _ = Describe("ValidateCreate", func() {
 		Context("when given a NRQL condition without required field ExistingPolicyId", func() {
 			It("should reject resource creation", func() {
 				r.Spec.ExistingPolicyID = 0
-				_, _, err := r.ValidateCreate()
+				_, err := r.ValidateCreate()
 				Expect(err).To(HaveOccurred())
 			})
 
@@ -162,7 +162,7 @@ var _ = Describe("ValidateCreate", func() {
 				It("should reject resource creation", func() {
 					r.Spec.Region = ""
 					r.Spec.ExistingPolicyID = 0
-					_, _, err := r.ValidateCreate()
+					_, err := r.ValidateCreate()
 					Expect(err).To(HaveOccurred())
 					Expect(err).To(MatchError(errors.New("region and existing_policy_id must be set")))
 				})
@@ -201,7 +201,7 @@ var _ = Describe("ValidateCreate", func() {
 				})
 
 				It("returns an error", func() {
-					_, _, err := r.ValidateCreate()
+					_, err := r.ValidateCreate()
 					Expect(err).To(HaveOccurred())
 				})
 			})

@@ -9,7 +9,6 @@ import (
 	"testing"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/kubernetes/scheme"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -42,7 +41,7 @@ func newIntegrationTestClient(t *testing.T) newrelic.NewRelic {
 	return *client
 }
 
-func testSetup(t *testing.T, object runtime.Object) client.Client {
+func testSetup(t *testing.T, object client.Object) client.Client {
 	ctx := context.Background()
 	testEnv := &envtest.Environment{
 		CRDDirectoryPaths: []string{filepath.Join("..", "config", "crd", "bases")},

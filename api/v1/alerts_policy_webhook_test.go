@@ -51,7 +51,7 @@ var _ = Describe("AlertsPolicy_webhooks", func() {
 
 		Context("When given a valid API key", func() {
 			It("should not return an error", func() {
-				_, _, err := r.ValidateCreate()
+				_, err := r.ValidateCreate()
 				Expect(err).ToNot(HaveOccurred())
 			})
 		})
@@ -59,7 +59,7 @@ var _ = Describe("AlertsPolicy_webhooks", func() {
 		Context("When given an invalid API key", func() {
 			It("should return an error", func() {
 				r.Spec.APIKey = ""
-				_, _, err := r.ValidateCreate()
+				_, err := r.ValidateCreate()
 				Expect(err).To(HaveOccurred())
 				Expect(err.Error()).To(Equal("either api_key or api_key_secret must be set"))
 			})
@@ -83,7 +83,7 @@ var _ = Describe("AlertsPolicy_webhooks", func() {
 					},
 				}
 				k8Client.Create(context.Background(), secret)
-				_, _, err := r.ValidateCreate()
+				_, err := r.ValidateCreate()
 				Expect(err).ToNot(HaveOccurred())
 			})
 
@@ -95,7 +95,7 @@ var _ = Describe("AlertsPolicy_webhooks", func() {
 		Context("when given a policy with an invalid incident_preference", func() {
 			It("should reject the policy", func() {
 				r.Spec.IncidentPreference = "totally bogus"
-				_, _, err := r.ValidateCreate()
+				_, err := r.ValidateCreate()
 				Expect(err).To(HaveOccurred())
 				Expect(err.Error()).To(Equal("incident preference must be PER_POLICY, PER_CONDITION, or PER_CONDITION_AND_TARGET"))
 			})
@@ -160,7 +160,7 @@ var _ = Describe("AlertsPolicy_webhooks", func() {
 			})
 
 			It("should reject the policy", func() {
-				_, _, err := r.ValidateCreate()
+				_, err := r.ValidateCreate()
 				Expect(err).To(HaveOccurred())
 				Expect(err.Error()).To(Equal("duplicate conditions detected or hash collision"))
 			})
@@ -169,7 +169,7 @@ var _ = Describe("AlertsPolicy_webhooks", func() {
 				It("should include all errors", func() {
 					r.Spec.IncidentPreference = "totally bogus"
 					r.Spec.APIKey = ""
-					_, _, err := r.ValidateCreate()
+					_, err := r.ValidateCreate()
 					Expect(err).To(HaveOccurred())
 					Expect(err.Error()).To(ContainSubstring("either api_key or api_key_secret must be set"))
 					Expect(err.Error()).To(ContainSubstring("duplicate conditions detected"))
