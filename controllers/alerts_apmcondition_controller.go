@@ -30,7 +30,7 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	newrelic "github.com/newrelic/go-agent/v3/newrelic"
+	"github.com/newrelic/go-agent/v3/newrelic"
 
 	nralertsv1 "github.com/newrelic/newrelic-kubernetes-operator/api/v1"
 	"github.com/newrelic/newrelic-kubernetes-operator/interfaces"
@@ -52,11 +52,9 @@ type AlertsAPMConditionReconciler struct {
 // +kubebuilder:rbac:groups=nr.k8s.newrelic.com,resources=alertsapmconditions/status,verbs=get;update;patch
 
 // nolint:gocyclo
-func (r *AlertsAPMConditionReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
+func (r *AlertsAPMConditionReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	r.txn = r.NewRelicAgent.StartTransaction("Reconcile/Alerts/apmCondition")
 	defer r.txn.End()
-
-	ctx := context.Background()
 	_ = r.Log.WithValues("alertsapmcondition", req.NamespacedName)
 
 	r.Log.Info("Starting reconcile action")

@@ -27,6 +27,7 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/webhook"
+	"sigs.k8s.io/controller-runtime/pkg/webhook/admission"
 
 	"github.com/newrelic/newrelic-kubernetes-operator/interfaces"
 )
@@ -46,7 +47,7 @@ func (r *AlertsAPMCondition) SetupWebhookWithManager(mgr ctrl.Manager) error {
 
 // EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
 
-// +kubebuilder:webhook:path=/mutate-nr-k8s-newrelic-com-v1-alertsapmcondition,mutating=true,failurePolicy=fail,groups=nr.k8s.newrelic.com,resources=alertsapmconditions,verbs=create;update,versions=v1,name=malertsapmcondition.kb.io,sideEffects=None
+// +kubebuilder:webhook:path=/mutate-nr-k8s-newrelic-com-v1-alertsapmcondition,mutating=true,failurePolicy=fail,groups=nr.k8s.newrelic.com,resources=alertsapmconditions,verbs=create;update,versions=v1,name=malertsapmcondition.kb.io,sideEffects=None,admissionReviewVersions=v1
 
 var _ webhook.Defaulter = &AlertsAPMCondition{}
 
@@ -60,22 +61,22 @@ func (r *AlertsAPMCondition) Default() {
 	}
 }
 
-// +kubebuilder:webhook:verbs=create;update,path=/validate-nr-k8s-newrelic-com-v1-alertsapmcondition,mutating=false,failurePolicy=fail,groups=nr.k8s.newrelic.com,resources=alertsapmconditions,versions=v1,name=valertsapmcondition.kb.io,sideEffects=None
+// +kubebuilder:webhook:verbs=create;update,path=/validate-nr-k8s-newrelic-com-v1-alertsapmcondition,mutating=false,failurePolicy=fail,groups=nr.k8s.newrelic.com,resources=alertsapmconditions,versions=v1,name=valertsapmcondition.kb.io,sideEffects=None,admissionReviewVersions=v1
 
 var _ webhook.Validator = &AlertsAPMCondition{}
 
 // ValidateCreate implements webhook.Validator so a webhook will be registered for the type
-func (r *AlertsAPMCondition) ValidateCreate() error {
+func (r *AlertsAPMCondition) ValidateCreate() (admission.Warnings, error) {
 	alertsapmconditionlog.Info("validate create", "name", r.Name)
 
 	err := r.CheckForAPIKeyOrSecret()
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	err = r.CheckRequiredFields()
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	var invalidAttributes InvalidAttributeSlice
@@ -86,23 +87,23 @@ func (r *AlertsAPMCondition) ValidateCreate() error {
 	invalidAttributes = append(invalidAttributes, r.ValidateUserDefinedValueFunction()...)
 
 	if len(invalidAttributes) > 0 {
-		return errors.New("error with invalid attributes: \n" + invalidAttributes.errorString())
+		return nil, errors.New("error with invalid attributes: \n" + invalidAttributes.errorString())
 	}
-	return r.CheckExistingPolicyID()
+	return nil, r.CheckExistingPolicyID()
 }
 
 // ValidateUpdate implements webhook.Validator so a webhook will be registered for the type
-func (r *AlertsAPMCondition) ValidateUpdate(old runtime.Object) error {
+func (r *AlertsAPMCondition) ValidateUpdate(old runtime.Object) (admission.Warnings, error) {
 	alertsapmconditionlog.Info("validate update", "name", r)
 
 	err := r.CheckForAPIKeyOrSecret()
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	err = r.CheckRequiredFields()
 	if err != nil {
-		return err
+		return nil, err
 	}
 	var invalidAttributes InvalidAttributeSlice
 
@@ -112,17 +113,17 @@ func (r *AlertsAPMCondition) ValidateUpdate(old runtime.Object) error {
 	invalidAttributes = append(invalidAttributes, r.ValidateUserDefinedValueFunction()...)
 
 	if len(invalidAttributes) > 0 {
-		return errors.New("error with invalid attributes")
+		return nil, errors.New("error with invalid attributes")
 	}
-	return r.CheckExistingPolicyID()
+	return nil, r.CheckExistingPolicyID()
 }
 
 // ValidateDelete implements webhook.Validator so a webhook will be registered for the type
-func (r *AlertsAPMCondition) ValidateDelete() error {
+func (r *AlertsAPMCondition) ValidateDelete() (admission.Warnings, error) {
 	alertsapmconditionlog.Info("validate delete", "name", r.Name)
 
 	// TODO(user): fill in your validation logic upon object deletion.
-	return nil
+	return nil, nil
 }
 
 func (r *AlertsAPMCondition) ValidateType() InvalidAttributeSlice {

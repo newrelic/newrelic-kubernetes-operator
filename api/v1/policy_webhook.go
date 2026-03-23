@@ -23,6 +23,7 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/webhook"
+	"sigs.k8s.io/controller-runtime/pkg/webhook/admission"
 
 	customErrors "github.com/newrelic/newrelic-kubernetes-operator/errors"
 )
@@ -39,7 +40,7 @@ func (r *Policy) SetupWebhookWithManager(mgr ctrl.Manager) error {
 
 // EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
 
-// +kubebuilder:webhook:path=/mutate-nr-k8s-newrelic-com-v1-policy,mutating=true,failurePolicy=fail,groups=nr.k8s.newrelic.com,resources=policies,verbs=create;update,versions=v1,name=mpolicy.kb.io,sideEffects=None
+// +kubebuilder:webhook:path=/mutate-nr-k8s-newrelic-com-v1-policy,mutating=true,failurePolicy=fail,groups=nr.k8s.newrelic.com,resources=policies,verbs=create;update,versions=v1,name=mpolicy.kb.io,sideEffects=None,admissionReviewVersions=v1
 
 var _ webhook.Defaulter = &Policy{}
 
@@ -55,12 +56,12 @@ func (r *Policy) Default() {
 	r.DefaultIncidentPreference()
 }
 
-// +kubebuilder:webhook:verbs=create;update,path=/validate-nr-k8s-newrelic-com-v1-policy,mutating=false,failurePolicy=fail,groups=nr.k8s.newrelic.com,resources=policies,versions=v1,name=vpolicy.kb.io,sideEffects=None
+// +kubebuilder:webhook:verbs=create;update,path=/validate-nr-k8s-newrelic-com-v1-policy,mutating=false,failurePolicy=fail,groups=nr.k8s.newrelic.com,resources=policies,versions=v1,name=vpolicy.kb.io,sideEffects=None,admissionReviewVersions=v1
 
 var _ webhook.Validator = &Policy{}
 
 // ValidateCreate implements webhook.Validator so a webhook will be registered for the type
-func (r *Policy) ValidateCreate() error {
+func (r *Policy) ValidateCreate() (admission.Warnings, error) {
 	Log.Info("validate create", "name", r.Name)
 
 	collectedErrors := new(customErrors.ErrorCollector)
@@ -82,14 +83,14 @@ func (r *Policy) ValidateCreate() error {
 
 	if len(*collectedErrors) > 0 {
 		Log.Info("Errors encountered validating policy", "collectedErrors", collectedErrors)
-		return collectedErrors
+		return nil, collectedErrors
 	}
 
-	return nil
+	return nil, nil
 }
 
 // ValidateUpdate implements webhook.Validator so a webhook will be registered for the type
-func (r *Policy) ValidateUpdate(old runtime.Object) error {
+func (r *Policy) ValidateUpdate(old runtime.Object) (admission.Warnings, error) {
 	Log.Info("validate update", "name", r.Name)
 
 	collectedErrors := new(customErrors.ErrorCollector)
@@ -111,22 +112,22 @@ func (r *Policy) ValidateUpdate(old runtime.Object) error {
 
 	if len(*collectedErrors) > 0 {
 		Log.Info("Errors encountered validating policy", "collectedErrors", collectedErrors)
-		return collectedErrors
+		return nil, collectedErrors
 	}
 
-	return nil
+	return nil, nil
 }
 
 // ValidateDelete implements webhook.Validator so a webhook will be registered for the type
-func (r *Policy) ValidateDelete() error {
+func (r *Policy) ValidateDelete() (admission.Warnings, error) {
 	Log.Info("validate delete", "name", r.Name)
 
 	err := r.CheckForAPIKeyOrSecret()
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	return nil
+	return nil, nil
 }
 
 func (r *Policy) DefaultIncidentPreference() {

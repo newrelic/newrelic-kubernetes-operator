@@ -23,6 +23,7 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/webhook"
+	"sigs.k8s.io/controller-runtime/pkg/webhook/admission"
 
 	"github.com/newrelic/newrelic-client-go/pkg/alerts"
 
@@ -41,7 +42,7 @@ func (r *AlertsPolicy) SetupWebhookWithManager(mgr ctrl.Manager) error {
 
 // EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
 
-// +kubebuilder:webhook:path=/mutate-nr-k8s-newrelic-com-v1-alertspolicy,mutating=true,failurePolicy=fail,groups=nr.k8s.newrelic.com,resources=alertspolicies,verbs=create;update,versions=v1,name=malertspolicy.kb.io,sideEffects=None
+// +kubebuilder:webhook:path=/mutate-nr-k8s-newrelic-com-v1-alertspolicy,mutating=true,failurePolicy=fail,groups=nr.k8s.newrelic.com,resources=alertspolicies,verbs=create;update,versions=v1,name=malertspolicy.kb.io,sideEffects=None,admissionReviewVersions=v1
 
 var _ webhook.Defaulter = &AlertsPolicy{}
 
@@ -58,12 +59,12 @@ func (r *AlertsPolicy) Default() {
 }
 
 // TODO(user): change verbs to "verbs=create;update;delete" if you want to enable deletion validation.
-// +kubebuilder:webhook:verbs=create;update,path=/validate-nr-k8s-newrelic-com-v1-alertspolicy,mutating=false,failurePolicy=fail,groups=nr.k8s.newrelic.com,resources=alertspolicies,versions=v1,name=valertspolicy.kb.io,sideEffects=None
+// +kubebuilder:webhook:verbs=create;update,path=/validate-nr-k8s-newrelic-com-v1-alertspolicy,mutating=false,failurePolicy=fail,groups=nr.k8s.newrelic.com,resources=alertspolicies,versions=v1,name=valertspolicy.kb.io,sideEffects=None,admissionReviewVersions=v1
 
 var _ webhook.Validator = &AlertsPolicy{}
 
 // ValidateCreate implements webhook.Validator so a webhook will be registered for the type
-func (r *AlertsPolicy) ValidateCreate() error {
+func (r *AlertsPolicy) ValidateCreate() (admission.Warnings, error) {
 	AlertsPolicyLog.Info("validate create", "name", r.Name)
 
 	collectedErrors := new(customErrors.ErrorCollector)
@@ -85,14 +86,14 @@ func (r *AlertsPolicy) ValidateCreate() error {
 
 	if len(*collectedErrors) > 0 {
 		AlertsPolicyLog.Info("Errors encountered validating policy", "collectedErrors", collectedErrors)
-		return collectedErrors
+		return nil, collectedErrors
 	}
 
-	return nil
+	return nil, nil
 }
 
 // ValidateUpdate implements webhook.Validator so a webhook will be registered for the type
-func (r *AlertsPolicy) ValidateUpdate(old runtime.Object) error {
+func (r *AlertsPolicy) ValidateUpdate(old runtime.Object) (admission.Warnings, error) {
 	AlertsPolicyLog.Info("validate update", "name", r.Name)
 
 	collectedErrors := new(customErrors.ErrorCollector)
@@ -114,22 +115,22 @@ func (r *AlertsPolicy) ValidateUpdate(old runtime.Object) error {
 
 	if len(*collectedErrors) > 0 {
 		AlertsPolicyLog.Info("Errors encountered validating policy", "collectedErrors", collectedErrors)
-		return collectedErrors
+		return nil, collectedErrors
 	}
 
-	return nil
+	return nil, nil
 }
 
 // ValidateDelete implements webhook.Validator so a webhook will be registered for the type
-func (r *AlertsPolicy) ValidateDelete() error {
+func (r *AlertsPolicy) ValidateDelete() (admission.Warnings, error) {
 	AlertsPolicyLog.Info("validate delete", "name", r.Name)
 
 	err := r.CheckForAPIKeyOrSecret()
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	return nil
+	return nil, nil
 }
 
 func (r *AlertsPolicy) DefaultIncidentPreference() {

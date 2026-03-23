@@ -28,6 +28,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/webhook"
+	"sigs.k8s.io/controller-runtime/pkg/webhook/admission"
 
 	"github.com/newrelic/newrelic-kubernetes-operator/interfaces"
 )
@@ -64,7 +65,7 @@ func (r *ApmAlertCondition) SetupWebhookWithManager(mgr ctrl.Manager) error {
 
 // EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
 
-// +kubebuilder:webhook:path=/mutate-nr-k8s-newrelic-com-v1-apmalertcondition,mutating=true,failurePolicy=fail,groups=nr.k8s.newrelic.com,resources=apmalertconditions,verbs=create;update,versions=v1,name=mapmalertcondition.kb.io,sideEffects=None
+// +kubebuilder:webhook:path=/mutate-nr-k8s-newrelic-com-v1-apmalertcondition,mutating=true,failurePolicy=fail,groups=nr.k8s.newrelic.com,resources=apmalertconditions,verbs=create;update,versions=v1,name=mapmalertcondition.kb.io,sideEffects=None,admissionReviewVersions=v1
 
 var _ webhook.Defaulter = &ApmAlertCondition{}
 
@@ -78,22 +79,22 @@ func (r *ApmAlertCondition) Default() {
 	}
 }
 
-// +kubebuilder:webhook:verbs=create;update,path=/validate-nr-k8s-newrelic-com-v1-apmalertcondition,mutating=false,failurePolicy=fail,groups=nr.k8s.newrelic.com,resources=apmalertconditions,versions=v1,name=vapmalertcondition.kb.io,sideEffects=None
+// +kubebuilder:webhook:verbs=create;update,path=/validate-nr-k8s-newrelic-com-v1-apmalertcondition,mutating=false,failurePolicy=fail,groups=nr.k8s.newrelic.com,resources=apmalertconditions,versions=v1,name=vapmalertcondition.kb.io,sideEffects=None,admissionReviewVersions=v1
 
 var _ webhook.Validator = &ApmAlertCondition{}
 
 // ValidateCreate implements webhook.Validator so a webhook will be registered for the type
-func (r *ApmAlertCondition) ValidateCreate() error {
+func (r *ApmAlertCondition) ValidateCreate() (admission.Warnings, error) {
 	apmalertconditionlog.Info("validate create", "name", r.Name)
 
 	err := r.CheckForAPIKeyOrSecret()
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	err = r.CheckRequiredFields()
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	var invalidAttributes InvalidAttributeSlice
@@ -104,23 +105,23 @@ func (r *ApmAlertCondition) ValidateCreate() error {
 	invalidAttributes = append(invalidAttributes, r.ValidateUserDefinedValueFunction()...)
 
 	if len(invalidAttributes) > 0 {
-		return errors.New("error with invalid attributes: \n" + invalidAttributes.errorString())
+		return nil, errors.New("error with invalid attributes: \n" + invalidAttributes.errorString())
 	}
-	return r.CheckExistingPolicyID()
+	return nil, r.CheckExistingPolicyID()
 }
 
 // ValidateUpdate implements webhook.Validator so a webhook will be registered for the type
-func (r *ApmAlertCondition) ValidateUpdate(old runtime.Object) error {
+func (r *ApmAlertCondition) ValidateUpdate(old runtime.Object) (admission.Warnings, error) {
 	apmalertconditionlog.Info("validate update", "name", r)
 
 	err := r.CheckForAPIKeyOrSecret()
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	err = r.CheckRequiredFields()
 	if err != nil {
-		return err
+		return nil, err
 	}
 	var invalidAttributes InvalidAttributeSlice
 
@@ -130,18 +131,18 @@ func (r *ApmAlertCondition) ValidateUpdate(old runtime.Object) error {
 	invalidAttributes = append(invalidAttributes, r.ValidateUserDefinedValueFunction()...)
 
 	if len(invalidAttributes) > 0 {
-		return errors.New("error with invalid attributes")
+		return nil, errors.New("error with invalid attributes")
 	}
 
-	return r.CheckExistingPolicyID()
+	return nil, r.CheckExistingPolicyID()
 }
 
 // ValidateDelete implements webhook.Validator so a webhook will be registered for the type
-func (r *ApmAlertCondition) ValidateDelete() error {
+func (r *ApmAlertCondition) ValidateDelete() (admission.Warnings, error) {
 	apmalertconditionlog.Info("validate delete", "name", r.Name)
 
 	// TODO(user): fill in your validation logic upon object deletion.
-	return nil
+	return nil, nil
 }
 
 func (r *ApmAlertCondition) ValidateType() InvalidAttributeSlice {

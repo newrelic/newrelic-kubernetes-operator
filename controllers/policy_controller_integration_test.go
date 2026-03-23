@@ -1,4 +1,4 @@
-// +build integration
+//go:build integration
 
 package controllers
 
@@ -10,7 +10,7 @@ import (
 	"github.com/newrelic/newrelic-client-go/pkg/alerts"
 	ctrl "sigs.k8s.io/controller-runtime"
 
-	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 
 	nrv1 "github.com/newrelic/newrelic-kubernetes-operator/api/v1"
@@ -166,7 +166,7 @@ var _ = Describe("policy reconciliation", func() {
 				Expect(err).ToNot(HaveOccurred())
 
 				// call reconcile
-				_, err = r.Reconcile(request)
+				_, err = r.Reconcile(ctx, request)
 				Expect(err).ToNot(HaveOccurred())
 			})
 
@@ -175,7 +175,7 @@ var _ = Describe("policy reconciliation", func() {
 				Expect(err).ToNot(HaveOccurred())
 
 				// call reconcile
-				_, err = r.Reconcile(request)
+				_, err = r.Reconcile(ctx, request)
 				Expect(err).ToNot(HaveOccurred())
 
 				var endStatePolicy nrv1.Policy
@@ -189,7 +189,7 @@ var _ = Describe("policy reconciliation", func() {
 				Expect(err).ToNot(HaveOccurred())
 
 				// call reconcile
-				_, err = r.Reconcile(request)
+				_, err = r.Reconcile(ctx, request)
 				Expect(err).ToNot(HaveOccurred())
 
 				var endStatePolicy nrv1.Policy
@@ -212,7 +212,7 @@ var _ = Describe("policy reconciliation", func() {
 				Expect(err).ToNot(HaveOccurred())
 
 				// call reconcile
-				_, err = r.Reconcile(request)
+				_, err = r.Reconcile(ctx, request)
 				Expect(err).ToNot(HaveOccurred())
 
 				var endStatePolicy nrv1.Policy
@@ -244,7 +244,7 @@ var _ = Describe("policy reconciliation", func() {
 				Expect(createErr).ToNot(HaveOccurred())
 
 				// call reconcile
-				_, reconcileErr := r.Reconcile(request)
+				_, reconcileErr := r.Reconcile(ctx, request)
 				Expect(reconcileErr).To(HaveOccurred())
 				Expect(reconcileErr.Error()).To(Equal("Any Error Goes Here"))
 
@@ -292,7 +292,7 @@ var _ = Describe("policy reconciliation", func() {
 				Expect(err).ToNot(HaveOccurred())
 
 				// call reconcile
-				_, err = r.Reconcile(request)
+				_, err = r.Reconcile(ctx, request)
 				Expect(err).ToNot(HaveOccurred())
 
 				Expect(alertsClient.CreatePolicyCallCount()).To(Equal(1))
@@ -318,7 +318,7 @@ var _ = Describe("policy reconciliation", func() {
 					Expect(err).ToNot(HaveOccurred())
 
 					// call reconcile
-					_, err = r.Reconcile(request)
+					_, err = r.Reconcile(ctx, request)
 					Expect(err).ToNot(HaveOccurred())
 
 					Expect(alertsClient.CreatePolicyCallCount()).To(Equal(1))
@@ -345,7 +345,7 @@ var _ = Describe("policy reconciliation", func() {
 			Expect(err).ToNot(HaveOccurred())
 
 			// Need to call reconcile to delete finalizer
-			_, err = r.Reconcile(request)
+			_, err = r.Reconcile(ctx, request)
 			Expect(err).ToNot(HaveOccurred())
 		})
 	})
@@ -406,7 +406,7 @@ var _ = Describe("policy reconciliation", func() {
 			err := k8sClient.Create(ctx, policy)
 			Expect(err).ToNot(HaveOccurred())
 			// call reconcile
-			_, err = r.Reconcile(request)
+			_, err = r.Reconcile(ctx, request)
 			Expect(err).ToNot(HaveOccurred())
 
 			Expect(alertsClient.CreatePolicyCallCount()).To(Equal(1))
@@ -423,7 +423,7 @@ var _ = Describe("policy reconciliation", func() {
 				Expect(err).ToNot(HaveOccurred())
 
 				// Need to call reconcile to delete finalizer
-				_, err = r.Reconcile(request)
+				_, err = r.Reconcile(ctx, request)
 				Expect(err).ToNot(HaveOccurred())
 
 				var endStatePolicy nrv1.Policy
@@ -436,7 +436,7 @@ var _ = Describe("policy reconciliation", func() {
 				Expect(err).ToNot(HaveOccurred())
 
 				// Need to call reconcile to delete finalizer
-				_, err = r.Reconcile(request)
+				_, err = r.Reconcile(ctx, request)
 				Expect(err).ToNot(HaveOccurred())
 
 				var endStateCondition nrv1.NrqlAlertCondition
@@ -466,7 +466,7 @@ var _ = Describe("policy reconciliation", func() {
 				Expect(err).ToNot(HaveOccurred())
 
 				// Need to call reconcile to delete finalizer
-				_, err = r.Reconcile(request)
+				_, err = r.Reconcile(ctx, request)
 				Expect(err).ToNot(HaveOccurred())
 			})
 		})
@@ -528,7 +528,7 @@ var _ = Describe("policy reconciliation", func() {
 			err := k8sClient.Create(ctx, policy)
 			Expect(err).ToNot(HaveOccurred())
 			// call reconcile
-			_, err = r.Reconcile(request)
+			_, err = r.Reconcile(ctx, request)
 			Expect(err).ToNot(HaveOccurred())
 
 			Expect(alertsClient.CreatePolicyCallCount()).To(Equal(1))
@@ -549,7 +549,7 @@ var _ = Describe("policy reconciliation", func() {
 				Expect(err).ToNot(HaveOccurred())
 
 				// Need to call reconcile twice to be fully settled
-				_, err = r.Reconcile(request)
+				_, err = r.Reconcile(ctx, request)
 				Expect(err).ToNot(HaveOccurred())
 
 				Expect(alertsClient.UpdatePolicyCallCount()).To(Equal(0))
@@ -580,7 +580,7 @@ var _ = Describe("policy reconciliation", func() {
 				Expect(err).ToNot(HaveOccurred())
 
 				// Need to call reconcile to update the condition
-				_, err = r.Reconcile(request)
+				_, err = r.Reconcile(ctx, request)
 				Expect(err).ToNot(HaveOccurred())
 
 				var endStatePolicy nrv1.Policy
@@ -605,7 +605,7 @@ var _ = Describe("policy reconciliation", func() {
 				Expect(err).ToNot(HaveOccurred())
 
 				// Need to call reconcile to update the condition
-				_, err = r.Reconcile(request)
+				_, err = r.Reconcile(ctx, request)
 				Expect(err).ToNot(HaveOccurred())
 
 				var endStatePolicy nrv1.Policy
@@ -629,7 +629,7 @@ var _ = Describe("policy reconciliation", func() {
 				Expect(err).ToNot(HaveOccurred())
 
 				// Need to call reconcile to update the condition
-				_, err = r.Reconcile(request)
+				_, err = r.Reconcile(ctx, request)
 				Expect(err).ToNot(HaveOccurred())
 
 				var endStatePolicy nrv1.Policy
@@ -662,7 +662,7 @@ var _ = Describe("policy reconciliation", func() {
 				Expect(err).ToNot(HaveOccurred())
 
 				// Need to call reconcile to update the condition
-				_, err = r.Reconcile(request)
+				_, err = r.Reconcile(ctx, request)
 				Expect(err).ToNot(HaveOccurred())
 
 				var endStatePolicy nrv1.Policy
@@ -686,7 +686,7 @@ var _ = Describe("policy reconciliation", func() {
 				Expect(err).ToNot(HaveOccurred())
 
 				// Need to call reconcile to update the condition
-				_, err = r.Reconcile(request)
+				_, err = r.Reconcile(ctx, request)
 				Expect(err).ToNot(HaveOccurred())
 
 				var endStatePolicy nrv1.Policy
@@ -748,7 +748,7 @@ var _ = Describe("policy reconciliation", func() {
 				Expect(err).ToNot(HaveOccurred())
 
 				// Need to call reconcile to update the condition
-				_, err = r.Reconcile(request)
+				_, err = r.Reconcile(ctx, request)
 				Expect(err).ToNot(HaveOccurred())
 
 				var endStatePolicy nrv1.Policy //test-policy1942898816
@@ -780,7 +780,7 @@ var _ = Describe("policy reconciliation", func() {
 				Expect(err).ToNot(HaveOccurred())
 
 				// Need to call reconcile to update the condition
-				_, err = r.Reconcile(request)
+				_, err = r.Reconcile(ctx, request)
 				Expect(err).To(HaveOccurred())
 			})
 		})
@@ -790,7 +790,7 @@ var _ = Describe("policy reconciliation", func() {
 			Expect(err).ToNot(HaveOccurred())
 
 			// Need to call reconcile to delete finalizer
-			_, err = r.Reconcile(request)
+			_, err = r.Reconcile(ctx, request)
 			Expect(err).ToNot(HaveOccurred())
 		})
 	})
@@ -850,7 +850,7 @@ var _ = Describe("policy reconciliation", func() {
 			err := k8sClient.Create(ctx, policy)
 			Expect(err).ToNot(HaveOccurred())
 			// call reconcile
-			_, err = r.Reconcile(request)
+			_, err = r.Reconcile(ctx, request)
 			Expect(err).ToNot(HaveOccurred())
 
 			Expect(alertsClient.CreatePolicyCallCount()).To(Equal(1))
@@ -871,7 +871,7 @@ var _ = Describe("policy reconciliation", func() {
 				Expect(err).ToNot(HaveOccurred())
 
 				// Need to call reconcile twice to be fully settled
-				_, err = r.Reconcile(request)
+				_, err = r.Reconcile(ctx, request)
 				Expect(err).ToNot(HaveOccurred())
 
 				Expect(alertsClient.UpdatePolicyCallCount()).To(Equal(0))
@@ -903,7 +903,7 @@ var _ = Describe("policy reconciliation", func() {
 				Expect(err).ToNot(HaveOccurred())
 
 				// Need to call reconcile to update the condition
-				_, err = r.Reconcile(request)
+				_, err = r.Reconcile(ctx, request)
 				Expect(err).ToNot(HaveOccurred())
 
 				var endStatePolicy nrv1.Policy
@@ -929,7 +929,7 @@ var _ = Describe("policy reconciliation", func() {
 				Expect(err).ToNot(HaveOccurred())
 
 				// Need to call reconcile to update the condition
-				_, err = r.Reconcile(request)
+				_, err = r.Reconcile(ctx, request)
 				Expect(err).ToNot(HaveOccurred())
 
 				var endStatePolicy nrv1.Policy
@@ -953,7 +953,7 @@ var _ = Describe("policy reconciliation", func() {
 				Expect(err).ToNot(HaveOccurred())
 
 				// Need to call reconcile to update the condition
-				_, err = r.Reconcile(request)
+				_, err = r.Reconcile(ctx, request)
 				Expect(err).ToNot(HaveOccurred())
 
 				var endStatePolicy nrv1.Policy
@@ -986,7 +986,7 @@ var _ = Describe("policy reconciliation", func() {
 				Expect(err).ToNot(HaveOccurred())
 
 				// Need to call reconcile to update the condition
-				_, err = r.Reconcile(request)
+				_, err = r.Reconcile(ctx, request)
 				Expect(err).ToNot(HaveOccurred())
 
 				var endStatePolicy nrv1.Policy
@@ -1010,7 +1010,7 @@ var _ = Describe("policy reconciliation", func() {
 				Expect(err).ToNot(HaveOccurred())
 
 				// Need to call reconcile to update the condition
-				_, err = r.Reconcile(request)
+				_, err = r.Reconcile(ctx, request)
 				Expect(err).ToNot(HaveOccurred())
 
 				var endStatePolicy nrv1.Policy
@@ -1070,7 +1070,7 @@ var _ = Describe("policy reconciliation", func() {
 				Expect(err).ToNot(HaveOccurred())
 
 				// Need to call reconcile to update the condition
-				_, err = r.Reconcile(request)
+				_, err = r.Reconcile(ctx, request)
 				Expect(err).ToNot(HaveOccurred())
 
 				var endStatePolicy nrv1.Policy //test-policy1942898816
@@ -1102,7 +1102,7 @@ var _ = Describe("policy reconciliation", func() {
 				Expect(err).ToNot(HaveOccurred())
 
 				// Need to call reconcile to update the condition
-				_, err = r.Reconcile(request)
+				_, err = r.Reconcile(ctx, request)
 				Expect(err).To(HaveOccurred())
 			})
 		})
@@ -1112,7 +1112,7 @@ var _ = Describe("policy reconciliation", func() {
 			Expect(err).ToNot(HaveOccurred())
 
 			// Need to call reconcile to delete finalizer
-			_, err = r.Reconcile(request)
+			_, err = r.Reconcile(ctx, request)
 			Expect(err).ToNot(HaveOccurred())
 		})
 	})
@@ -1207,7 +1207,7 @@ var _ = Describe("policy reconciliation", func() {
 			err := k8sClient.Create(ctx, policy)
 			Expect(err).ToNot(HaveOccurred())
 			// call reconcile
-			_, err = r.Reconcile(request)
+			_, err = r.Reconcile(ctx, request)
 			Expect(err).ToNot(HaveOccurred())
 
 			Expect(alertsClient.CreatePolicyCallCount()).To(Equal(1))
@@ -1236,7 +1236,7 @@ var _ = Describe("policy reconciliation", func() {
 				Expect(err).ToNot(HaveOccurred())
 
 				// Need to call reconcile to update the condition
-				_, err = r.Reconcile(request)
+				_, err = r.Reconcile(ctx, request)
 				Expect(err).ToNot(HaveOccurred())
 
 				var endStatePolicy nrv1.Policy
@@ -1263,7 +1263,7 @@ var _ = Describe("policy reconciliation", func() {
 				Expect(err).ToNot(HaveOccurred())
 
 				// Need to call reconcile to update the condition
-				_, err = r.Reconcile(request)
+				_, err = r.Reconcile(ctx, request)
 				Expect(err).ToNot(HaveOccurred())
 				Expect(alertsClient.UpdatePolicyCallCount()).To(Equal(0))
 			})
@@ -1280,7 +1280,7 @@ var _ = Describe("policy reconciliation", func() {
 				Expect(err).ToNot(HaveOccurred())
 
 				// Need to call reconcile to update the condition
-				_, err = r.Reconcile(request)
+				_, err = r.Reconcile(ctx, request)
 				Expect(err).ToNot(HaveOccurred())
 
 				var endStatePolicy nrv1.Policy //test-policy1942898816
@@ -1310,7 +1310,7 @@ var _ = Describe("policy reconciliation", func() {
 				Expect(err).ToNot(HaveOccurred())
 
 				// Need to call reconcile to update the condition
-				_, err = r.Reconcile(request)
+				_, err = r.Reconcile(ctx, request)
 				Expect(err).To(HaveOccurred())
 			})
 		})
@@ -1320,7 +1320,7 @@ var _ = Describe("policy reconciliation", func() {
 			Expect(err).ToNot(HaveOccurred())
 
 			// Need to call reconcile to delete finalizer
-			_, err = r.Reconcile(request)
+			_, err = r.Reconcile(ctx, request)
 			Expect(err).ToNot(HaveOccurred())
 		})
 	})

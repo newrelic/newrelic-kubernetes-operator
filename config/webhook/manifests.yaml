@@ -1,13 +1,12 @@
-
 ---
-apiVersion: admissionregistration.k8s.io/v1beta1
+apiVersion: admissionregistration.k8s.io/v1
 kind: MutatingWebhookConfiguration
 metadata:
-  creationTimestamp: null
   name: mutating-webhook-configuration
 webhooks:
-- clientConfig:
-    caBundle: Cg==
+- admissionReviewVersions:
+  - v1
+  clientConfig:
     service:
       name: webhook-service
       namespace: system
@@ -25,46 +24,9 @@ webhooks:
     resources:
     - alertsapmconditions
   sideEffects: None
-- clientConfig:
-    caBundle: Cg==
-    service:
-      name: webhook-service
-      namespace: system
-      path: /mutate-nr-k8s-newrelic-com-v1-alertsnrqlcondition
-  failurePolicy: Fail
-  name: malertsnrqlcondition.kb.io
-  rules:
-  - apiGroups:
-    - nr.k8s.newrelic.com
-    apiVersions:
-    - v1
-    operations:
-    - CREATE
-    - UPDATE
-    resources:
-    - alertsnrqlconditions
-  sideEffects: None
-- clientConfig:
-    caBundle: Cg==
-    service:
-      name: webhook-service
-      namespace: system
-      path: /mutate-nr-k8s-newrelic-com-v1-alertspolicy
-  failurePolicy: Fail
-  name: malertspolicy.kb.io
-  rules:
-  - apiGroups:
-    - nr.k8s.newrelic.com
-    apiVersions:
-    - v1
-    operations:
-    - CREATE
-    - UPDATE
-    resources:
-    - alertspolicies
-  sideEffects: None
-- clientConfig:
-    caBundle: Cg==
+- admissionReviewVersions:
+  - v1
+  clientConfig:
     service:
       name: webhook-service
       namespace: system
@@ -82,8 +44,49 @@ webhooks:
     resources:
     - alertschannels
   sideEffects: None
-- clientConfig:
-    caBundle: Cg==
+- admissionReviewVersions:
+  - v1
+  clientConfig:
+    service:
+      name: webhook-service
+      namespace: system
+      path: /mutate-nr-k8s-newrelic-com-v1-alertsnrqlcondition
+  failurePolicy: Fail
+  name: malertsnrqlcondition.kb.io
+  rules:
+  - apiGroups:
+    - nr.k8s.newrelic.com
+    apiVersions:
+    - v1
+    operations:
+    - CREATE
+    - UPDATE
+    resources:
+    - alertsnrqlconditions
+  sideEffects: None
+- admissionReviewVersions:
+  - v1
+  clientConfig:
+    service:
+      name: webhook-service
+      namespace: system
+      path: /mutate-nr-k8s-newrelic-com-v1-alertspolicy
+  failurePolicy: Fail
+  name: malertspolicy.kb.io
+  rules:
+  - apiGroups:
+    - nr.k8s.newrelic.com
+    apiVersions:
+    - v1
+    operations:
+    - CREATE
+    - UPDATE
+    resources:
+    - alertspolicies
+  sideEffects: None
+- admissionReviewVersions:
+  - v1
+  clientConfig:
     service:
       name: webhook-service
       namespace: system
@@ -101,8 +104,9 @@ webhooks:
     resources:
     - apmalertconditions
   sideEffects: None
-- clientConfig:
-    caBundle: Cg==
+- admissionReviewVersions:
+  - v1
+  clientConfig:
     service:
       name: webhook-service
       namespace: system
@@ -120,8 +124,9 @@ webhooks:
     resources:
     - nrqlalertconditions
   sideEffects: None
-- clientConfig:
-    caBundle: Cg==
+- admissionReviewVersions:
+  - v1
+  clientConfig:
     service:
       name: webhook-service
       namespace: system
@@ -139,16 +144,15 @@ webhooks:
     resources:
     - policies
   sideEffects: None
-
 ---
-apiVersion: admissionregistration.k8s.io/v1beta1
+apiVersion: admissionregistration.k8s.io/v1
 kind: ValidatingWebhookConfiguration
 metadata:
-  creationTimestamp: null
   name: validating-webhook-configuration
 webhooks:
-- clientConfig:
-    caBundle: Cg==
+- admissionReviewVersions:
+  - v1
+  clientConfig:
     service:
       name: webhook-service
       namespace: system
@@ -166,46 +170,9 @@ webhooks:
     resources:
     - alertsapmconditions
   sideEffects: None
-- clientConfig:
-    caBundle: Cg==
-    service:
-      name: webhook-service
-      namespace: system
-      path: /validate-nr-k8s-newrelic-com-v1-alertsnrqlcondition
-  failurePolicy: Fail
-  name: valertsnrqlcondition.kb.io
-  rules:
-  - apiGroups:
-    - nr.k8s.newrelic.com
-    apiVersions:
-    - v1
-    operations:
-    - CREATE
-    - UPDATE
-    resources:
-    - alertsnrqlconditions
-  sideEffects: None
-- clientConfig:
-    caBundle: Cg==
-    service:
-      name: webhook-service
-      namespace: system
-      path: /validate-nr-k8s-newrelic-com-v1-alertspolicy
-  failurePolicy: Fail
-  name: valertspolicy.kb.io
-  rules:
-  - apiGroups:
-    - nr.k8s.newrelic.com
-    apiVersions:
-    - v1
-    operations:
-    - CREATE
-    - UPDATE
-    resources:
-    - alertspolicies
-  sideEffects: None
-- clientConfig:
-    caBundle: Cg==
+- admissionReviewVersions:
+  - v1
+  clientConfig:
     service:
       name: webhook-service
       namespace: system
@@ -223,8 +190,49 @@ webhooks:
     resources:
     - alertschannels
   sideEffects: None
-- clientConfig:
-    caBundle: Cg==
+- admissionReviewVersions:
+  - v1
+  clientConfig:
+    service:
+      name: webhook-service
+      namespace: system
+      path: /validate-nr-k8s-newrelic-com-v1-alertsnrqlcondition
+  failurePolicy: Fail
+  name: valertsnrqlcondition.kb.io
+  rules:
+  - apiGroups:
+    - nr.k8s.newrelic.com
+    apiVersions:
+    - v1
+    operations:
+    - CREATE
+    - UPDATE
+    resources:
+    - alertsnrqlconditions
+  sideEffects: None
+- admissionReviewVersions:
+  - v1
+  clientConfig:
+    service:
+      name: webhook-service
+      namespace: system
+      path: /validate-nr-k8s-newrelic-com-v1-alertspolicy
+  failurePolicy: Fail
+  name: valertspolicy.kb.io
+  rules:
+  - apiGroups:
+    - nr.k8s.newrelic.com
+    apiVersions:
+    - v1
+    operations:
+    - CREATE
+    - UPDATE
+    resources:
+    - alertspolicies
+  sideEffects: None
+- admissionReviewVersions:
+  - v1
+  clientConfig:
     service:
       name: webhook-service
       namespace: system
@@ -242,8 +250,9 @@ webhooks:
     resources:
     - apmalertconditions
   sideEffects: None
-- clientConfig:
-    caBundle: Cg==
+- admissionReviewVersions:
+  - v1
+  clientConfig:
     service:
       name: webhook-service
       namespace: system
@@ -261,8 +270,9 @@ webhooks:
     resources:
     - nrqlalertconditions
   sideEffects: None
-- clientConfig:
-    caBundle: Cg==
+- admissionReviewVersions:
+  - v1
+  clientConfig:
     service:
       name: webhook-service
       namespace: system

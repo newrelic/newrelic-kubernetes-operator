@@ -1,8 +1,9 @@
-// +build integration
+//go:build integration
 
 package controllers
 
 import (
+	"context"
 	"testing"
 
 	"k8s.io/apimachinery/pkg/types"
@@ -37,6 +38,6 @@ func TestIntegrationAlertsPolicyController(t *testing.T) {
 	}
 
 	// call reconcile
-	_, err := reconciler.Reconcile(request)
+	_, err := reconciler.Reconcile(context.Background(), request)
 	require.NoError(t, err)
 }

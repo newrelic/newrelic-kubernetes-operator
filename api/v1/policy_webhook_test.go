@@ -1,4 +1,4 @@
-// +build integration
+//go:build integration
 
 package v1
 
@@ -11,7 +11,7 @@ import (
 	"github.com/newrelic/newrelic-kubernetes-operator/interfaces"
 
 	"github.com/newrelic/newrelic-client-go/pkg/alerts"
-	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 
 	"github.com/newrelic/newrelic-kubernetes-operator/interfaces/interfacesfakes"
@@ -62,7 +62,7 @@ var _ = Describe("Policy_webhooks", func() {
 
 		Context("When given a valid API key", func() {
 			It("should not return an error", func() {
-				err := r.ValidateCreate()
+				_, err := r.ValidateCreate()
 				Expect(err).ToNot(HaveOccurred())
 			})
 		})
@@ -70,7 +70,7 @@ var _ = Describe("Policy_webhooks", func() {
 		Context("When given an invalid API key", func() {
 			It("should return an error", func() {
 				r.Spec.APIKey = ""
-				err := r.ValidateCreate()
+				_, err := r.ValidateCreate()
 				Expect(err).To(HaveOccurred())
 				Expect(err.Error()).To(Equal("either api_key or api_key_secret must be set"))
 			})
@@ -94,7 +94,7 @@ var _ = Describe("Policy_webhooks", func() {
 					},
 				}
 				Expect(ignoreAlreadyExists(k8Client.Create(ctx, secret))).To(Succeed())
-				err := r.ValidateCreate()
+				_, err := r.ValidateCreate()
 				Expect(err).ToNot(HaveOccurred())
 			})
 
@@ -106,7 +106,7 @@ var _ = Describe("Policy_webhooks", func() {
 		Context("when given a policy with an invalid incident_preference", func() {
 			It("should reject the policy", func() {
 				r.Spec.IncidentPreference = "totally bogus"
-				err := r.ValidateCreate()
+				_, err := r.ValidateCreate()
 				Expect(err).To(HaveOccurred())
 				Expect(err.Error()).To(Equal("incident preference must be PER_POLICY, PER_CONDITION, or PER_CONDITION_AND_TARGET"))
 			})
@@ -185,7 +185,7 @@ var _ = Describe("Policy_webhooks", func() {
 			})
 
 			It("should reject the policy", func() {
-				err := r.ValidateCreate()
+				_, err := r.ValidateCreate()
 				Expect(err).To(HaveOccurred())
 				Expect(err.Error()).To(Equal("duplicate conditions detected or hash collision"))
 			})
@@ -194,7 +194,7 @@ var _ = Describe("Policy_webhooks", func() {
 				It("should include all errors", func() {
 					r.Spec.IncidentPreference = "totally bogus"
 					r.Spec.APIKey = ""
-					err := r.ValidateCreate()
+					_, err := r.ValidateCreate()
 					Expect(err).To(HaveOccurred())
 					Expect(err.Error()).To(ContainSubstring("either api_key or api_key_secret must be set"))
 					Expect(err.Error()).To(ContainSubstring("duplicate conditions detected"))

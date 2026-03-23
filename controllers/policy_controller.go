@@ -20,7 +20,7 @@ import (
 	"errors"
 	"reflect"
 
-	newrelic "github.com/newrelic/go-agent/v3/newrelic"
+	"github.com/newrelic/go-agent/v3/newrelic"
 	"github.com/newrelic/newrelic-client-go/pkg/alerts"
 	v1 "k8s.io/api/core/v1"
 	kErr "k8s.io/apimachinery/pkg/api/errors"
@@ -52,8 +52,8 @@ type PolicyReconciler struct {
 // +kubebuilder:rbac:groups=nr.k8s.newrelic.com,resources=policies,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=nr.k8s.newrelic.com,resources=policies/status,verbs=get;update;patch
 
-func (r *PolicyReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
-	r.ctx = context.Background()
+func (r *PolicyReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
+	r.ctx = ctx
 	_ = r.Log.WithValues("policy", req.NamespacedName)
 
 	r.txn = r.NewRelicAgent.StartTransaction("Reconcile/Policy")
@@ -422,7 +422,7 @@ func (r *PolicyReconciler) deleteCondition(condition *nrv1.PolicyCondition) erro
 	defer r.txn.StartSegment("deleteCondition").End()
 	r.Log.Info("Deleting condition", "condition", condition.Name, "conditionName", condition.Spec.Name)
 
-	var retrievedCondition runtime.Object
+	var retrievedCondition client.Object
 	switch nrv1.GetConditionType(*condition) {
 	case "ApmAlertCondition":
 		returnedCondition := r.getApmConditionFromPolicyCondition(condition)

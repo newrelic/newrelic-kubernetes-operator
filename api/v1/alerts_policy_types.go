@@ -39,7 +39,7 @@ type AlertsPolicySpec struct {
 	ChannelIDs         []int                   `json:"channel_ids,omitempty"`
 }
 
-//AlertsPolicyCondition defined the conditions contained within an AlertsPolicy
+// AlertsPolicyCondition defined the conditions contained within an AlertsPolicy
 type AlertsPolicyCondition struct {
 	Name      string                    `json:"name,omitempty"`
 	Namespace string                    `json:"namespace,omitempty"`
@@ -129,7 +129,7 @@ func (p *AlertsPolicyCondition) GetNamespace() types.NamespacedName {
 	}
 }
 
-//Equals - comparator function to check for equality
+// Equals - comparator function to check for equality
 func (in AlertsPolicySpec) Equals(policyToCompare AlertsPolicySpec) bool {
 	if in.IncidentPreference != policyToCompare.IncidentPreference {
 		return false
@@ -181,7 +181,7 @@ func (in AlertsPolicySpec) Equals(policyToCompare AlertsPolicySpec) bool {
 	return true
 }
 
-//GetAlertsConditionType - returns the string representative of the Condition type
+// GetAlertsConditionType - returns the string representative of the Condition type
 func GetAlertsConditionType(condition AlertsPolicyCondition) string {
 	if condition.Spec.Type == "NRQL" {
 		return "AlertsNrqlCondition"

@@ -54,11 +54,11 @@ type AlertsChannelReconciler struct {
 // +kubebuilder:rbac:groups=nr.k8s.newrelic.com,resources=alertschannels,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=nr.k8s.newrelic.com,resources=alertschannels/status,verbs=get;update;patch
 
-//Reconcile - Main processing loop for AlertsChannel reconciliation
-func (r *AlertsChannelReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
+// Reconcile - Main processing loop for AlertsChannel reconciliation
+func (r *AlertsChannelReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	var alertsChannel nrv1.AlertsChannel
 
-	r.ctx = context.Background()
+	r.ctx = ctx
 	r.Log.WithValues("alertsChannel", req.NamespacedName)
 
 	r.txn = r.NewRelicAgent.StartTransaction("Reconcile/Alerts/AlertsPolicy")
@@ -135,7 +135,7 @@ func (r *AlertsChannelReconciler) Reconcile(req ctrl.Request) (ctrl.Result, erro
 	return ctrl.Result{}, nil
 }
 
-//SetupWithManager - Sets up Controller for AlertsChannel
+// SetupWithManager - Sets up Controller for AlertsChannel
 func (r *AlertsChannelReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&nrv1.AlertsChannel{}).

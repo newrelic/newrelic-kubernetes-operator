@@ -27,6 +27,7 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/webhook"
+	"sigs.k8s.io/controller-runtime/pkg/webhook/admission"
 
 	"github.com/newrelic/newrelic-kubernetes-operator/interfaces"
 )
@@ -46,7 +47,7 @@ func (r *AlertsNrqlCondition) SetupWebhookWithManager(mgr ctrl.Manager) error {
 
 // EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
 
-// +kubebuilder:webhook:path=/mutate-nr-k8s-newrelic-com-v1-alertsnrqlcondition,mutating=true,failurePolicy=fail,groups=nr.k8s.newrelic.com,resources=alertsnrqlconditions,verbs=create;update,versions=v1,name=malertsnrqlcondition.kb.io,sideEffects=None
+// +kubebuilder:webhook:path=/mutate-nr-k8s-newrelic-com-v1-alertsnrqlcondition,mutating=true,failurePolicy=fail,groups=nr.k8s.newrelic.com,resources=alertsnrqlconditions,verbs=create;update,versions=v1,name=malertsnrqlcondition.kb.io,sideEffects=None,admissionReviewVersions=v1
 
 var _ webhook.Defaulter = &AlertsNrqlCondition{}
 
@@ -62,45 +63,45 @@ func (r *AlertsNrqlCondition) Default() {
 }
 
 // TODO(user): change verbs to "verbs=create;update;delete" if you want to enable deletion validation.
-// +kubebuilder:webhook:verbs=create;update,path=/validate-nr-k8s-newrelic-com-v1-alertsnrqlcondition,mutating=false,failurePolicy=fail,groups=nr.k8s.newrelic.com,resources=alertsnrqlconditions,versions=v1,name=valertsnrqlcondition.kb.io,sideEffects=None
+// +kubebuilder:webhook:verbs=create;update,path=/validate-nr-k8s-newrelic-com-v1-alertsnrqlcondition,mutating=false,failurePolicy=fail,groups=nr.k8s.newrelic.com,resources=alertsnrqlconditions,versions=v1,name=valertsnrqlcondition.kb.io,sideEffects=None,admissionReviewVersions=v1
 
 var _ webhook.Validator = &AlertsNrqlCondition{}
 
 // ValidateCreate implements webhook.Validator so a webhook will be registered for the type
-func (r *AlertsNrqlCondition) ValidateCreate() error {
+func (r *AlertsNrqlCondition) ValidateCreate() (admission.Warnings, error) {
 	alertsNrqlConditionLog.Info("validate create", "name", r.Name)
 	//TODO this should write this value TO a new secret so code path always reads from a secret
 	err := r.CheckForAPIKeyOrSecret()
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	err = r.CheckRequiredFields()
 	if err != nil {
-		return err
+		return nil, err
 	}
-	return r.CheckExistingPolicyID()
+	return nil, r.CheckExistingPolicyID()
 }
 
 // ValidateUpdate implements webhook.Validator so a webhook will be registered for the type
-func (r *AlertsNrqlCondition) ValidateUpdate(old runtime.Object) error {
+func (r *AlertsNrqlCondition) ValidateUpdate(old runtime.Object) (admission.Warnings, error) {
 	alertsNrqlConditionLog.Info("validate update", "name", r.Name)
 	prevCondition := old.(*AlertsNrqlCondition)
 
 	if (r.Spec.BaselineDirection == nil && prevCondition.Spec.BaselineDirection != nil) ||
 		(r.Spec.BaselineDirection != nil && prevCondition.Spec.BaselineDirection == nil) {
-		return errors.New("cannot change between condition types, you must delete and create a new alert")
+		return nil, errors.New("cannot change between condition types, you must delete and create a new alert")
 	}
 
-	return nil
+	return nil, nil
 }
 
 // ValidateDelete implements webhook.Validator so a webhook will be registered for the type
-func (r *AlertsNrqlCondition) ValidateDelete() error {
+func (r *AlertsNrqlCondition) ValidateDelete() (admission.Warnings, error) {
 	alertsNrqlConditionLog.Info("validate delete", "name", r.Name)
 
 	// TODO(user): fill in your validation logic upon object deletion.
-	return nil
+	return nil, nil
 }
 
 func (r *AlertsNrqlCondition) CheckExistingPolicyID() error {

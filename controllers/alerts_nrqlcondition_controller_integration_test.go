@@ -1,4 +1,4 @@
-// +build integration
+//go:build integration
 
 package controllers
 
@@ -7,7 +7,7 @@ import (
 	"errors"
 	"testing"
 
-	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 
 	newrelic "github.com/newrelic/go-agent/v3/newrelic"
@@ -127,7 +127,7 @@ var _ = Describe("AlertsNrqlCondition reconciliation", func() {
 					err := k8sClient.Create(ctx, condition)
 					Expect(err).To(BeNil())
 
-					_, err = r.Reconcile(request)
+					_, err = r.Reconcile(ctx, request)
 					Expect(err).ToNot(HaveOccurred())
 					Expect(mockAlertsClient.CreateNrqlConditionStaticMutationCallCount()).To(Equal(1))
 					Expect(mockAlertsClient.UpdateNrqlConditionStaticMutationCallCount()).To(Equal(0))
@@ -137,7 +137,7 @@ var _ = Describe("AlertsNrqlCondition reconciliation", func() {
 					err := k8sClient.Create(ctx, condition)
 					Expect(err).ToNot(HaveOccurred())
 
-					_, err = r.Reconcile(request)
+					_, err = r.Reconcile(ctx, request)
 					Expect(err).ToNot(HaveOccurred())
 
 					var endStateCondition nrv1.AlertsNrqlCondition
@@ -176,7 +176,7 @@ var _ = Describe("AlertsNrqlCondition reconciliation", func() {
 					err := k8sClient.Create(ctx, condition)
 					Expect(err).ToNot(HaveOccurred())
 
-					_, err = r.Reconcile(request)
+					_, err = r.Reconcile(ctx, request)
 					Expect(err).ToNot(HaveOccurred())
 					Expect(mockAlertsClient.CreateNrqlConditionStaticMutationCallCount()).To(Equal(1))
 					Expect(mockAlertsClient.UpdateNrqlConditionStaticMutationCallCount()).To(Equal(0))
@@ -190,7 +190,7 @@ var _ = Describe("AlertsNrqlCondition reconciliation", func() {
 					err := k8sClient.Create(ctx, condition)
 					Expect(err).ToNot(HaveOccurred())
 
-					_, err = r.Reconcile(request)
+					_, err = r.Reconcile(ctx, request)
 					Expect(err).ToNot(HaveOccurred())
 
 					var endStateCondition nrv1.AlertsNrqlCondition
@@ -203,7 +203,7 @@ var _ = Describe("AlertsNrqlCondition reconciliation", func() {
 					err := k8sClient.Create(ctx, condition)
 					Expect(err).ToNot(HaveOccurred())
 
-					_, err = r.Reconcile(request)
+					_, err = r.Reconcile(ctx, request)
 					Expect(err).ToNot(HaveOccurred())
 
 					var endStateCondition nrv1.AlertsNrqlCondition
@@ -260,7 +260,7 @@ var _ = Describe("AlertsNrqlCondition reconciliation", func() {
 					err := k8sClient.Create(ctx, condition)
 					Expect(err).ToNot(HaveOccurred())
 
-					_, err = r.Reconcile(request)
+					_, err = r.Reconcile(ctx, request)
 					Expect(err).ToNot(HaveOccurred())
 					Expect(mockAlertsClient.CreateNrqlConditionStaticMutationCallCount()).To(Equal(0))
 				})
@@ -269,7 +269,7 @@ var _ = Describe("AlertsNrqlCondition reconciliation", func() {
 					err := k8sClient.Create(ctx, condition)
 					Expect(err).ToNot(HaveOccurred())
 
-					_, err = r.Reconcile(request)
+					_, err = r.Reconcile(ctx, request)
 					Expect(err).ToNot(HaveOccurred())
 
 					var endStateCondition nrv1.AlertsNrqlCondition
@@ -282,7 +282,7 @@ var _ = Describe("AlertsNrqlCondition reconciliation", func() {
 					err := k8sClient.Create(ctx, condition)
 					Expect(err).ToNot(HaveOccurred())
 
-					_, err = r.Reconcile(request)
+					_, err = r.Reconcile(ctx, request)
 					Expect(err).ToNot(HaveOccurred())
 
 					var endStateCondition nrv1.AlertsNrqlCondition
@@ -298,7 +298,7 @@ var _ = Describe("AlertsNrqlCondition reconciliation", func() {
 				err := k8sClient.Create(ctx, condition)
 				Expect(err).ToNot(HaveOccurred())
 
-				_, err = r.Reconcile(request)
+				_, err = r.Reconcile(ctx, request)
 				Expect(err).ToNot(HaveOccurred())
 				Expect(mockAlertsClient.CreateNrqlConditionStaticMutationCallCount()).To(Equal(1))
 				Expect(mockAlertsClient.UpdateNrqlConditionStaticMutationCallCount()).To(Equal(0))
@@ -317,7 +317,7 @@ var _ = Describe("AlertsNrqlCondition reconciliation", func() {
 					err := k8sClient.Update(ctx, condition)
 					Expect(err).ToNot(HaveOccurred())
 
-					_, err = r.Reconcile(request)
+					_, err = r.Reconcile(ctx, request)
 					Expect(err).ToNot(HaveOccurred())
 					Expect(mockAlertsClient.CreateNrqlConditionStaticMutationCallCount()).To(Equal(1))
 					Expect(mockAlertsClient.UpdateNrqlConditionStaticMutationCallCount()).To(Equal(1))
@@ -327,7 +327,7 @@ var _ = Describe("AlertsNrqlCondition reconciliation", func() {
 					err := k8sClient.Update(ctx, condition)
 					Expect(err).ToNot(HaveOccurred())
 
-					_, err = r.Reconcile(request)
+					_, err = r.Reconcile(ctx, request)
 					Expect(err).ToNot(HaveOccurred())
 
 					var endStateCondition nrv1.AlertsNrqlCondition
@@ -340,7 +340,7 @@ var _ = Describe("AlertsNrqlCondition reconciliation", func() {
 					err := k8sClient.Update(ctx, condition)
 					Expect(err).ToNot(HaveOccurred())
 
-					_, err = r.Reconcile(request)
+					_, err = r.Reconcile(ctx, request)
 					Expect(err).ToNot(HaveOccurred())
 
 					var endStateCondition nrv1.AlertsNrqlCondition
@@ -355,7 +355,7 @@ var _ = Describe("AlertsNrqlCondition reconciliation", func() {
 					err := k8sClient.Update(ctx, condition)
 					Expect(err).ToNot(HaveOccurred())
 
-					_, err = r.Reconcile(request)
+					_, err = r.Reconcile(ctx, request)
 					Expect(err).ToNot(HaveOccurred())
 					Expect(mockAlertsClient.CreateNrqlConditionStaticMutationCallCount()).To(Equal(1))
 					Expect(mockAlertsClient.UpdateNrqlConditionStaticMutationCallCount()).To(Equal(0))
@@ -372,7 +372,7 @@ var _ = Describe("AlertsNrqlCondition reconciliation", func() {
 					err := k8sClient.Create(ctx, condition)
 					Expect(err).To(BeNil())
 
-					_, err = r.Reconcile(request)
+					_, err = r.Reconcile(ctx, request)
 					Expect(err).ToNot(HaveOccurred())
 					Expect(mockAlertsClient.CreateNrqlConditionBaselineMutationCallCount()).To(Equal(1))
 					Expect(mockAlertsClient.UpdateNrqlConditionBaselineMutationCallCount()).To(Equal(0))
@@ -382,7 +382,7 @@ var _ = Describe("AlertsNrqlCondition reconciliation", func() {
 					err := k8sClient.Create(ctx, condition)
 					Expect(err).ToNot(HaveOccurred())
 
-					_, err = r.Reconcile(request)
+					_, err = r.Reconcile(ctx, request)
 					Expect(err).ToNot(HaveOccurred())
 
 					var endStateCondition nrv1.AlertsNrqlCondition
@@ -399,7 +399,7 @@ var _ = Describe("AlertsNrqlCondition reconciliation", func() {
 			Expect(err).ToNot(HaveOccurred())
 
 			// Need to call reconcile to delete finalizer
-			_, err = r.Reconcile(request)
+			_, err = r.Reconcile(ctx, request)
 			Expect(err).ToNot(HaveOccurred())
 		})
 	})
@@ -410,7 +410,7 @@ var _ = Describe("AlertsNrqlCondition reconciliation", func() {
 				err := k8sClient.Create(ctx, condition)
 				Expect(err).ToNot(HaveOccurred())
 
-				_, err = r.Reconcile(request)
+				_, err = r.Reconcile(ctx, request)
 				Expect(err).ToNot(HaveOccurred())
 
 				err = k8sClient.Get(ctx, namespacedName, condition)
@@ -422,7 +422,7 @@ var _ = Describe("AlertsNrqlCondition reconciliation", func() {
 					err := k8sClient.Delete(ctx, condition)
 					Expect(err).ToNot(HaveOccurred())
 
-					_, err = r.Reconcile(request)
+					_, err = r.Reconcile(ctx, request)
 					Expect(err).ToNot(HaveOccurred())
 					Expect(mockAlertsClient.CreateNrqlConditionStaticMutationCallCount()).To(Equal(1))
 					Expect(mockAlertsClient.UpdateNrqlConditionStaticMutationCallCount()).To(Equal(0))
@@ -433,7 +433,7 @@ var _ = Describe("AlertsNrqlCondition reconciliation", func() {
 					err := k8sClient.Delete(ctx, condition)
 					Expect(err).ToNot(HaveOccurred())
 
-					_, err = r.Reconcile(request)
+					_, err = r.Reconcile(ctx, request)
 					Expect(err).ToNot(HaveOccurred())
 
 					var endStateCondition nrv1.AlertsNrqlCondition
@@ -453,7 +453,7 @@ var _ = Describe("AlertsNrqlCondition reconciliation", func() {
 					err := k8sClient.Delete(ctx, condition)
 					Expect(err).ToNot(HaveOccurred())
 
-					_, err = r.Reconcile(request)
+					_, err = r.Reconcile(ctx, request)
 					Expect(err).ToNot(HaveOccurred())
 					Expect(mockAlertsClient.CreateNrqlConditionStaticMutationCallCount()).To(Equal(1))
 					Expect(mockAlertsClient.UpdateNrqlConditionStaticMutationCallCount()).To(Equal(0))
@@ -477,7 +477,7 @@ var _ = Describe("AlertsNrqlCondition reconciliation", func() {
 					err := k8sClient.Delete(ctx, condition)
 					Expect(err).ToNot(HaveOccurred())
 
-					_, err = r.Reconcile(request)
+					_, err = r.Reconcile(ctx, request)
 					Expect(err).ToNot(HaveOccurred())
 					Expect(mockAlertsClient.CreateNrqlConditionStaticMutationCallCount()).To(Equal(1))
 					Expect(mockAlertsClient.UpdateNrqlConditionStaticMutationCallCount()).To(Equal(0))
@@ -506,7 +506,7 @@ var _ = Describe("AlertsNrqlCondition reconciliation", func() {
 			err := k8sClient.Create(ctx, secret)
 
 			Expect(err).ToNot(HaveOccurred())
-			_, err = r.Reconcile(request)
+			_, err = r.Reconcile(ctx, request)
 		})
 	})
 })

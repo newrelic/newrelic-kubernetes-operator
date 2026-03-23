@@ -1,4 +1,4 @@
-// +build integration
+//go:build integration
 
 package controllers
 
@@ -6,7 +6,7 @@ import (
 	"context"
 	"errors"
 
-	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -140,7 +140,7 @@ var _ = Describe("NrqlCondition reconciliation", func() {
 					Expect(err).ToNot(HaveOccurred())
 
 					// call reconcile
-					_, err = r.Reconcile(request)
+					_, err = r.Reconcile(ctx, request)
 					Expect(err).ToNot(HaveOccurred())
 
 					Expect(alertsClient.CreateNrqlConditionCallCount()).To(Equal(1))
@@ -152,7 +152,7 @@ var _ = Describe("NrqlCondition reconciliation", func() {
 					Expect(err).ToNot(HaveOccurred())
 
 					// call reconcile
-					_, err = r.Reconcile(request)
+					_, err = r.Reconcile(ctx, request)
 					Expect(err).ToNot(HaveOccurred())
 
 					var endStateCondition nrv1.NrqlAlertCondition
@@ -166,7 +166,7 @@ var _ = Describe("NrqlCondition reconciliation", func() {
 					Expect(err).ToNot(HaveOccurred())
 
 					// call reconcile
-					_, err = r.Reconcile(request)
+					_, err = r.Reconcile(ctx, request)
 					Expect(err).ToNot(HaveOccurred())
 
 					var endStateCondition nrv1.NrqlAlertCondition
@@ -205,7 +205,7 @@ var _ = Describe("NrqlCondition reconciliation", func() {
 					Expect(err).ToNot(HaveOccurred())
 
 					// call reconcile
-					_, err = r.Reconcile(request)
+					_, err = r.Reconcile(ctx, request)
 					Expect(err).ToNot(HaveOccurred())
 
 					Expect(alertsClient.CreateNrqlConditionCallCount()).To(Equal(1))
@@ -221,7 +221,7 @@ var _ = Describe("NrqlCondition reconciliation", func() {
 					Expect(err).ToNot(HaveOccurred())
 
 					// call reconcile
-					_, err = r.Reconcile(request)
+					_, err = r.Reconcile(ctx, request)
 					Expect(err).ToNot(HaveOccurred())
 
 					var endStateCondition nrv1.NrqlAlertCondition
@@ -235,7 +235,7 @@ var _ = Describe("NrqlCondition reconciliation", func() {
 					Expect(err).ToNot(HaveOccurred())
 
 					// call reconcile
-					_, err = r.Reconcile(request)
+					_, err = r.Reconcile(ctx, request)
 					Expect(err).ToNot(HaveOccurred())
 
 					var endStateCondition nrv1.NrqlAlertCondition
@@ -297,7 +297,7 @@ var _ = Describe("NrqlCondition reconciliation", func() {
 					Expect(err).ToNot(HaveOccurred())
 
 					// call reconcile
-					_, err = r.Reconcile(request)
+					_, err = r.Reconcile(ctx, request)
 					Expect(err).ToNot(HaveOccurred())
 
 					Expect(alertsClient.CreateNrqlConditionCallCount()).To(Equal(0))
@@ -308,7 +308,7 @@ var _ = Describe("NrqlCondition reconciliation", func() {
 					Expect(err).ToNot(HaveOccurred())
 
 					// call reconcile
-					_, err = r.Reconcile(request)
+					_, err = r.Reconcile(ctx, request)
 					Expect(err).ToNot(HaveOccurred())
 
 					var endStateCondition nrv1.NrqlAlertCondition
@@ -322,7 +322,7 @@ var _ = Describe("NrqlCondition reconciliation", func() {
 					Expect(err).ToNot(HaveOccurred())
 
 					// call reconcile
-					_, err = r.Reconcile(request)
+					_, err = r.Reconcile(ctx, request)
 					Expect(err).ToNot(HaveOccurred())
 
 					var endStateCondition nrv1.NrqlAlertCondition
@@ -339,7 +339,7 @@ var _ = Describe("NrqlCondition reconciliation", func() {
 				Expect(err).ToNot(HaveOccurred())
 
 				// call reconcile
-				_, err = r.Reconcile(request)
+				_, err = r.Reconcile(ctx, request)
 				Expect(err).ToNot(HaveOccurred())
 
 				Expect(alertsClient.CreateNrqlConditionCallCount()).To(Equal(1))
@@ -361,7 +361,7 @@ var _ = Describe("NrqlCondition reconciliation", func() {
 					Expect(err).ToNot(HaveOccurred())
 
 					// call reconcile
-					_, err = r.Reconcile(request)
+					_, err = r.Reconcile(ctx, request)
 					Expect(err).ToNot(HaveOccurred())
 
 					// Only call count for Update is changed from second reconciliation run
@@ -374,7 +374,7 @@ var _ = Describe("NrqlCondition reconciliation", func() {
 					Expect(err).ToNot(HaveOccurred())
 
 					// call reconcile
-					_, err = r.Reconcile(request)
+					_, err = r.Reconcile(ctx, request)
 					Expect(err).ToNot(HaveOccurred())
 
 					var endStateCondition nrv1.NrqlAlertCondition
@@ -388,7 +388,7 @@ var _ = Describe("NrqlCondition reconciliation", func() {
 					Expect(err).ToNot(HaveOccurred())
 
 					// call reconcile
-					_, err = r.Reconcile(request)
+					_, err = r.Reconcile(ctx, request)
 					Expect(err).ToNot(HaveOccurred())
 
 					var endStateCondition nrv1.NrqlAlertCondition
@@ -404,7 +404,7 @@ var _ = Describe("NrqlCondition reconciliation", func() {
 					Expect(err).ToNot(HaveOccurred())
 
 					// call reconcile
-					_, err = r.Reconcile(request)
+					_, err = r.Reconcile(ctx, request)
 					Expect(err).ToNot(HaveOccurred())
 
 					Expect(alertsClient.CreateNrqlConditionCallCount()).To(Equal(1))
@@ -419,7 +419,7 @@ var _ = Describe("NrqlCondition reconciliation", func() {
 			Expect(err).ToNot(HaveOccurred())
 
 			// Need to call reconcile to delete finalizer
-			_, err = r.Reconcile(request)
+			_, err = r.Reconcile(ctx, request)
 			Expect(err).ToNot(HaveOccurred())
 		})
 	})
@@ -431,7 +431,7 @@ var _ = Describe("NrqlCondition reconciliation", func() {
 				Expect(err).ToNot(HaveOccurred())
 
 				// call reconcile
-				_, err = r.Reconcile(request)
+				_, err = r.Reconcile(ctx, request)
 				Expect(err).ToNot(HaveOccurred())
 
 				// change the event after creation via reconciliation
@@ -446,7 +446,7 @@ var _ = Describe("NrqlCondition reconciliation", func() {
 					Expect(err).ToNot(HaveOccurred())
 
 					// call reconcile
-					_, err = r.Reconcile(request)
+					_, err = r.Reconcile(ctx, request)
 					Expect(err).ToNot(HaveOccurred())
 
 					Expect(alertsClient.CreateNrqlConditionCallCount()).To(Equal(1)) //This is 1 because the create occurring in the
@@ -459,7 +459,7 @@ var _ = Describe("NrqlCondition reconciliation", func() {
 					Expect(err).ToNot(HaveOccurred())
 
 					// call reconcile
-					_, err = r.Reconcile(request)
+					_, err = r.Reconcile(ctx, request)
 					Expect(err).ToNot(HaveOccurred())
 
 					var endStateCondition nrv1.NrqlAlertCondition
@@ -481,7 +481,7 @@ var _ = Describe("NrqlCondition reconciliation", func() {
 					Expect(err).ToNot(HaveOccurred())
 
 					// call reconcile
-					_, err = r.Reconcile(request)
+					_, err = r.Reconcile(ctx, request)
 					Expect(err).ToNot(HaveOccurred())
 
 					Expect(alertsClient.CreateNrqlConditionCallCount()).To(Equal(1)) //This is 1 because the create occurring in the
@@ -507,7 +507,7 @@ var _ = Describe("NrqlCondition reconciliation", func() {
 					Expect(err).ToNot(HaveOccurred())
 
 					// call reconcile
-					_, err = r.Reconcile(request)
+					_, err = r.Reconcile(ctx, request)
 					Expect(err).ToNot(HaveOccurred())
 
 					Expect(alertsClient.CreateNrqlConditionCallCount()).To(Equal(1)) //This is 1 because the create occurring in the

@@ -5,7 +5,6 @@ import (
 	"sync"
 
 	"github.com/newrelic/newrelic-client-go/pkg/alerts"
-
 	"github.com/newrelic/newrelic-kubernetes-operator/interfaces"
 )
 
