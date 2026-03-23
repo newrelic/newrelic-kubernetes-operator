@@ -26,6 +26,7 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/webhook"
+	"sigs.k8s.io/controller-runtime/pkg/webhook/admission"
 
 	"github.com/newrelic/newrelic-kubernetes-operator/interfaces"
 )
@@ -65,44 +66,44 @@ func (r *NrqlAlertCondition) Default() {
 var _ webhook.Validator = &NrqlAlertCondition{}
 
 // ValidateCreate implements webhook.Validator so a webhook will be registered for the type
-func (r *NrqlAlertCondition) ValidateCreate() error {
+func (r *NrqlAlertCondition) ValidateCreate() (admission.Warnings, error) {
 	log.Info("validate create", "name", r.Name)
 	//TODO this should write this value TO a new secret so code path always reads from a secret
 	err := r.CheckForAPIKeyOrSecret()
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	err = r.CheckRequiredFields()
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	return r.CheckExistingPolicyID()
+	return nil, r.CheckExistingPolicyID()
 }
 
 // ValidateUpdate implements webhook.Validator so a webhook will be registered for the type
-func (r *NrqlAlertCondition) ValidateUpdate(old runtime.Object) error {
+func (r *NrqlAlertCondition) ValidateUpdate(old runtime.Object) (admission.Warnings, error) {
 	log.Info("validate update", "name", r.Name)
 	err := r.CheckForAPIKeyOrSecret()
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	err = r.CheckRequiredFields()
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	return r.CheckExistingPolicyID()
+	return nil, r.CheckExistingPolicyID()
 }
 
 // ValidateDelete implements webhook.Validator so a webhook will be registered for the type
-func (r *NrqlAlertCondition) ValidateDelete() error {
+func (r *NrqlAlertCondition) ValidateDelete() (admission.Warnings, error) {
 	log.Info("validate delete", "name", r.Name)
 
 	// TODO(user): fill in your validation logic upon object deletion.
-	return nil
+	return nil, nil
 }
 
 func (r *NrqlAlertCondition) CheckExistingPolicyID() error {

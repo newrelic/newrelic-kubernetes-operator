@@ -6,7 +6,7 @@ import (
 
 	"github.com/newrelic/newrelic-client-go/pkg/alerts"
 
-	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 )
 

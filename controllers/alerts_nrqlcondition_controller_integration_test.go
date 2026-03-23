@@ -7,7 +7,7 @@ import (
 	"errors"
 	"testing"
 
-	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 
 	newrelic "github.com/newrelic/go-agent/v3/newrelic"

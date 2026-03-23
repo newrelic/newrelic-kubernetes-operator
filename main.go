@@ -25,6 +25,8 @@ import (
 	_ "k8s.io/client-go/plugin/pkg/client/auth/gcp"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
+	metricsserver "sigs.k8s.io/controller-runtime/pkg/metrics/server"
+	"sigs.k8s.io/controller-runtime/pkg/webhook"
 
 	nrv1 "github.com/newrelic/newrelic-kubernetes-operator/api/v1"
 	"github.com/newrelic/newrelic-kubernetes-operator/internal/info"
@@ -64,11 +66,11 @@ func main() {
 	ctrl.SetLogger(logger)
 
 	opts := ctrl.Options{
-		Scheme:             scheme,
-		MetricsBindAddress: metricsAddr,
-		LeaderElection:     enableLeaderElection,
-		LeaderElectionID:   "newrelic-kubernetes-operator",
-		Port:               9443,
+		Scheme:           scheme,
+		Metrics:          metricsserver.Options{BindAddress: metricsAddr},
+		LeaderElection:   enableLeaderElection,
+		LeaderElectionID: "newrelic-kubernetes-operator",
+		WebhookServer:    webhook.NewServer(webhook.Options{Port: 9443}),
 	}
 
 	mgr, err := ctrl.NewManager(ctrl.GetConfigOrDie(), opts)

@@ -5,7 +5,7 @@ import (
 	"time"
 
 	"github.com/newrelic/newrelic-client-go/pkg/alerts"
-	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
@@ -68,7 +68,7 @@ var _ = Describe("alertsAPMCondition_webhook", func() {
 	Context("ValidateCreate", func() {
 		Context("With a valid Apm Condition", func() {
 			It("Should create the apm condition", func() {
-				err := r.ValidateCreate()
+				_, _, err := r.ValidateCreate()
 				Expect(err).ToNot(HaveOccurred())
 
 			})
@@ -80,7 +80,7 @@ var _ = Describe("alertsAPMCondition_webhook", func() {
 			})
 
 			It("Should reject the apm condition creation", func() {
-				err := r.ValidateCreate()
+				_, _, err := r.ValidateCreate()
 				Expect(err).To(HaveOccurred())
 				Expect(err.Error()).To(ContainSubstring("burritos"))
 			})
@@ -92,7 +92,7 @@ var _ = Describe("alertsAPMCondition_webhook", func() {
 			})
 
 			It("Should reject the apm condition creation", func() {
-				err := r.ValidateCreate()
+				_, _, err := r.ValidateCreate()
 				Expect(err).To(HaveOccurred())
 				Expect(err.Error()).To(ContainSubstring("moar burritos"))
 			})
@@ -107,7 +107,7 @@ var _ = Describe("alertsAPMCondition_webhook", func() {
 			})
 
 			It("Should reject the apm condition creation", func() {
-				err := r.ValidateCreate()
+				_, _, err := r.ValidateCreate()
 				Expect(err).To(HaveOccurred())
 				Expect(err.Error()).To(ContainSubstring("moar burritos"))
 				Expect(err.Error()).To(ContainSubstring("moar tacos"))
@@ -124,7 +124,7 @@ var _ = Describe("alertsAPMCondition_webhook", func() {
 			})
 
 			It("Should reject the apm condition creation", func() {
-				err := r.ValidateCreate()
+				_, _, err := r.ValidateCreate()
 				Expect(err).To(HaveOccurred())
 				Expect(err.Error()).To(ContainSubstring("invalid type"))
 			})
@@ -147,7 +147,7 @@ var _ = Describe("alertsAPMCondition_webhook", func() {
 			})
 
 			It("Should allow the deletion anyway", func() {
-				err := update.ValidateUpdate(&r)
+				_, err := update.ValidateUpdate(&r)
 				Expect(err).ToNot(HaveOccurred())
 			})
 		})

@@ -23,6 +23,7 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/webhook"
+	"sigs.k8s.io/controller-runtime/pkg/webhook/admission"
 
 	"github.com/newrelic/newrelic-client-go/pkg/alerts"
 
@@ -63,7 +64,7 @@ func (r *AlertsPolicy) Default() {
 var _ webhook.Validator = &AlertsPolicy{}
 
 // ValidateCreate implements webhook.Validator so a webhook will be registered for the type
-func (r *AlertsPolicy) ValidateCreate() error {
+func (r *AlertsPolicy) ValidateCreate() (admission.Warnings, error) {
 	AlertsPolicyLog.Info("validate create", "name", r.Name)
 
 	collectedErrors := new(customErrors.ErrorCollector)
@@ -85,14 +86,14 @@ func (r *AlertsPolicy) ValidateCreate() error {
 
 	if len(*collectedErrors) > 0 {
 		AlertsPolicyLog.Info("Errors encountered validating policy", "collectedErrors", collectedErrors)
-		return collectedErrors
+		return nil, collectedErrors
 	}
 
-	return nil
+	return nil, nil
 }
 
 // ValidateUpdate implements webhook.Validator so a webhook will be registered for the type
-func (r *AlertsPolicy) ValidateUpdate(old runtime.Object) error {
+func (r *AlertsPolicy) ValidateUpdate(old runtime.Object) (admission.Warnings, error) {
 	AlertsPolicyLog.Info("validate update", "name", r.Name)
 
 	collectedErrors := new(customErrors.ErrorCollector)
@@ -114,22 +115,22 @@ func (r *AlertsPolicy) ValidateUpdate(old runtime.Object) error {
 
 	if len(*collectedErrors) > 0 {
 		AlertsPolicyLog.Info("Errors encountered validating policy", "collectedErrors", collectedErrors)
-		return collectedErrors
+		return nil, collectedErrors
 	}
 
-	return nil
+	return nil, nil
 }
 
 // ValidateDelete implements webhook.Validator so a webhook will be registered for the type
-func (r *AlertsPolicy) ValidateDelete() error {
+func (r *AlertsPolicy) ValidateDelete() (admission.Warnings, error) {
 	AlertsPolicyLog.Info("validate delete", "name", r.Name)
 
 	err := r.CheckForAPIKeyOrSecret()
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	return nil
+	return nil, nil
 }
 
 func (r *AlertsPolicy) DefaultIncidentPreference() {

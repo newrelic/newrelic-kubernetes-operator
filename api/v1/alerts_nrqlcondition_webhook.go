@@ -27,6 +27,7 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/webhook"
+	"sigs.k8s.io/controller-runtime/pkg/webhook/admission"
 
 	"github.com/newrelic/newrelic-kubernetes-operator/interfaces"
 )
@@ -67,40 +68,40 @@ func (r *AlertsNrqlCondition) Default() {
 var _ webhook.Validator = &AlertsNrqlCondition{}
 
 // ValidateCreate implements webhook.Validator so a webhook will be registered for the type
-func (r *AlertsNrqlCondition) ValidateCreate() error {
+func (r *AlertsNrqlCondition) ValidateCreate() (admission.Warnings, error) {
 	alertsNrqlConditionLog.Info("validate create", "name", r.Name)
 	//TODO this should write this value TO a new secret so code path always reads from a secret
 	err := r.CheckForAPIKeyOrSecret()
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	err = r.CheckRequiredFields()
 	if err != nil {
-		return err
+		return nil, err
 	}
-	return r.CheckExistingPolicyID()
+	return nil, r.CheckExistingPolicyID()
 }
 
 // ValidateUpdate implements webhook.Validator so a webhook will be registered for the type
-func (r *AlertsNrqlCondition) ValidateUpdate(old runtime.Object) error {
+func (r *AlertsNrqlCondition) ValidateUpdate(old runtime.Object) (admission.Warnings, error) {
 	alertsNrqlConditionLog.Info("validate update", "name", r.Name)
 	prevCondition := old.(*AlertsNrqlCondition)
 
 	if (r.Spec.BaselineDirection == nil && prevCondition.Spec.BaselineDirection != nil) ||
 		(r.Spec.BaselineDirection != nil && prevCondition.Spec.BaselineDirection == nil) {
-		return errors.New("cannot change between condition types, you must delete and create a new alert")
+		return nil, errors.New("cannot change between condition types, you must delete and create a new alert")
 	}
 
-	return nil
+	return nil, nil
 }
 
 // ValidateDelete implements webhook.Validator so a webhook will be registered for the type
-func (r *AlertsNrqlCondition) ValidateDelete() error {
+func (r *AlertsNrqlCondition) ValidateDelete() (admission.Warnings, error) {
 	alertsNrqlConditionLog.Info("validate delete", "name", r.Name)
 
 	// TODO(user): fill in your validation logic upon object deletion.
-	return nil
+	return nil, nil
 }
 
 func (r *AlertsNrqlCondition) CheckExistingPolicyID() error {

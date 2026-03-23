@@ -22,6 +22,7 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/webhook"
+	"sigs.k8s.io/controller-runtime/pkg/webhook/admission"
 
 	"github.com/newrelic/newrelic-client-go/pkg/alerts"
 
@@ -68,25 +69,25 @@ func (r *AlertsChannel) Default() {
 var _ webhook.Validator = &AlertsChannel{}
 
 // ValidateCreate implements webhook.Validator so a webhook will be registered for the type
-func (r *AlertsChannel) ValidateCreate() error {
+func (r *AlertsChannel) ValidateCreate() (admission.Warnings, error) {
 	alertschannellog.Info("validate create", "name", r.Name)
 
-	return r.ValidateAlertsChannel()
+	return nil, r.ValidateAlertsChannel()
 }
 
 // ValidateUpdate implements webhook.Validator so a webhook will be registered for the type
-func (r *AlertsChannel) ValidateUpdate(old runtime.Object) error {
+func (r *AlertsChannel) ValidateUpdate(old runtime.Object) (admission.Warnings, error) {
 	alertschannellog.Info("validate update", "name", r)
 
-	return r.ValidateAlertsChannel()
+	return nil, r.ValidateAlertsChannel()
 }
 
 // ValidateDelete implements webhook.Validator so a webhook will be registered for the type
-func (r *AlertsChannel) ValidateDelete() error {
+func (r *AlertsChannel) ValidateDelete() (admission.Warnings, error) {
 	alertschannellog.Info("validate delete", "name", r.Name)
 
 	// TODO(user): fill in your validation logic upon object deletion.
-	return nil
+	return nil, nil
 }
 
 // ValidateAlertsChannel - Validates create/update of AlertsChannel

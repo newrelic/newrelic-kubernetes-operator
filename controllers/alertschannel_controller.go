@@ -55,10 +55,10 @@ type AlertsChannelReconciler struct {
 // +kubebuilder:rbac:groups=nr.k8s.newrelic.com,resources=alertschannels/status,verbs=get;update;patch
 
 // Reconcile - Main processing loop for AlertsChannel reconciliation
-func (r *AlertsChannelReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
+func (r *AlertsChannelReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	var alertsChannel nrv1.AlertsChannel
 
-	r.ctx = context.Background()
+	r.ctx = ctx
 	r.Log.WithValues("alertsChannel", req.NamespacedName)
 
 	r.txn = r.NewRelicAgent.StartTransaction("Reconcile/Alerts/AlertsPolicy")

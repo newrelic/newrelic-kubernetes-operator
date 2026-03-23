@@ -10,7 +10,7 @@ import (
 	"github.com/newrelic/newrelic-client-go/pkg/alerts"
 	ctrl "sigs.k8s.io/controller-runtime"
 
-	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 
 	nrv1 "github.com/newrelic/newrelic-kubernetes-operator/api/v1"

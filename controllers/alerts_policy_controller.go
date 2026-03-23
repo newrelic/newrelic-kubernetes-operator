@@ -60,8 +60,8 @@ type AlertsPolicyReconciler struct {
 // +kubebuilder:rbac:groups=nr.k8s.newrelic.com,resources=alertspolicies,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=nr.k8s.newrelic.com,resources=alertspolicies/status,verbs=get;update;patch
 
-func (r *AlertsPolicyReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
-	r.ctx = context.Background()
+func (r *AlertsPolicyReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
+	r.ctx = ctx
 	_ = r.Log.WithValues("policy", req.NamespacedName)
 	r.txn = r.NewRelicAgent.StartTransaction("Reconcile/Alerts/AlertsPolicy")
 	defer r.txn.End()
@@ -456,7 +456,7 @@ func (r *AlertsPolicyReconciler) deleteCondition(condition *nrv1.AlertsPolicyCon
 	defer r.txn.StartSegment("deleteCondition").End()
 	r.Log.Info("Deleting condition", "condition", condition.Name, "conditionName", condition.Spec.Name)
 
-	var retrievedCondition runtime.Object
+	var retrievedCondition client.Object
 	switch nrv1.GetAlertsConditionType(*condition) {
 	case "AlertsAPMCondition":
 		returnedCondition := r.getApmConditionFromAlertsPolicyCondition(condition)
