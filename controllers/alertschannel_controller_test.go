@@ -144,7 +144,7 @@ var _ = Describe("AlertsChannel reconciliation", func() {
 					Expect(err).ToNot(HaveOccurred())
 
 					// call reconcile
-					_, err = r.Reconcile(request)
+					_, err = r.Reconcile(ctx, request)
 					Expect(err).ToNot(HaveOccurred())
 				})
 
@@ -195,7 +195,7 @@ var _ = Describe("AlertsChannel reconciliation", func() {
 					err = k8sClient.Create(ctx, alertsChannel)
 					Expect(err).ToNot(HaveOccurred())
 
-					_, err = r.Reconcile(request)
+					_, err = r.Reconcile(ctx, request)
 					Expect(err).ToNot(HaveOccurred())
 
 					err = k8sClient.Get(ctx, namespacedName, &endStateAlertsChannel)
@@ -233,7 +233,7 @@ var _ = Describe("AlertsChannel reconciliation", func() {
 				It("should only create a single link object", func() {
 					err := k8sClient.Create(ctx, alertsChannel)
 					Expect(err).ToNot(HaveOccurred())
-					_, err = r.Reconcile(request)
+					_, err = r.Reconcile(ctx, request)
 					Expect(err).ToNot(HaveOccurred())
 					Expect(alertsClient.UpdatePolicyChannelsCallCount()).To(Equal(1))
 				})
@@ -256,7 +256,7 @@ var _ = Describe("AlertsChannel reconciliation", func() {
 				It("Should fail the reconcile loop", func() {
 					err := k8sClient.Create(ctx, alertsChannel)
 					Expect(err).ToNot(HaveOccurred())
-					_, err = r.Reconcile(request)
+					_, err = r.Reconcile(ctx, request)
 					Expect(err).To(HaveOccurred())
 					Expect(err.Error()).To(ContainSubstring("Retrieved policy " + testPolicy.Name + " but ID was blank"))
 				})
@@ -295,7 +295,7 @@ var _ = Describe("AlertsChannel reconciliation", func() {
 					Expect(err).ToNot(HaveOccurred())
 
 					// call reconcile
-					_, err = r.Reconcile(request)
+					_, err = r.Reconcile(ctx, request)
 					Expect(err).ToNot(HaveOccurred())
 					Expect(alertsClient.ListChannelsCallCount()).To(Equal(1))
 					Expect(alertsClient.CreateChannelCallCount()).To(Equal(0))
@@ -306,7 +306,7 @@ var _ = Describe("AlertsChannel reconciliation", func() {
 					Expect(err).ToNot(HaveOccurred())
 
 					// call reconcile
-					_, err = r.Reconcile(request)
+					_, err = r.Reconcile(ctx, request)
 					Expect(err).ToNot(HaveOccurred())
 					var endStateAlertsChannel nrv1.AlertsChannel
 					err = k8sClient.Get(ctx, namespacedName, &endStateAlertsChannel)
@@ -319,7 +319,7 @@ var _ = Describe("AlertsChannel reconciliation", func() {
 					Expect(err).ToNot(HaveOccurred())
 
 					// call reconcile
-					_, err = r.Reconcile(request)
+					_, err = r.Reconcile(ctx, request)
 					Expect(err).ToNot(HaveOccurred())
 					var endStateAlertsChannel nrv1.AlertsChannel
 					err = k8sClient.Get(ctx, namespacedName, &endStateAlertsChannel)
@@ -354,7 +354,7 @@ var _ = Describe("AlertsChannel reconciliation", func() {
 					Expect(err).ToNot(HaveOccurred())
 
 					// call reconcile
-					_, err = r.Reconcile(request)
+					_, err = r.Reconcile(ctx, request)
 					Expect(err).ToNot(HaveOccurred())
 					Expect(alertsClient.ListChannelsCallCount()).To(Equal(1))
 					Expect(alertsClient.CreateChannelCallCount()).To(Equal(1))
@@ -366,7 +366,7 @@ var _ = Describe("AlertsChannel reconciliation", func() {
 					Expect(err).ToNot(HaveOccurred())
 
 					// call reconcile
-					_, err = r.Reconcile(request)
+					_, err = r.Reconcile(ctx, request)
 					Expect(err).ToNot(HaveOccurred())
 					var endStateAlertsChannel nrv1.AlertsChannel
 					err = k8sClient.Get(ctx, namespacedName, &endStateAlertsChannel)
@@ -379,7 +379,7 @@ var _ = Describe("AlertsChannel reconciliation", func() {
 					Expect(err).ToNot(HaveOccurred())
 
 					// call reconcile
-					_, err = r.Reconcile(request)
+					_, err = r.Reconcile(ctx, request)
 					Expect(err).ToNot(HaveOccurred())
 					var endStateAlertsChannel nrv1.AlertsChannel
 					err = k8sClient.Get(ctx, namespacedName, &endStateAlertsChannel)
@@ -421,7 +421,7 @@ var _ = Describe("AlertsChannel reconciliation", func() {
 					Expect(err).ToNot(HaveOccurred())
 
 					// call reconcile
-					_, err = r.Reconcile(request)
+					_, err = r.Reconcile(ctx, request)
 					Expect(err).ToNot(HaveOccurred())
 					Expect(alertsClient.ListChannelsCallCount()).To(Equal(1))
 					Expect(alertsClient.CreateChannelCallCount()).To(Equal(1))
@@ -433,7 +433,7 @@ var _ = Describe("AlertsChannel reconciliation", func() {
 					Expect(err).ToNot(HaveOccurred())
 
 					// call reconcile
-					_, err = r.Reconcile(request)
+					_, err = r.Reconcile(ctx, request)
 					Expect(err).ToNot(HaveOccurred())
 					var endStateAlertsChannel nrv1.AlertsChannel
 					err = k8sClient.Get(ctx, namespacedName, &endStateAlertsChannel)
@@ -446,7 +446,7 @@ var _ = Describe("AlertsChannel reconciliation", func() {
 					Expect(err).ToNot(HaveOccurred())
 
 					// call reconcile
-					_, err = r.Reconcile(request)
+					_, err = r.Reconcile(ctx, request)
 					Expect(err).ToNot(HaveOccurred())
 					var endStateAlertsChannel nrv1.AlertsChannel
 					err = k8sClient.Get(ctx, namespacedName, &endStateAlertsChannel)
@@ -462,7 +462,7 @@ var _ = Describe("AlertsChannel reconciliation", func() {
 			Expect(err).ToNot(HaveOccurred())
 
 			// Need to call reconcile to delete finalizer
-			_, err = r.Reconcile(request)
+			_, err = r.Reconcile(ctx, request)
 			Expect(err).ToNot(HaveOccurred())
 		})
 	})
@@ -473,7 +473,7 @@ var _ = Describe("AlertsChannel reconciliation", func() {
 			Expect(err).ToNot(HaveOccurred())
 
 			// call reconcile
-			_, err = r.Reconcile(request)
+			_, err = r.Reconcile(ctx, request)
 			Expect(err).ToNot(HaveOccurred())
 		})
 
@@ -484,7 +484,7 @@ var _ = Describe("AlertsChannel reconciliation", func() {
 				Expect(err).ToNot(HaveOccurred())
 
 				// call reconcile
-				_, err = r.Reconcile(request)
+				_, err = r.Reconcile(ctx, request)
 				Expect(err).ToNot(HaveOccurred())
 			})
 
@@ -513,7 +513,7 @@ var _ = Describe("AlertsChannel reconciliation", func() {
 					alertsChannel.Spec.Links.PolicyIDs = append(alertsChannel.Spec.Links.PolicyIDs, 4)
 					err := k8sClient.Update(ctx, alertsChannel)
 					Expect(err).ToNot(HaveOccurred())
-					_, err = r.Reconcile(request)
+					_, err = r.Reconcile(ctx, request)
 					Expect(err).ToNot(HaveOccurred())
 				})
 
@@ -536,7 +536,7 @@ var _ = Describe("AlertsChannel reconciliation", func() {
 					alertsChannel.Spec.Links.PolicyIDs = []int{1}
 					err := k8sClient.Update(ctx, alertsChannel)
 					Expect(err).ToNot(HaveOccurred())
-					_, err = r.Reconcile(request)
+					_, err = r.Reconcile(ctx, request)
 					Expect(err).ToNot(HaveOccurred())
 				})
 
@@ -555,7 +555,7 @@ var _ = Describe("AlertsChannel reconciliation", func() {
 			AfterEach(func() {
 				err := k8sClient.Delete(ctx, alertsChannel)
 				Expect(err).ToNot(HaveOccurred())
-				_, err = r.Reconcile(request)
+				_, err = r.Reconcile(ctx, request)
 				Expect(err).ToNot(HaveOccurred())
 			})
 		})

@@ -62,7 +62,7 @@ var _ = Describe("AlertsChannel_webhook", func() {
 	Context("ValidateCreate", func() {
 		Context("With a valid Alert Channel", func() {
 			It("Should create the Alert Channel", func() {
-				_, _, err := r.ValidateCreate()
+				_, err := r.ValidateCreate()
 				Expect(err).ToNot(HaveOccurred())
 			})
 		})
@@ -73,7 +73,7 @@ var _ = Describe("AlertsChannel_webhook", func() {
 			})
 
 			It("Should reject the Alert Channel creation", func() {
-				_, _, err := r.ValidateCreate()
+				_, err := r.ValidateCreate()
 				Expect(err).To(HaveOccurred())
 				Expect(err.Error()).To(ContainSubstring("hamburgers"))
 			})
@@ -85,7 +85,7 @@ var _ = Describe("AlertsChannel_webhook", func() {
 			})
 
 			It("Should reject the Alert Channel creation", func() {
-				_, _, err := r.ValidateCreate()
+				_, err := r.ValidateCreate()
 				Expect(err).To(HaveOccurred())
 				Expect(err.Error()).To(ContainSubstring("burritos"))
 			})
@@ -97,7 +97,7 @@ var _ = Describe("AlertsChannel_webhook", func() {
 			})
 
 			It("Should reject the Alert Channel creation", func() {
-				_, _, err := r.ValidateCreate()
+				_, err := r.ValidateCreate()
 				Expect(err).To(HaveOccurred())
 				Expect(err.Error()).To(ContainSubstring("either api_key or api_key_secret must be set"))
 			})

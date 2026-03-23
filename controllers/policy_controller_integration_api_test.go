@@ -152,7 +152,7 @@ func TestIntegrationPolicyController(t *testing.T) {
 	}
 
 	// call reconcile
-	_, err := reconciler.Reconcile(request)
+	_, err := reconciler.Reconcile(context.Background(), request)
 	require.NoError(t, err)
 
 	// Deferred teardown
@@ -220,7 +220,7 @@ func TestIntegrationAlertsChannelController(t *testing.T) {
 	}
 
 	// call reconcile
-	_, err := reconciler.Reconcile(request)
+	_, err := reconciler.Reconcile(context.Background(), request)
 	require.NoError(t, err)
 
 	// Deferred teardown

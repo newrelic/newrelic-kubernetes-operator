@@ -37,6 +37,6 @@ func TestIntegrationAlertsPolicyController(t *testing.T) {
 	}
 
 	// call reconcile
-	_, err := reconciler.Reconcile(request)
+	_, err := reconciler.Reconcile(context.Background(), request)
 	require.NoError(t, err)
 }

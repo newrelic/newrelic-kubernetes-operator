@@ -68,7 +68,7 @@ var _ = Describe("alertsAPMCondition_webhook", func() {
 	Context("ValidateCreate", func() {
 		Context("With a valid Apm Condition", func() {
 			It("Should create the apm condition", func() {
-				_, _, err := r.ValidateCreate()
+				_, err := r.ValidateCreate()
 				Expect(err).ToNot(HaveOccurred())
 
 			})
@@ -80,7 +80,7 @@ var _ = Describe("alertsAPMCondition_webhook", func() {
 			})
 
 			It("Should reject the apm condition creation", func() {
-				_, _, err := r.ValidateCreate()
+				_, err := r.ValidateCreate()
 				Expect(err).To(HaveOccurred())
 				Expect(err.Error()).To(ContainSubstring("burritos"))
 			})
@@ -92,7 +92,7 @@ var _ = Describe("alertsAPMCondition_webhook", func() {
 			})
 
 			It("Should reject the apm condition creation", func() {
-				_, _, err := r.ValidateCreate()
+				_, err := r.ValidateCreate()
 				Expect(err).To(HaveOccurred())
 				Expect(err.Error()).To(ContainSubstring("moar burritos"))
 			})
@@ -107,7 +107,7 @@ var _ = Describe("alertsAPMCondition_webhook", func() {
 			})
 
 			It("Should reject the apm condition creation", func() {
-				_, _, err := r.ValidateCreate()
+				_, err := r.ValidateCreate()
 				Expect(err).To(HaveOccurred())
 				Expect(err.Error()).To(ContainSubstring("moar burritos"))
 				Expect(err.Error()).To(ContainSubstring("moar tacos"))
@@ -124,7 +124,7 @@ var _ = Describe("alertsAPMCondition_webhook", func() {
 			})
 
 			It("Should reject the apm condition creation", func() {
-				_, _, err := r.ValidateCreate()
+				_, err := r.ValidateCreate()
 				Expect(err).To(HaveOccurred())
 				Expect(err.Error()).To(ContainSubstring("invalid type"))
 			})
