@@ -98,7 +98,7 @@ var _ = Describe("AlertsChannel reconciliation", func() {
 					PolicyNames: []string{
 						"my-policy-name",
 					},
-					PolicyKubernetesObjects: []metav1.ObjectMeta{
+					PolicyKubernetesObjects: []nrv1.PolicyReference{
 						{
 							Name:      "my-policy",
 							Namespace: "default",

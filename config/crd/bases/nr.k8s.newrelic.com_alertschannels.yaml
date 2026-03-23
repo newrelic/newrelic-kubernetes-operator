@@ -122,6 +122,13 @@ spec:
                     type: array
                   policy_kubernetes_objects:
                     items:
+                      description: PolicyReference is a simple reference to a Policy
+                        resource by name and namespace
+                      properties:
+                        name:
+                          type: string
+                        namespace:
+                          type: string
                       type: object
                     type: array
                   policy_names:
@@ -223,6 +230,13 @@ spec:
                         type: array
                       policy_kubernetes_objects:
                         items:
+                          description: PolicyReference is a simple reference to a
+                            Policy resource by name and namespace
+                          properties:
+                            name:
+                              type: string
+                            namespace:
+                              type: string
                           type: object
                         type: array
                       policy_names:
