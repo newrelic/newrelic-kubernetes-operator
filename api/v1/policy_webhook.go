@@ -40,7 +40,7 @@ func (r *Policy) SetupWebhookWithManager(mgr ctrl.Manager) error {
 
 // EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
 
-// +kubebuilder:webhook:path=/mutate-nr-k8s-newrelic-com-v1-policy,mutating=true,failurePolicy=fail,groups=nr.k8s.newrelic.com,resources=policies,verbs=create;update,versions=v1,name=mpolicy.kb.io,sideEffects=None
+// +kubebuilder:webhook:path=/mutate-nr-k8s-newrelic-com-v1-policy,mutating=true,failurePolicy=fail,groups=nr.k8s.newrelic.com,resources=policies,verbs=create;update,versions=v1,name=mpolicy.kb.io,sideEffects=None,admissionReviewVersions=v1
 
 var _ webhook.Defaulter = &Policy{}
 
@@ -56,7 +56,7 @@ func (r *Policy) Default() {
 	r.DefaultIncidentPreference()
 }
 
-// +kubebuilder:webhook:verbs=create;update,path=/validate-nr-k8s-newrelic-com-v1-policy,mutating=false,failurePolicy=fail,groups=nr.k8s.newrelic.com,resources=policies,versions=v1,name=vpolicy.kb.io,sideEffects=None
+// +kubebuilder:webhook:verbs=create;update,path=/validate-nr-k8s-newrelic-com-v1-policy,mutating=false,failurePolicy=fail,groups=nr.k8s.newrelic.com,resources=policies,versions=v1,name=vpolicy.kb.io,sideEffects=None,admissionReviewVersions=v1
 
 var _ webhook.Validator = &Policy{}
 

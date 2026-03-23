@@ -65,7 +65,7 @@ func (r *ApmAlertCondition) SetupWebhookWithManager(mgr ctrl.Manager) error {
 
 // EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
 
-// +kubebuilder:webhook:path=/mutate-nr-k8s-newrelic-com-v1-apmalertcondition,mutating=true,failurePolicy=fail,groups=nr.k8s.newrelic.com,resources=apmalertconditions,verbs=create;update,versions=v1,name=mapmalertcondition.kb.io,sideEffects=None
+// +kubebuilder:webhook:path=/mutate-nr-k8s-newrelic-com-v1-apmalertcondition,mutating=true,failurePolicy=fail,groups=nr.k8s.newrelic.com,resources=apmalertconditions,verbs=create;update,versions=v1,name=mapmalertcondition.kb.io,sideEffects=None,admissionReviewVersions=v1
 
 var _ webhook.Defaulter = &ApmAlertCondition{}
 
@@ -79,7 +79,7 @@ func (r *ApmAlertCondition) Default() {
 	}
 }
 
-// +kubebuilder:webhook:verbs=create;update,path=/validate-nr-k8s-newrelic-com-v1-apmalertcondition,mutating=false,failurePolicy=fail,groups=nr.k8s.newrelic.com,resources=apmalertconditions,versions=v1,name=vapmalertcondition.kb.io,sideEffects=None
+// +kubebuilder:webhook:verbs=create;update,path=/validate-nr-k8s-newrelic-com-v1-apmalertcondition,mutating=false,failurePolicy=fail,groups=nr.k8s.newrelic.com,resources=apmalertconditions,versions=v1,name=vapmalertcondition.kb.io,sideEffects=None,admissionReviewVersions=v1
 
 var _ webhook.Validator = &ApmAlertCondition{}
 

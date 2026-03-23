@@ -45,7 +45,7 @@ func (r *AlertsChannel) SetupWebhookWithManager(mgr ctrl.Manager) error {
 
 // EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
 
-// +kubebuilder:webhook:path=/mutate-nr-k8s-newrelic-com-v1-alertschannel,mutating=true,failurePolicy=fail,groups=nr.k8s.newrelic.com,resources=alertschannels,verbs=create;update,versions=v1,name=malertschannel.kb.io,sideEffects=None
+// +kubebuilder:webhook:path=/mutate-nr-k8s-newrelic-com-v1-alertschannel,mutating=true,failurePolicy=fail,groups=nr.k8s.newrelic.com,resources=alertschannels,verbs=create;update,versions=v1,name=malertschannel.kb.io,sideEffects=None,admissionReviewVersions=v1
 
 var _ webhook.Defaulter = &AlertsChannel{}
 
@@ -64,7 +64,7 @@ func (r *AlertsChannel) Default() {
 	}
 }
 
-// +kubebuilder:webhook:verbs=create;update,path=/validate-nr-k8s-newrelic-com-v1-alertschannel,mutating=false,failurePolicy=fail,groups=nr.k8s.newrelic.com,resources=alertschannels,versions=v1,name=valertschannel.kb.io,sideEffects=None
+// +kubebuilder:webhook:verbs=create;update,path=/validate-nr-k8s-newrelic-com-v1-alertschannel,mutating=false,failurePolicy=fail,groups=nr.k8s.newrelic.com,resources=alertschannels,versions=v1,name=valertschannel.kb.io,sideEffects=None,admissionReviewVersions=v1
 
 var _ webhook.Validator = &AlertsChannel{}
 

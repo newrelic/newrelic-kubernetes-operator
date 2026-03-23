@@ -42,7 +42,7 @@ func (r *AlertsPolicy) SetupWebhookWithManager(mgr ctrl.Manager) error {
 
 // EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
 
-// +kubebuilder:webhook:path=/mutate-nr-k8s-newrelic-com-v1-alertspolicy,mutating=true,failurePolicy=fail,groups=nr.k8s.newrelic.com,resources=alertspolicies,verbs=create;update,versions=v1,name=malertspolicy.kb.io,sideEffects=None
+// +kubebuilder:webhook:path=/mutate-nr-k8s-newrelic-com-v1-alertspolicy,mutating=true,failurePolicy=fail,groups=nr.k8s.newrelic.com,resources=alertspolicies,verbs=create;update,versions=v1,name=malertspolicy.kb.io,sideEffects=None,admissionReviewVersions=v1
 
 var _ webhook.Defaulter = &AlertsPolicy{}
 
@@ -59,7 +59,7 @@ func (r *AlertsPolicy) Default() {
 }
 
 // TODO(user): change verbs to "verbs=create;update;delete" if you want to enable deletion validation.
-// +kubebuilder:webhook:verbs=create;update,path=/validate-nr-k8s-newrelic-com-v1-alertspolicy,mutating=false,failurePolicy=fail,groups=nr.k8s.newrelic.com,resources=alertspolicies,versions=v1,name=valertspolicy.kb.io,sideEffects=None
+// +kubebuilder:webhook:verbs=create;update,path=/validate-nr-k8s-newrelic-com-v1-alertspolicy,mutating=false,failurePolicy=fail,groups=nr.k8s.newrelic.com,resources=alertspolicies,versions=v1,name=valertspolicy.kb.io,sideEffects=None,admissionReviewVersions=v1
 
 var _ webhook.Validator = &AlertsPolicy{}
 
