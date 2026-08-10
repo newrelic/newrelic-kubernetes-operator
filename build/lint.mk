@@ -23,7 +23,7 @@ PROJECT_MODULE  ?= $(shell $(GO) list -m)
 GO_MOD_OUTDATED ?= go-mod-outdated
 
 GOTOOLS += github.com/client9/misspell/cmd/misspell \
-           github.com/llorllale/go-gitlint/cmd/go-gitlint \
+           github.com/llorllale/go-gitlint \
            github.com/psampaz/go-mod-outdated \
            golang.org/x/tools/cmd/goimports
 
