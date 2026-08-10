@@ -708,7 +708,7 @@ func (r *AlertsPolicyReconciler) updateAlertsChannels(policy *nrv1.AlertsPolicy)
 	return nil
 }
 
-//diffIntSlice - compares two slices of ints and outputs the values from the first slice that are not contained in the second
+// diffIntSlice - compares two slices of ints and outputs the values from the first slice that are not contained in the second
 func diffIntSlice(first, second []int) []int {
 	diff := []int{}
 
@@ -739,7 +739,7 @@ func (r *AlertsPolicyReconciler) getAPIKeyOrSecret(policy nrv1.AlertsPolicy) (st
 		var apiKeySecret v1.Secret
 		getErr := r.Client.Get(context.Background(), key, &apiKeySecret)
 		if getErr != nil {
-			r.Log.Error(getErr, "Failed to retrieve secret", "secret", apiKeySecret)
+			r.Log.Error(getErr, "Failed to retrieve secret", "secret", key)
 			return "", getErr
 		}
 

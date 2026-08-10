@@ -54,7 +54,7 @@ type AlertsChannelReconciler struct {
 // +kubebuilder:rbac:groups=nr.k8s.newrelic.com,resources=alertschannels,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=nr.k8s.newrelic.com,resources=alertschannels/status,verbs=get;update;patch
 
-//Reconcile - Main processing loop for AlertsChannel reconciliation
+// Reconcile - Main processing loop for AlertsChannel reconciliation
 func (r *AlertsChannelReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 	var alertsChannel nrv1.AlertsChannel
 
@@ -135,7 +135,7 @@ func (r *AlertsChannelReconciler) Reconcile(req ctrl.Request) (ctrl.Result, erro
 	return ctrl.Result{}, nil
 }
 
-//SetupWithManager - Sets up Controller for AlertsChannel
+// SetupWithManager - Sets up Controller for AlertsChannel
 func (r *AlertsChannelReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&nrv1.AlertsChannel{}).
@@ -155,7 +155,7 @@ func (r *AlertsChannelReconciler) getAPIKeyOrSecret(alertschannel nrv1.AlertsCha
 
 		getErr := r.Client.Get(context.Background(), key, &apiKeySecret)
 		if getErr != nil {
-			r.Log.Error(getErr, "Failed to retrieve secret", "secret", apiKeySecret)
+			r.Log.Error(getErr, "Failed to retrieve secret", "secret", key)
 			return "", getErr
 		}
 

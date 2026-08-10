@@ -74,15 +74,13 @@ func InitializeAlertsClient(apiKey string, regionName string) (NewRelicAlertsCli
 	return &client.Alerts, nil
 }
 
-//PartialAPIKey - Returns a partial API key to ensure we don't log the full API Key
+// PartialAPIKey - Indicates whether an API key was supplied, for log
+// correlation, without ever logging the key itself or any value derived
+// from it (including a hash - hashing sensitive data with a fast,
+// non-KDF algorithm is its own exposure risk).
 func PartialAPIKey(apiKey string) string {
-	partialKeyLength := min(10, len(apiKey))
-	return apiKey[0:partialKeyLength] + "..."
-}
-
-func min(x, y int) int {
-	if x > y {
-		return y
+	if apiKey == "" {
+		return "[not set]"
 	}
-	return x
+	return "[redacted]"
 }

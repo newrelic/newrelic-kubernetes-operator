@@ -622,7 +622,7 @@ func (r *PolicyReconciler) getAPIKeyOrSecret(policy nrv1.Policy) (string, error)
 		var apiKeySecret v1.Secret
 		getErr := r.Client.Get(context.Background(), key, &apiKeySecret)
 		if getErr != nil {
-			r.Log.Error(getErr, "Failed to retrieve secret", "secret", apiKeySecret)
+			r.Log.Error(getErr, "Failed to retrieve secret", "secret", key)
 			return "", getErr
 		}
 

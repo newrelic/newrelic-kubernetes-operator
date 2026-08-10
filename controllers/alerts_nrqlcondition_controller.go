@@ -274,7 +274,7 @@ func (r *AlertsNrqlConditionReconciler) getAPIKeyOrSecret(condition nrv1.AlertsN
 		key := types.NamespacedName{Namespace: condition.Spec.APIKeySecret.Namespace, Name: condition.Spec.APIKeySecret.Name}
 		var apiKeySecret v1.Secret
 		if getErr := r.Client.Get(context.Background(), key, &apiKeySecret); getErr != nil {
-			r.Log.Error(getErr, "Error retrieving secret", "secret", apiKeySecret)
+			r.Log.Error(getErr, "Error retrieving secret", "secret", key)
 			return "", getErr
 		}
 		return string(apiKeySecret.Data[condition.Spec.APIKeySecret.KeyName]), nil
