@@ -54,7 +54,7 @@ require (
 	github.com/Masterminds/sprig/v3 v3.2.3 // indirect
 	github.com/Microsoft/go-winio v0.6.2 // indirect
 	github.com/OpenPeeDeeP/depguard v1.0.1 // indirect
-	github.com/ProtonMail/go-crypto v1.3.0 // indirect
+	github.com/ProtonMail/go-crypto v1.4.1 // indirect
 	github.com/alecthomas/template v0.0.0-20190718012654-fb15b899a751 // indirect
 	github.com/alecthomas/units v0.0.0-20240927000941-0f3dac36c52b // indirect
 	github.com/andygrunwald/go-jira v1.16.0 // indirect
@@ -71,7 +71,6 @@ require (
 	github.com/cloudflare/circl v1.6.3 // indirect
 	github.com/coreos/go-semver v0.3.1 // indirect
 	github.com/cpuguy83/go-md2man/v2 v2.0.2 // indirect
-	github.com/cyphar/filepath-securejoin v0.6.1 // indirect
 	github.com/daixiang0/gci v0.0.0-20200727065011-66f1df783cb2 // indirect
 	github.com/denis-tingajkin/go-header v0.3.1 // indirect
 	github.com/dimchansky/utfbom v1.1.0 // indirect
@@ -84,9 +83,9 @@ require (
 	github.com/go-git/gcfg v1.5.0 // indirect
 	github.com/go-git/gcfg/v2 v2.0.2 // indirect
 	github.com/go-git/go-billy/v5 v5.0.0 // indirect
-	github.com/go-git/go-billy/v6 v6.0.0-20260226131633-45bd0956d66f // indirect
+	github.com/go-git/go-billy/v6 v6.0.0-alpha.2 // indirect
 	github.com/go-git/go-git/v5 v5.1.0 // indirect
-	github.com/go-git/go-git/v6 v6.0.0-20260324221343-cd85c8c75d34 // indirect
+	github.com/go-git/go-git/v6 v6.0.0-alpha.5 // indirect
 	github.com/go-logr/zapr v0.1.0 // indirect
 	github.com/go-toolsmith/astcast v1.0.0 // indirect
 	github.com/go-toolsmith/astcopy v1.0.0 // indirect
@@ -178,7 +177,7 @@ require (
 	github.com/op/go-logging v0.0.0-20160315200505-970db520ece7 // indirect
 	github.com/pelletier/go-toml v1.8.0 // indirect
 	github.com/phayes/checkstyle v0.0.0-20170904204023-bfd46e6a821d // indirect
-	github.com/pjbgf/sha1cd v0.5.0 // indirect
+	github.com/pjbgf/sha1cd v0.6.0 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/prometheus/client_golang v1.11.1 // indirect
