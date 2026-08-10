@@ -269,7 +269,7 @@ func (r *AlertsAPMConditionReconciler) getAPIKeyOrSecret(condition nralertsv1.Al
 		key := types.NamespacedName{Namespace: condition.Spec.APIKeySecret.Namespace, Name: condition.Spec.APIKeySecret.Name}
 
 		if getErr := r.Client.Get(context.Background(), key, &apiKeySecret); getErr != nil {
-			r.Log.Error(getErr, "Error retrieving secret", "secret", apiKeySecret)
+			r.Log.Error(getErr, "Error retrieving secret", "secret", key)
 			return "", getErr
 		}
 
