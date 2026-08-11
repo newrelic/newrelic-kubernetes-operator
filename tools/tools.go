@@ -7,7 +7,7 @@ import (
 	_ "github.com/maxbrunsfeld/counterfeiter/v6"
 
 	// build/lint.mk
-	_ "github.com/llorllale/go-gitlint/cmd/go-gitlint"
+	_ "github.com/llorllale/go-gitlint"
 	_ "github.com/psampaz/go-mod-outdated"
 	_ "golang.org/x/tools/cmd/goimports"
 
