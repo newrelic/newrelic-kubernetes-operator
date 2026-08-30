@@ -1,6 +1,6 @@
 
 ---
-apiVersion: apiextensions.k8s.io/v1beta1
+apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
@@ -8,10 +8,6 @@ metadata:
   creationTimestamp: null
   name: alertsapmconditions.nr.k8s.newrelic.com
 spec:
-  additionalPrinterColumns:
-  - JSONPath: .status.created
-    name: Created
-    type: boolean
   group: nr.k8s.newrelic.com
   names:
     kind: AlertsAPMCondition
@@ -19,241 +15,243 @@ spec:
     plural: alertsapmconditions
     singular: alertsapmcondition
   scope: Namespaced
-  subresources: {}
-  validation:
-    openAPIV3Schema:
-      description: AlertsAPMCondition is the Schema for the alertsapmconditions API
-      properties:
-        apiVersion:
-          description: 'APIVersion defines the versioned schema of this representation
-            of an object. Servers should convert recognized schemas to the latest
-            internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
-          type: string
-        kind:
-          description: 'Kind is a string value representing the REST resource this
-            object represents. Servers may infer this from the endpoint the client
-            submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
-          type: string
-        metadata:
-          type: object
-        spec:
-          description: AlertsAPMConditionSpec defines the desired state of AlertsAPMCondition
-          properties:
-            account_id:
-              type: integer
-            api_key:
-              type: string
-            api_key_secret:
-              properties:
-                key_name:
-                  type: string
-                name:
-                  type: string
-                namespace:
-                  type: string
-              type: object
-            apm_terms:
-              items:
-                description: AlertConditionTerm represents the terms of a New Relic
-                  alert condition.
-                properties:
-                  duration:
-                    type: string
-                  operator:
-                    type: string
-                  priority:
-                    type: string
-                  threshold:
-                    type: string
-                  time_function:
-                    type: string
-                  violation_close_timer:
-                    type: integer
-                required:
-                - threshold
-                type: object
-              type: array
-            condition_scope:
-              type: string
-            enabled:
-              type: boolean
-            entities:
-              items:
-                type: string
-              type: array
-            existing_policy_id:
-              type: string
-            gc_metric:
-              type: string
-            id:
-              type: integer
-            metric:
-              type: string
-            name:
-              type: string
-            region:
-              type: string
-            runbook_url:
-              type: string
-            terms:
-              items:
-                description: AlertsNrqlConditionTerm represents the terms of a New
-                  Relic alert condition.
-                properties:
-                  operator:
-                    description: AlertsNRQLConditionTermsOperator - Operator used
-                      to compare against the threshold for NrqlConditions.
-                    type: string
-                  priority:
-                    description: NrqlConditionPriority specifies the priority for
-                      alert condition terms.
-                    type: string
-                  threshold:
-                    type: string
-                  threshold_duration:
-                    type: integer
-                  threshold_occurrences:
-                    description: ThresholdOccurrence specifies the threshold occurrence
-                      for NRQL alert condition terms.
-                    type: string
-                type: object
-              type: array
-            type:
-              description: NrqlConditionType specifies the type of NRQL alert condition.
-              type: string
-            user_defined:
-              description: ConditionUserDefined represents user defined metrics for
-                the New Relic alert condition.
-              properties:
-                metric:
-                  type: string
-                value_function:
-                  description: ValueFunctionType specifies the value function to be
-                    used for returning custom metric data.
-                  type: string
-              type: object
-            violation_close_timer:
-              type: integer
-          required:
-          - enabled
-          type: object
-        status:
-          description: AlertsAPMConditionStatus defines the observed state of AlertsAPMCondition
-          properties:
-            applied_spec:
-              description: AlertsAPMConditionSpec defines the desired state of AlertsAPMCondition
-              properties:
-                account_id:
-                  type: integer
-                api_key:
-                  type: string
-                api_key_secret:
-                  properties:
-                    key_name:
-                      type: string
-                    name:
-                      type: string
-                    namespace:
-                      type: string
-                  type: object
-                apm_terms:
-                  items:
-                    description: AlertConditionTerm represents the terms of a New
-                      Relic alert condition.
-                    properties:
-                      duration:
-                        type: string
-                      operator:
-                        type: string
-                      priority:
-                        type: string
-                      threshold:
-                        type: string
-                      time_function:
-                        type: string
-                      violation_close_timer:
-                        type: integer
-                    required:
-                    - threshold
-                    type: object
-                  type: array
-                condition_scope:
-                  type: string
-                enabled:
-                  type: boolean
-                entities:
-                  items:
-                    type: string
-                  type: array
-                existing_policy_id:
-                  type: string
-                gc_metric:
-                  type: string
-                id:
-                  type: integer
-                metric:
-                  type: string
-                name:
-                  type: string
-                region:
-                  type: string
-                runbook_url:
-                  type: string
-                terms:
-                  items:
-                    description: AlertsNrqlConditionTerm represents the terms of a
-                      New Relic alert condition.
-                    properties:
-                      operator:
-                        description: AlertsNRQLConditionTermsOperator - Operator used
-                          to compare against the threshold for NrqlConditions.
-                        type: string
-                      priority:
-                        description: NrqlConditionPriority specifies the priority
-                          for alert condition terms.
-                        type: string
-                      threshold:
-                        type: string
-                      threshold_duration:
-                        type: integer
-                      threshold_occurrences:
-                        description: ThresholdOccurrence specifies the threshold occurrence
-                          for NRQL alert condition terms.
-                        type: string
-                    type: object
-                  type: array
-                type:
-                  description: NrqlConditionType specifies the type of NRQL alert
-                    condition.
-                  type: string
-                user_defined:
-                  description: ConditionUserDefined represents user defined metrics
-                    for the New Relic alert condition.
-                  properties:
-                    metric:
-                      type: string
-                    value_function:
-                      description: ValueFunctionType specifies the value function
-                        to be used for returning custom metric data.
-                      type: string
-                  type: object
-                violation_close_timer:
-                  type: integer
-              required:
-              - enabled
-              type: object
-            condition_id:
-              type: integer
-          required:
-          - applied_spec
-          - condition_id
-          type: object
-      type: object
-  version: v1
   versions:
   - name: v1
     served: true
     storage: true
+    schema:
+      openAPIV3Schema:
+        description: AlertsAPMCondition is the Schema for the alertsapmconditions API
+        properties:
+          apiVersion:
+            description: 'APIVersion defines the versioned schema of this representation
+              of an object. Servers should convert recognized schemas to the latest
+              internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+            type: string
+          kind:
+            description: 'Kind is a string value representing the REST resource this
+              object represents. Servers may infer this from the endpoint the client
+              submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+            type: string
+          metadata:
+            type: object
+          spec:
+            description: AlertsAPMConditionSpec defines the desired state of AlertsAPMCondition
+            properties:
+              account_id:
+                type: integer
+              api_key:
+                type: string
+              api_key_secret:
+                properties:
+                  key_name:
+                    type: string
+                  name:
+                    type: string
+                  namespace:
+                    type: string
+                type: object
+              apm_terms:
+                items:
+                  description: AlertConditionTerm represents the terms of a New Relic
+                    alert condition.
+                  properties:
+                    duration:
+                      type: string
+                    operator:
+                      type: string
+                    priority:
+                      type: string
+                    threshold:
+                      type: string
+                    time_function:
+                      type: string
+                    violation_close_timer:
+                      type: integer
+                  required:
+                  - threshold
+                  type: object
+                type: array
+              condition_scope:
+                type: string
+              enabled:
+                type: boolean
+              entities:
+                items:
+                  type: string
+                type: array
+              existing_policy_id:
+                type: string
+              gc_metric:
+                type: string
+              id:
+                type: integer
+              metric:
+                type: string
+              name:
+                type: string
+              region:
+                type: string
+              runbook_url:
+                type: string
+              terms:
+                items:
+                  description: AlertsNrqlConditionTerm represents the terms of a New
+                    Relic alert condition.
+                  properties:
+                    operator:
+                      description: AlertsNRQLConditionTermsOperator - Operator used
+                        to compare against the threshold for NrqlConditions.
+                      type: string
+                    priority:
+                      description: NrqlConditionPriority specifies the priority for
+                        alert condition terms.
+                      type: string
+                    threshold:
+                      type: string
+                    threshold_duration:
+                      type: integer
+                    threshold_occurrences:
+                      description: ThresholdOccurrence specifies the threshold occurrence
+                        for NRQL alert condition terms.
+                      type: string
+                  type: object
+                type: array
+              type:
+                description: NrqlConditionType specifies the type of NRQL alert condition.
+                type: string
+              user_defined:
+                description: ConditionUserDefined represents user defined metrics for
+                  the New Relic alert condition.
+                properties:
+                  metric:
+                    type: string
+                  value_function:
+                    description: ValueFunctionType specifies the value function to be
+                      used for returning custom metric data.
+                    type: string
+                type: object
+              violation_close_timer:
+                type: integer
+            required:
+            - enabled
+            type: object
+          status:
+            description: AlertsAPMConditionStatus defines the observed state of AlertsAPMCondition
+            properties:
+              applied_spec:
+                description: AlertsAPMConditionSpec defines the desired state of AlertsAPMCondition
+                properties:
+                  account_id:
+                    type: integer
+                  api_key:
+                    type: string
+                  api_key_secret:
+                    properties:
+                      key_name:
+                        type: string
+                      name:
+                        type: string
+                      namespace:
+                        type: string
+                    type: object
+                  apm_terms:
+                    items:
+                      description: AlertConditionTerm represents the terms of a New
+                        Relic alert condition.
+                      properties:
+                        duration:
+                          type: string
+                        operator:
+                          type: string
+                        priority:
+                          type: string
+                        threshold:
+                          type: string
+                        time_function:
+                          type: string
+                        violation_close_timer:
+                          type: integer
+                      required:
+                      - threshold
+                      type: object
+                    type: array
+                  condition_scope:
+                    type: string
+                  enabled:
+                    type: boolean
+                  entities:
+                    items:
+                      type: string
+                    type: array
+                  existing_policy_id:
+                    type: string
+                  gc_metric:
+                    type: string
+                  id:
+                    type: integer
+                  metric:
+                    type: string
+                  name:
+                    type: string
+                  region:
+                    type: string
+                  runbook_url:
+                    type: string
+                  terms:
+                    items:
+                      description: AlertsNrqlConditionTerm represents the terms of a
+                        New Relic alert condition.
+                      properties:
+                        operator:
+                          description: AlertsNRQLConditionTermsOperator - Operator used
+                            to compare against the threshold for NrqlConditions.
+                          type: string
+                        priority:
+                          description: NrqlConditionPriority specifies the priority
+                            for alert condition terms.
+                          type: string
+                        threshold:
+                          type: string
+                        threshold_duration:
+                          type: integer
+                        threshold_occurrences:
+                          description: ThresholdOccurrence specifies the threshold occurrence
+                            for NRQL alert condition terms.
+                          type: string
+                      type: object
+                    type: array
+                  type:
+                    description: NrqlConditionType specifies the type of NRQL alert
+                      condition.
+                    type: string
+                  user_defined:
+                    description: ConditionUserDefined represents user defined metrics
+                      for the New Relic alert condition.
+                    properties:
+                      metric:
+                        type: string
+                      value_function:
+                        description: ValueFunctionType specifies the value function
+                          to be used for returning custom metric data.
+                        type: string
+                    type: object
+                  violation_close_timer:
+                    type: integer
+                required:
+                - enabled
+                type: object
+              condition_id:
+                type: integer
+            required:
+            - applied_spec
+            - condition_id
+            type: object
+        type: object
+    additionalPrinterColumns:
+    - name: Created
+      type: boolean
+      jsonPath: .status.created
 status:
   acceptedNames:
     kind: ""
