@@ -5,7 +5,7 @@ go 1.25.8
 require (
 	github.com/davecgh/go-spew v1.1.1
 	github.com/git-chglog/git-chglog v0.15.4
-	github.com/go-logr/logr v0.1.0
+	github.com/go-logr/logr v1.4.1
 	github.com/golang/mock v1.6.0
 	github.com/goreleaser/goreleaser v0.143.0
 	github.com/llorllale/go-gitlint v0.0.0-20260329145721-5adb4417f6a6
@@ -13,7 +13,7 @@ require (
 	github.com/newrelic/go-agent/v3 v3.7.0
 	github.com/newrelic/newrelic-client-go v0.60.0
 	github.com/onsi/ginkgo v1.13.0
-	github.com/onsi/gomega v1.10.1
+	github.com/onsi/gomega v1.34.1
 	github.com/psampaz/go-mod-outdated v0.9.0
 	github.com/stretchr/testify v1.11.1
 	golang.org/x/tools v0.47.0
@@ -71,6 +71,7 @@ require (
 	github.com/cloudflare/circl v1.6.3 // indirect
 	github.com/coreos/go-semver v0.3.1 // indirect
 	github.com/cpuguy83/go-md2man/v2 v2.0.2 // indirect
+	github.com/cyphar/filepath-securejoin v0.6.1 // indirect
 	github.com/daixiang0/gci v0.0.0-20200727065011-66f1df783cb2 // indirect
 	github.com/denis-tingajkin/go-header v0.3.1 // indirect
 	github.com/dimchansky/utfbom v1.1.0 // indirect
@@ -82,7 +83,7 @@ require (
 	github.com/go-critic/go-critic v0.5.0 // indirect
 	github.com/go-git/gcfg v1.5.0 // indirect
 	github.com/go-git/gcfg/v2 v2.0.2 // indirect
-	github.com/go-git/go-billy/v5 v5.0.0 // indirect
+	github.com/go-git/go-billy/v5 v5.9.0 // indirect
 	github.com/go-git/go-billy/v6 v6.0.0-alpha.2 // indirect
 	github.com/go-git/go-git/v5 v5.1.0 // indirect
 	github.com/go-git/go-git/v6 v6.0.0-alpha.5 // indirect
@@ -117,7 +118,7 @@ require (
 	github.com/golangci/prealloc v0.0.0-20180630174525-215b22d4de21 // indirect
 	github.com/golangci/revgrep v0.0.0-20180526074752-d9c87f5ffaf0 // indirect
 	github.com/golangci/unconvert v0.0.0-20180507085042-28b1c447d1f4 // indirect
-	github.com/google/go-cmp v0.6.0 // indirect
+	github.com/google/go-cmp v0.7.0 // indirect
 	github.com/google/go-github/v28 v28.1.1 // indirect
 	github.com/google/go-querystring v1.1.0 // indirect
 	github.com/google/gofuzz v1.1.0 // indirect
@@ -149,7 +150,6 @@ require (
 	github.com/kevinburke/ssh_config v1.6.0 // indirect
 	github.com/kisielk/gotool v1.0.0 // indirect
 	github.com/klauspost/cpuid/v2 v2.3.0 // indirect
-	github.com/kr/pretty v0.3.0 // indirect
 	github.com/kyoh86/exportloopref v0.1.7 // indirect
 	github.com/kyokomi/emoji/v2 v2.2.11 // indirect
 	github.com/magiconair/properties v1.8.1 // indirect
@@ -186,7 +186,6 @@ require (
 	github.com/quasilyte/go-ruleguard v0.1.2-0.20200318202121-b00d7a75d3d8 // indirect
 	github.com/quasilyte/regex/syntax v0.0.0-20200407221936-30656e2c4a95 // indirect
 	github.com/rivo/uniseg v0.4.3 // indirect
-	github.com/rogpeppe/go-internal v1.9.0 // indirect
 	github.com/russross/blackfriday/v2 v2.1.0 // indirect
 	github.com/ryancurrah/gomodguard v1.1.0 // indirect
 	github.com/ryanrolds/sqlclosecheck v0.3.0 // indirect
@@ -228,6 +227,7 @@ require (
 	go.uber.org/zap v1.10.0 // indirect
 	gocloud.dev v0.20.0 // indirect
 	golang.org/x/crypto v0.54.0 // indirect
+	golang.org/x/exp v0.0.0-20260410095643-746e56fc9e2f // indirect
 	golang.org/x/mod v0.37.0 // indirect
 	golang.org/x/net v0.57.0 // indirect
 	golang.org/x/oauth2 v0.27.0 // indirect
@@ -237,8 +237,6 @@ require (
 	golang.org/x/term v0.45.0 // indirect
 	golang.org/x/text v0.40.0 // indirect
 	golang.org/x/time v0.3.0 // indirect
-	golang.org/x/tools/go/expect v0.1.1-deprecated // indirect
-	golang.org/x/tools/go/packages/packagestest v0.1.1-deprecated // indirect
 	golang.org/x/xerrors v0.0.0-20220907171357-04be3eba64a2 // indirect
 	gomodules.xyz/jsonpatch/v2 v2.1.0 // indirect
 	google.golang.org/api v0.126.0 // indirect
@@ -247,9 +245,8 @@ require (
 	google.golang.org/genproto/googleapis/api v0.0.0-20230711160842-782d3b101e98 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20230711160842-782d3b101e98 // indirect
 	google.golang.org/grpc v1.58.3 // indirect
-	google.golang.org/protobuf v1.33.0 // indirect
+	google.golang.org/protobuf v1.34.1 // indirect
 	gopkg.in/alecthomas/kingpin.v2 v2.2.6 // indirect
-	gopkg.in/check.v1 v1.0.0-20201130134442-10cb98267c6c // indirect
 	gopkg.in/fsnotify.v1 v1.4.7 // indirect
 	gopkg.in/inf.v0 v0.9.1 // indirect
 	gopkg.in/ini.v1 v1.57.0 // indirect
